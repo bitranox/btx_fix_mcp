@@ -372,7 +372,7 @@ class TestQualityConfigIntegration:
         )
 
         # Should have a default value (either from config or code default)
-        assert server.complexity_threshold == 10  # Default value
+        assert server.quality_config.thresholds.complexity == 10  # Default value
 
     def test_quality_subserver_constructor_overrides_config(self, tmp_path):
         """Test that constructor parameters override config file values."""
@@ -390,7 +390,7 @@ class TestQualityConfigIntegration:
             complexity_threshold=25,  # Override
         )
 
-        assert server.complexity_threshold == 25
+        assert server.quality_config.thresholds.complexity == 25
 
     def test_quality_subserver_reads_all_feature_flags(self, tmp_path):
         """Test QualitySubServer reads all feature flags from config."""
@@ -406,29 +406,29 @@ class TestQualityConfigIntegration:
             repo_path=tmp_path,
         )
 
-        # All these should be set (either from config or defaults)
+        # All these should be set in features config (either from config or defaults)
         feature_flags = [
-            "enable_type_coverage",
-            "enable_dead_code_detection",
-            "enable_import_cycle_detection",
-            "enable_docstring_coverage",
-            "enable_halstead_metrics",
-            "enable_raw_metrics",
-            "enable_cognitive_complexity",
-            "enable_js_analysis",
-            "enable_code_churn",
-            "enable_beartype",
-            "enable_duplication_detection",
-            "enable_static_analysis",
-            "enable_test_analysis",
-            "enable_architecture_analysis",
-            "enable_runtime_check_detection",
+            "type_coverage",
+            "dead_code_detection",
+            "import_cycle_detection",
+            "docstring_coverage",
+            "halstead_metrics",
+            "raw_metrics",
+            "cognitive_complexity",
+            "js_analysis",
+            "code_churn",
+            "beartype",
+            "duplication_detection",
+            "static_analysis",
+            "test_analysis",
+            "architecture_analysis",
+            "runtime_check_detection",
         ]
 
         for flag in feature_flags:
-            assert hasattr(server, flag), f"QualitySubServer missing attribute: {flag}"
+            assert hasattr(server.quality_config.features, flag), f"QualityConfig missing feature flag: {flag}"
             # Should be boolean
-            value = getattr(server, flag)
+            value = getattr(server.quality_config.features, flag)
             assert isinstance(value, bool), f"{flag} should be boolean, got {type(value)}"
 
     def test_quality_subserver_reads_all_thresholds(self, tmp_path):
@@ -445,25 +445,25 @@ class TestQualityConfigIntegration:
             repo_path=tmp_path,
         )
 
-        # All threshold attributes
+        # All threshold attributes (access via quality_config.thresholds)
         thresholds = {
-            "complexity_threshold": 10,
-            "maintainability_threshold": 20,
+            "complexity": 10,
+            "maintainability": 20,
             "max_function_length": 50,
             "max_nesting_depth": 3,
-            "cognitive_complexity_threshold": 15,
+            "cognitive_complexity": 15,
             "min_type_coverage": 80,
             "dead_code_confidence": 80,
             "min_docstring_coverage": 80,
             "churn_threshold": 20,
             "coupling_threshold": 15,
-            "god_object_methods_threshold": 20,
-            "god_object_lines_threshold": 500,
+            "god_object_methods": 20,
+            "god_object_lines": 500,
         }
 
         for attr, expected_default in thresholds.items():
-            assert hasattr(server, attr), f"QualitySubServer missing attribute: {attr}"
-            value = getattr(server, attr)
+            assert hasattr(server.quality_config.thresholds, attr), f"QualityConfig.thresholds missing attribute: {attr}"
+            value = getattr(server.quality_config.thresholds, attr)
             assert isinstance(value, (int, float)), f"{attr} should be numeric, got {type(value)}"
             # Check it has the expected default
             assert value == expected_default, f"{attr} has value {value}, expected default {expected_default}"

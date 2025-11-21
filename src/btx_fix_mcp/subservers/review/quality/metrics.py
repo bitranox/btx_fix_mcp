@@ -130,111 +130,22 @@ class MetricsAnalyzer(BaseAnalyzer):
         - Technical debt areas
         """
         churn_threshold = self.config.get("churn_threshold", 20)
-        results = {
-            "files": [],
-            "high_churn_files": [],
-            "total_commits_analyzed": 0,
-            "analysis_period_days": 90,
-        }
-        if not files:
+        results = self._create_empty_churn_results()
+
+        if not files or not self._is_git_repository():
             return results
 
         try:
-            # Check if we're in a git repo
-            git_check = subprocess.run(
-                ["git", "rev-parse", "--git-dir"],
-                capture_output=True,
-                text=True,
-                timeout=5,
-                cwd=str(self.repo_path),
-            )
-            if git_check.returncode != 0:
-                self.logger.info("Not a git repository, skipping churn analysis")
+            relative_files = self._convert_to_relative_paths(files)
+            git_output = self._run_git_log(relative_files)
+
+            if git_output is None:
                 return results
 
-            # Convert absolute paths to relative paths for git
-            relative_files = []
-            for f in files:
-                try:
-                    relative_files.append(str(Path(f).relative_to(self.repo_path)))
-                except ValueError:
-                    # File not under repo_path, use as-is
-                    relative_files.append(f)
-
-            # Get git log with numstat for the past 90 days
-            result = subprocess.run(
-                ["git", "log", "--numstat", "--format=%H|%ae|%at", "--since=90 days ago", "--", *relative_files],
-                capture_output=True,
-                text=True,
-                timeout=60,
-                cwd=str(self.repo_path),
-            )
-
-            if result.returncode != 0:
-                return results
-
-            # Parse git log output
-            file_stats: dict[str, dict[str, Any]] = {}
-            current_author = None
-            commits_seen: set[str] = set()
-
-            for line in result.stdout.strip().split("\n"):
-                if not line:
-                    continue
-
-                # Commit line format: hash|author_email|timestamp
-                if "|" in line and line.count("|") == 2:
-                    parts = line.split("|")
-                    current_commit = parts[0]
-                    current_author = parts[1]
-                    commits_seen.add(current_commit)
-                # Numstat line format: added\tdeleted\tfilename
-                elif "\t" in line:
-                    parts = line.split("\t")
-                    if len(parts) >= 3:
-                        added = int(parts[0]) if parts[0] != "-" else 0
-                        deleted = int(parts[1]) if parts[1] != "-" else 0
-                        filepath = parts[2]
-
-                        if filepath not in file_stats:
-                            file_stats[filepath] = {
-                                "file": filepath,
-                                "commits": 0,
-                                "authors": set(),
-                                "lines_added": 0,
-                                "lines_deleted": 0,
-                                "total_changes": 0,
-                            }
-
-                        file_stats[filepath]["commits"] += 1
-                        if current_author:
-                            file_stats[filepath]["authors"].add(current_author)
-                        file_stats[filepath]["lines_added"] += added
-                        file_stats[filepath]["lines_deleted"] += deleted
-                        file_stats[filepath]["total_changes"] += added + deleted
-
+            file_stats, commits_seen = self._parse_git_log(git_output)
             results["total_commits_analyzed"] = len(commits_seen)
 
-            # Convert to list and sort by commits (descending)
-            for filepath, stats in file_stats.items():
-                file_info = {
-                    "file": stats["file"],
-                    "commits": stats["commits"],
-                    "authors": len(stats["authors"]),
-                    "lines_added": stats["lines_added"],
-                    "lines_deleted": stats["lines_deleted"],
-                    "total_changes": stats["total_changes"],
-                    "churn_score": stats["commits"] * len(stats["authors"]),
-                }
-                results["files"].append(file_info)
-
-                # Flag high churn files
-                if stats["commits"] >= churn_threshold:
-                    results["high_churn_files"].append(file_info)
-
-            # Sort by churn score
-            results["files"].sort(key=lambda x: x["churn_score"], reverse=True)
-            results["high_churn_files"].sort(key=lambda x: x["churn_score"], reverse=True)
+            self._compile_churn_results(file_stats, churn_threshold, results)
 
         except FileNotFoundError:
             self.logger.warning("git not found for churn analysis")
@@ -244,3 +155,138 @@ class MetricsAnalyzer(BaseAnalyzer):
             self.logger.warning(f"churn analysis error: {e}")
 
         return results
+
+    def _create_empty_churn_results(self) -> dict[str, Any]:
+        """Create empty results structure for churn analysis."""
+        return {
+            "files": [],
+            "high_churn_files": [],
+            "total_commits_analyzed": 0,
+            "analysis_period_days": 90,
+        }
+
+    def _is_git_repository(self) -> bool:
+        """Check if current directory is a git repository."""
+        try:
+            git_check = subprocess.run(
+                ["git", "rev-parse", "--git-dir"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                cwd=str(self.repo_path),
+            )
+            if git_check.returncode != 0:
+                self.logger.info("Not a git repository, skipping churn analysis")
+                return False
+            return True
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            self.logger.info("Git not available, skipping churn analysis")
+            return False
+
+    def _convert_to_relative_paths(self, files: list[str]) -> list[str]:
+        """Convert absolute paths to relative paths for git."""
+        relative_files = []
+        for f in files:
+            try:
+                relative_files.append(str(Path(f).relative_to(self.repo_path)))
+            except ValueError:
+                # File not under repo_path, use as-is
+                relative_files.append(f)
+        return relative_files
+
+    def _run_git_log(self, relative_files: list[str]) -> str | None:
+        """Run git log command to get file change history."""
+        result = subprocess.run(
+            [
+                "git",
+                "log",
+                "--numstat",
+                "--format=%H|%ae|%at",
+                "--since=90 days ago",
+                "--",
+                *relative_files,
+            ],
+            capture_output=True,
+            text=True,
+            timeout=60,
+            cwd=str(self.repo_path),
+        )
+
+        if result.returncode != 0:
+            return None
+        return result.stdout
+
+    def _parse_git_log(
+        self, git_output: str
+    ) -> tuple[dict[str, dict[str, Any]], set[str]]:
+        """Parse git log output to extract file statistics."""
+        file_stats: dict[str, dict[str, Any]] = {}
+        current_author = None
+        commits_seen: set[str] = set()
+
+        for line in git_output.strip().split("\n"):
+            if not line:
+                continue
+
+            # Commit line format: hash|author_email|timestamp
+            if "|" in line and line.count("|") == 2:
+                parts = line.split("|")
+                commits_seen.add(parts[0])
+                current_author = parts[1]
+            # Numstat line format: added\tdeleted\tfilename
+            elif "\t" in line:
+                self._process_numstat_line(line, current_author, file_stats)
+
+        return file_stats, commits_seen
+
+    def _process_numstat_line(
+        self, line: str, current_author: str | None, file_stats: dict[str, dict[str, Any]]
+    ) -> None:
+        """Process a single numstat line from git log."""
+        parts = line.split("\t")
+        if len(parts) < 3:
+            return
+
+        added = int(parts[0]) if parts[0] != "-" else 0
+        deleted = int(parts[1]) if parts[1] != "-" else 0
+        filepath = parts[2]
+
+        if filepath not in file_stats:
+            file_stats[filepath] = {
+                "file": filepath,
+                "commits": 0,
+                "authors": set(),
+                "lines_added": 0,
+                "lines_deleted": 0,
+                "total_changes": 0,
+            }
+
+        file_stats[filepath]["commits"] += 1
+        if current_author:
+            file_stats[filepath]["authors"].add(current_author)
+        file_stats[filepath]["lines_added"] += added
+        file_stats[filepath]["lines_deleted"] += deleted
+        file_stats[filepath]["total_changes"] += added + deleted
+
+    def _compile_churn_results(
+        self, file_stats: dict[str, dict[str, Any]], churn_threshold: int, results: dict[str, Any]
+    ) -> None:
+        """Compile file statistics into churn results."""
+        for filepath, stats in file_stats.items():
+            file_info = {
+                "file": stats["file"],
+                "commits": stats["commits"],
+                "authors": len(stats["authors"]),
+                "lines_added": stats["lines_added"],
+                "lines_deleted": stats["lines_deleted"],
+                "total_changes": stats["total_changes"],
+                "churn_score": stats["commits"] * len(stats["authors"]),
+            }
+            results["files"].append(file_info)
+
+            if stats["commits"] >= churn_threshold:
+                results["high_churn_files"].append(file_info)
+
+        # Sort by churn score
+        results["files"].sort(key=lambda x: x["churn_score"], reverse=True)
+        results["high_churn_files"].sort(key=lambda x: x["churn_score"], reverse=True)

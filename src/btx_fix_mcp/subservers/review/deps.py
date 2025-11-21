@@ -459,23 +459,49 @@ class DepsSubServer(BaseSubServer):
     def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue]) -> str:
         """Generate markdown summary with mindset evaluation."""
         metrics = self._compile_metrics(results, all_issues)
-        tree = results.get("dependency_tree")
-        tree_total = tree.total if isinstance(tree, DependencyTree) else tree.get("total", 0) if tree else 0
-        tree_direct = tree.direct if isinstance(tree, DependencyTree) else tree.get("direct", 0) if tree else 0
+        verdict = self._evaluate_mindset(all_issues, metrics)
 
-        # Evaluate results with mindset (convert to dicts for evaluate_results)
+        lines = []
+        lines.extend(self._format_header_section(verdict, metrics, results))
+        lines.extend(self._format_vulnerabilities_section(results))
+        lines.extend(self._format_outdated_section(results))
+        lines.extend(self._format_license_section(all_issues))
+        lines.extend(self._format_approval_section(verdict))
+
+        return "\n".join(lines)
+
+    def _evaluate_mindset(
+        self, all_issues: list[BaseIssue], metrics: dict[str, Any]
+    ) -> Any:
+        """Evaluate results using mindset."""
         critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
         warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
         total_items = max(metrics["total_dependencies"], 1)
 
-        verdict = evaluate_results(
+        return evaluate_results(
             self.mindset,
             critical_issues,
             warning_issues,
             total_items,
         )
 
-        lines = [
+    def _format_header_section(
+        self, verdict: Any, metrics: dict[str, Any], results: dict[str, Any]
+    ) -> list[str]:
+        """Format header section with mindset, verdict, and overview."""
+        tree = results.get("dependency_tree")
+        tree_total = (
+            tree.total
+            if isinstance(tree, DependencyTree)
+            else tree.get("total", 0) if tree else 0
+        )
+        tree_direct = (
+            tree.direct
+            if isinstance(tree, DependencyTree)
+            else tree.get("direct", 0) if tree else 0
+        )
+
+        return [
             "# Dependency Analysis Report",
             "",
             "## Reviewer Mindset",
@@ -490,7 +516,7 @@ class DepsSubServer(BaseSubServer):
             "",
             f"- Critical issues: {verdict.critical_count} ({verdict.critical_ratio:.1f}%)",
             f"- Warnings: {verdict.warning_count} ({verdict.warning_ratio:.1f}%)",
-            f"- Total dependencies analyzed: {total_items}",
+            f"- Total dependencies analyzed: {max(metrics['total_dependencies'], 1)}",
             "",
             "## Overview",
             "",
@@ -503,47 +529,68 @@ class DepsSubServer(BaseSubServer):
             "",
         ]
 
+    def _format_vulnerabilities_section(self, results: dict[str, Any]) -> list[str]:
+        """Format security vulnerabilities section."""
+        lines = []
         vulns = results.get("vulnerabilities", [])
+
         if vulns:
             lines.append(f"🔴 **{len(vulns)} vulnerabilities found**\n")
             for v in vulns[:10]:
-                lines.append(f"- **{v.get('package', '')}** {v.get('version', '')}: {v.get('vulnerability_id', '')} - {v.get('description', '')[:80]}")
+                lines.append(
+                    f"- **{v.get('package', '')}** {v.get('version', '')}: "
+                    f"{v.get('vulnerability_id', '')} - {v.get('description', '')[:80]}"
+                )
             if len(vulns) > 10:
                 lines.append(f"- ... and {len(vulns) - 10} more")
         else:
             lines.append("✅ No known vulnerabilities found")
-        lines.append("")
 
-        # Outdated packages
-        lines.append("## Outdated Packages\n")
+        lines.append("")
+        return lines
+
+    def _format_outdated_section(self, results: dict[str, Any]) -> list[str]:
+        """Format outdated packages section."""
+        lines = ["## Outdated Packages\n"]
         outdated = results.get("outdated", [])
+
         if outdated:
             lines.append(f"⚠️ **{len(outdated)} packages are outdated**\n")
             for pkg in outdated[:10]:
-                lines.append(f"- **{pkg.get('name', '')}**: {pkg.get('version', '')} → {pkg.get('latest_version', '')}")
+                lines.append(
+                    f"- **{pkg.get('name', '')}**: "
+                    f"{pkg.get('version', '')} → {pkg.get('latest_version', '')}"
+                )
             if len(outdated) > 10:
                 lines.append(f"- ... and {len(outdated) - 10} more")
         else:
             lines.append("✅ All packages are up to date")
-        lines.append("")
 
-        # License compliance
-        lines.append("## License Compliance\n")
+        lines.append("")
+        return lines
+
+    def _format_license_section(self, all_issues: list[BaseIssue]) -> list[str]:
+        """Format license compliance section."""
+        lines = ["## License Compliance\n"]
         license_issues = [i for i in all_issues if i.type == "license"]
+
         if license_issues:
             lines.append(f"⚠️ **{len(license_issues)} license issues found**\n")
             for lic in license_issues[:5]:
                 lines.append(f"- {lic.message}")
         else:
             lines.append("✅ All licenses are compliant")
-        lines.append("")
 
-        # Approval status
-        lines.extend(["## Approval Status", ""])
-        lines.append(f"**{verdict.verdict_text}**")
+        lines.append("")
+        return lines
+
+    def _format_approval_section(self, verdict: Any) -> list[str]:
+        """Format approval status section."""
+        lines = ["## Approval Status", "", f"**{verdict.verdict_text}**"]
+
         if verdict.recommendations:
             lines.append("")
             for rec in verdict.recommendations:
                 lines.append(f"- {rec}")
 
-        return "\n".join(lines)
+        return lines

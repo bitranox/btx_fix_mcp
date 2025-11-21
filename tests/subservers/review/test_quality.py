@@ -83,8 +83,8 @@ def process(data, flag1, flag2, flag3):
         )
 
         assert server.name == "quality"
-        assert server.complexity_threshold == 10
-        assert server.maintainability_threshold == 20
+        assert server.quality_config.thresholds.complexity == 10
+        assert server.quality_config.thresholds.maintainability == 20
 
     def test_initialization_custom_thresholds(self, tmp_path):
         """Test initialization with custom thresholds."""
@@ -99,8 +99,8 @@ def process(data, flag1, flag2, flag3):
             maintainability_threshold=25,
         )
 
-        assert server.complexity_threshold == 15
-        assert server.maintainability_threshold == 25
+        assert server.quality_config.thresholds.complexity == 15
+        assert server.quality_config.thresholds.maintainability == 25
 
     def test_validate_inputs_missing_files_list(self, tmp_path):
         """Test validation fails without files list."""
@@ -292,8 +292,8 @@ def test_hello():
             maintainability_threshold=30,
         )
 
-        assert server.complexity_threshold == 15
-        assert server.maintainability_threshold == 30
+        assert server.quality_config.thresholds.complexity == 15
+        assert server.quality_config.thresholds.maintainability == 30
 
 
 class TestQualitySubServerIntegration:
@@ -387,13 +387,13 @@ def foo():
         # Track which analyzers were called
         called_analyzers = []
 
-        # Mock all analyzers to track calls
-        original_complexity = server.complexity_analyzer.analyze
-        original_static = server.static_analyzer.analyze
-        original_test = server.test_analyzer.analyze
-        original_arch = server.architecture_analyzer.analyze
-        original_metrics = server.metrics_analyzer.analyze
-        original_types = server.type_analyzer.analyze
+        # Mock all analyzers to track calls (access via orchestrator)
+        original_complexity = server.orchestrator.complexity_analyzer.analyze
+        original_static = server.orchestrator.static_analyzer.analyze
+        original_test = server.orchestrator.test_analyzer.analyze
+        original_arch = server.orchestrator.architecture_analyzer.analyze
+        original_metrics = server.orchestrator.metrics_analyzer.analyze
+        original_types = server.orchestrator.type_analyzer.analyze
 
         def make_mock(name, original):
             def mock_analyze(files):
@@ -402,12 +402,12 @@ def foo():
 
             return mock_analyze
 
-        server.complexity_analyzer.analyze = make_mock("complexity", original_complexity)
-        server.static_analyzer.analyze = make_mock("static", original_static)
-        server.test_analyzer.analyze = make_mock("tests", original_test)
-        server.architecture_analyzer.analyze = make_mock("architecture", original_arch)
-        server.metrics_analyzer.analyze = make_mock("metrics", original_metrics)
-        server.type_analyzer.analyze = make_mock("types", original_types)
+        server.orchestrator.complexity_analyzer.analyze = make_mock("complexity", original_complexity)
+        server.orchestrator.static_analyzer.analyze = make_mock("static", original_static)
+        server.orchestrator.test_analyzer.analyze = make_mock("tests", original_test)
+        server.orchestrator.architecture_analyzer.analyze = make_mock("architecture", original_arch)
+        server.orchestrator.metrics_analyzer.analyze = make_mock("metrics", original_metrics)
+        server.orchestrator.type_analyzer.analyze = make_mock("types", original_types)
 
         result = server.run()
 
@@ -436,8 +436,8 @@ def foo():
         js_files = []
 
         # Patch ThreadPoolExecutor to verify it's used
-        with patch("btx_fix_mcp.subservers.review.quality.ThreadPoolExecutor", wraps=ThreadPoolExecutor) as mock_executor:
-            server._run_analyzers_parallel(python_files, js_files)
+        with patch("btx_fix_mcp.subservers.review.quality.orchestrator.ThreadPoolExecutor", wraps=ThreadPoolExecutor) as mock_executor:
+            server.orchestrator.run_all(python_files, js_files)
             # Verify ThreadPoolExecutor was called
             assert mock_executor.called
 
@@ -462,10 +462,10 @@ def foo():
         def failing_analyze(files):
             raise RuntimeError("Simulated failure")
 
-        server.test_analyzer.analyze = failing_analyze
+        server.orchestrator.test_analyzer.analyze = failing_analyze
 
         # Should still complete without raising
-        result = server._run_analyzers_parallel([str(repo_dir / "code.py")], [])
+        result = server.orchestrator.run_all([str(repo_dir / "code.py")], [])
 
         # Should complete with results from other analyzers (complexity at minimum)
         assert "complexity" in result or "maintainability" in result

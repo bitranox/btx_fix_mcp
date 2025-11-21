@@ -393,3 +393,7 @@ When working on this project:
 
   pytest --cov=src/btx_fix_mcp --cov-report=term-missing
 - on user command "full review" run python -m btx_fix_mcp review all --mode full  , and analyze the code_review_report in LLM-CONTEXT/btx_fix_mcp/review/report/all_issues.json after finishing the command
+- ignore the slow tests - those are slow dependecy tests
+- remove legacy code or backwards compatibility code in the whole codebase. we are in development, we dont care about backward compatibility
+- only document current behaviour, no development fragments - dont document old, before etc ... only current state !
+- consider dataclasses instead of dict-based
