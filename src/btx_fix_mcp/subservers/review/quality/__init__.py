@@ -51,7 +51,7 @@ from .issues import compile_all_issues
 from .metrics import MetricsAnalyzer
 from .summary import generate_comprehensive_summary
 from .static import StaticAnalyzer
-from .tests import TestAnalyzer
+from .tests import TestSuiteAnalyzer
 from .types import TypeAnalyzer
 
 __all__ = [
@@ -61,7 +61,7 @@ __all__ = [
     "ComplexityAnalyzer",
     "MetricsAnalyzer",
     "StaticAnalyzer",
-    "TestAnalyzer",
+    "TestSuiteAnalyzer",
     "TypeAnalyzer",
 ]
 
@@ -152,7 +152,7 @@ class QualitySubServer(BaseSubServer):
         self.static_analyzer = StaticAnalyzer(self.repo_path, self.logger, analyzer_config)
         self.type_analyzer = TypeAnalyzer(self.repo_path, self.logger, analyzer_config)
         self.architecture_analyzer = ArchitectureAnalyzer(self.repo_path, self.logger, analyzer_config)
-        self.test_analyzer = TestAnalyzer(self.repo_path, self.logger, analyzer_config)
+        self.test_analyzer = TestSuiteAnalyzer(self.repo_path, self.logger, analyzer_config)
         self.metrics_analyzer = MetricsAnalyzer(self.repo_path, self.logger, analyzer_config)
 
     # --- Config accessor properties (for backward compatibility) ---

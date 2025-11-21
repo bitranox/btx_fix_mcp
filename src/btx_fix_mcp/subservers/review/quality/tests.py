@@ -14,8 +14,10 @@ from typing import Any
 from .base import BaseAnalyzer
 
 
-class TestAnalyzer(BaseAnalyzer):
+class TestSuiteAnalyzer(BaseAnalyzer):
     """Test suite analyzer with assertion counting and OS-specific detection."""
+
+    __test__ = False  # Tell pytest this is not a test class
 
     def analyze(self, files: list[str]) -> dict[str, Any]:
         """Analyze test suite.

@@ -1,7 +1,7 @@
 # Implementation Status
 
 > **Last Updated**: 2025-11-21
-> **Tests**: 591 passing (100%)
+> **Tests**: 597 passing (100%)
 > **Coverage**: 87%
 > **Version**: 0.1.0
 
@@ -120,15 +120,25 @@ tests/                       # 591 tests
 | Quality Sub-server | 15 | :white_check_mark: |
 | Security Sub-server | 14 | :white_check_mark: |
 | BaseSubServer | 15 | :white_check_mark: |
-| Tools Venv | 18 | :white_check_mark: |
+| Tools Venv | 32 | :white_check_mark: |
 | CLI/Behaviors | 17 | :white_check_mark: |
+| Integration Tests | 6 | :white_check_mark: |
 | Other | 12 | :white_check_mark: |
 | Configuration | 33 | :white_check_mark: |
-| **Total** | **255** | **100%** |
+| **Total** | **275** | **100%** |
 
 ---
 
 ## Recent Changes
+
+### 2025-11-21: Integration Tests and pytest Warning Fix
+- Added 6 comprehensive integration tests in `tests/integration/test_review_workflow.py`
+- Integration tests use real behavior instead of mocks (no mocking of ScopeSubServer)
+- Tests verify end-to-end functionality: file discovery, categorization, git integration
+- Fixed pytest collection warning by renaming `TestAnalyzer` to `TestSuiteAnalyzer`
+- Added `__test__ = False` to `TestSuiteAnalyzer` class to prevent pytest collection
+- Updated `__all__` exports in quality module
+- All 597 tests passing with 87% coverage
 
 ### 2025-11-21: Configuration Testing
 - Added 33 comprehensive tests for configuration system in `tests/test_config.py`
@@ -224,7 +234,7 @@ pyright src/
 
 | Metric | Value |
 |--------|-------|
-| Total Tests | 591 |
+| Total Tests | 597 |
 | Test Pass Rate | 100% |
 | Test Coverage | 87% |
 | Python Files | ~40 |

@@ -4,7 +4,7 @@ import logging
 
 import pytest
 
-from btx_fix_mcp.subservers.review.quality.tests import TestAnalyzer as TestAnalyzerClass
+from btx_fix_mcp.subservers.review.quality.tests import TestSuiteAnalyzer
 
 
 @pytest.fixture
@@ -19,7 +19,7 @@ class TestTestAnalyzerBasic:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -48,7 +48,7 @@ class TestIdentifyTestFiles:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -108,7 +108,7 @@ class TestAssertionCounting:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -155,7 +155,7 @@ class TestTestCategorization:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -222,7 +222,7 @@ class TestIssueDetection:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -264,7 +264,7 @@ class TestOSSpecificDetection:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -325,7 +325,7 @@ class TestDecoratorExtraction:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
@@ -374,7 +374,7 @@ class TestAsyncTestSupport:
     @pytest.fixture
     def analyzer(self, tmp_path, test_logger):
         """Create a TestAnalyzer instance."""
-        return TestAnalyzerClass(
+        return TestSuiteAnalyzer(
             repo_path=tmp_path,
             logger=test_logger,
             config={},
