@@ -285,6 +285,31 @@ class PerfMetrics:
 
 
 @dataclass(slots=True)
+class ScopeMetrics:
+    """Scope analysis metrics.
+
+    Attributes:
+        total_files: Total files found
+        code_files: Code files count
+        test_files: Test files count
+        doc_files: Documentation files count
+        config_files: Configuration files count
+        mode: Analysis mode (git, full, etc.)
+    """
+
+    total_files: int = 0
+    code_files: int = 0
+    test_files: int = 0
+    doc_files: int = 0
+    config_files: int = 0
+    mode: str = "git"
+
+    def to_dict(self) -> dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return asdict(self)
+
+
+@dataclass(slots=True)
 class QualityMetrics:
     """Quality analysis metrics.
 

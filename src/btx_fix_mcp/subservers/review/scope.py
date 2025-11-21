@@ -11,6 +11,7 @@ from pathlib import Path
 from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.files import categorize_files, find_files
 from btx_fix_mcp.subservers.common.git import GitOperationError, GitOperations
+from btx_fix_mcp.subservers.common.issues import ScopeMetrics
 from btx_fix_mcp.subservers.common.logging import (
     LogContext,
     get_mcp_logger,
@@ -144,18 +145,20 @@ class ScopeSubServer(BaseSubServer):
 
             log_result(self.logger, True, "Scope analysis completed successfully")
 
+            metrics = ScopeMetrics(
+                total_files=len(files),
+                code_files=len(categorized.get("CODE", [])),
+                test_files=len(categorized.get("TEST", [])),
+                doc_files=len(categorized.get("DOCS", [])),
+                config_files=len(categorized.get("CONFIG", [])),
+                mode=self.mode,
+            )
+
             return SubServerResult(
                 status="SUCCESS",
                 summary=summary,
                 artifacts=artifacts,
-                metrics={
-                    "total_files": len(files),
-                    "code_files": len(categorized.get("CODE", [])),
-                    "test_files": len(categorized.get("TEST", [])),
-                    "doc_files": len(categorized.get("DOCS", [])),
-                    "config_files": len(categorized.get("CONFIG", [])),
-                    "mode": self.mode,
-                },
+                metrics=metrics.to_dict(),
             )
 
         except Exception as e:
