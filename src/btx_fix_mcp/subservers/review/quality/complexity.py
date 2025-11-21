@@ -60,6 +60,7 @@ class ComplexityAnalyzer(BaseAnalyzer):
                                     "type": func.get("type", ""),
                                     "complexity": func.get("complexity", 0),
                                     "rank": func.get("rank", ""),
+                                    # Note: radon returns "lineno", we standardize to "line"
                                     "line": func.get("lineno", 0),
                                 }
                             )
