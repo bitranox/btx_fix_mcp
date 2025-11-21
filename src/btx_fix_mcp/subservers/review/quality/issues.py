@@ -136,7 +136,7 @@ def _add_complexity_issues(
                 type="high_complexity",
                 severity="warning" if r["complexity"] <= 20 else "error",
                 file=r["file"],
-                line=r.get("lineno", 0),
+                line=r.get("line", 0),
                 name=r["name"],
                 value=r["complexity"],
                 threshold=threshold,
