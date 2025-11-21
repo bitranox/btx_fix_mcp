@@ -5,22 +5,21 @@
 **Mode**: full
 **Repository**: /media/srv-main-softdev/projects/MCP/btx_fix_mcp
 **Branch**: master
-**Total Files**: 1661
+**Total Files**: 2459
 
 ## File Breakdown by Category
 
-- **CODE**: 56 files
-- **TEST**: 48 files
+- **CODE**: 58 files
+- **TEST**: 60 files
 - **DOCS**: 60 files
 - **CONFIG**: 318 files
 - **BUILD**: 1 files
-- **OTHER**: 1178 files
+- **OTHER**: 1962 files
 
 ## Sample Files (first 10)
 
 - `.btx-review.yaml.example`
 - `.claude/settings.local.json`
-- `.coverage.unit.lxc-pydev.69601.XJkIlGyx`
 - `.devcontainer/devcontainer.json`
 - `.devcontainer/settings.json`
 - `.env`
@@ -28,7 +27,8 @@
 - `.git/hooks/applypatch-msg.sample`
 - `.git/hooks/commit-msg.sample`
 - `.git/hooks/fsmonitor-watchman.sample`
-- ... and 1651 more
+- `.git/hooks/post-update.sample`
+- ... and 2449 more
 
 ## Next Steps
 

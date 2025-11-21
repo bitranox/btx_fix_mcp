@@ -1,6 +1,276 @@
 {
   "files": [
     {
+      "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
+      "commits": 3,
+      "authors": 1,
+      "lines_added": 1186,
+      "lines_deleted": 400,
+      "total_changes": 1586,
+      "churn_score": 3
+    },
+    {
+      "file": "scripts/_utils.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 792,
+      "lines_deleted": 56,
+      "total_changes": 848,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/cli.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 451,
+      "lines_deleted": 2,
+      "total_changes": 453,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/servers/__init__.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 9,
+      "lines_deleted": 0,
+      "total_changes": 9,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/base.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 232,
+      "lines_deleted": 47,
+      "total_changes": 279,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/common/files.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 215,
+      "lines_deleted": 10,
+      "total_changes": 225,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/common/git.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 453,
+      "lines_deleted": 5,
+      "total_changes": 458,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/common/logging.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 636,
+      "lines_deleted": 10,
+      "total_changes": 646,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 365,
+      "lines_deleted": 19,
+      "total_changes": 384,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/__init__.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 21,
+      "lines_deleted": 0,
+      "total_changes": 21,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 220,
+      "lines_deleted": 38,
+      "total_changes": 258,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 258,
+      "lines_deleted": 41,
+      "total_changes": 299,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 282,
+      "lines_deleted": 36,
+      "total_changes": 318,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/static.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 87,
+      "lines_deleted": 2,
+      "total_changes": 89,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 160,
+      "lines_deleted": 12,
+      "total_changes": 172,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/scope.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 305,
+      "lines_deleted": 16,
+      "total_changes": 321,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/security.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 532,
+      "lines_deleted": 64,
+      "total_changes": 596,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/tools_venv.py",
+      "commits": 2,
+      "authors": 1,
+      "lines_added": 327,
+      "lines_deleted": 1,
+      "total_changes": 328,
+      "churn_score": 2
+    },
+    {
+      "file": "src/btx_fix_mcp/servers/review.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 517,
+      "lines_deleted": 0,
+      "total_changes": 517,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/servers/review_handlers.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 116,
+      "lines_deleted": 0,
+      "total_changes": 116,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/servers/review_tools.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 222,
+      "lines_deleted": 0,
+      "total_changes": 222,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/common/issues.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 290,
+      "lines_deleted": 0,
+      "total_changes": 290,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/common/mindsets.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 308,
+      "lines_deleted": 0,
+      "total_changes": 308,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/deps.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 549,
+      "lines_deleted": 0,
+      "total_changes": 549,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 203,
+      "lines_deleted": 0,
+      "total_changes": 203,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/docs.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 468,
+      "lines_deleted": 0,
+      "total_changes": 468,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/perf.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 472,
+      "lines_deleted": 0,
+      "total_changes": 472,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/issues.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 420,
+      "lines_deleted": 0,
+      "total_changes": 420,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/quality/summary.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 230,
+      "lines_deleted": 0,
+      "total_changes": 230,
+      "churn_score": 1
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/report.py",
+      "commits": 1,
+      "authors": 1,
+      "lines_added": 444,
+      "lines_deleted": 0,
+      "total_changes": 444,
+      "churn_score": 1
+    },
+    {
       "file": "scripts/__init__.py",
       "commits": 1,
       "authors": 1,
@@ -16,15 +286,6 @@
       "lines_added": 7,
       "lines_deleted": 0,
       "total_changes": 7,
-      "churn_score": 1
-    },
-    {
-      "file": "scripts/_utils.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 636,
-      "lines_deleted": 0,
-      "total_changes": 636,
       "churn_score": 1
     },
     {
@@ -217,39 +478,12 @@
       "churn_score": 1
     },
     {
-      "file": "src/btx_fix_mcp/cli.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 168,
-      "lines_deleted": 0,
-      "total_changes": 168,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/servers/__init__.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 0,
-      "lines_deleted": 0,
-      "total_changes": 0,
-      "churn_score": 1
-    },
-    {
       "file": "src/btx_fix_mcp/subservers/__init__.py",
       "commits": 1,
       "authors": 1,
       "lines_added": 0,
       "lines_deleted": 0,
       "total_changes": 0,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/base.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 187,
-      "lines_deleted": 0,
-      "total_changes": 187,
       "churn_score": 1
     },
     {
@@ -262,84 +496,12 @@
       "churn_score": 1
     },
     {
-      "file": "src/btx_fix_mcp/subservers/common/files.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 212,
-      "lines_deleted": 0,
-      "total_changes": 212,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/common/git.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 446,
-      "lines_deleted": 0,
-      "total_changes": 446,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/common/logging.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 625,
-      "lines_deleted": 0,
-      "total_changes": 625,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/common/protocol.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 353,
-      "lines_deleted": 0,
-      "total_changes": 353,
-      "churn_score": 1
-    },
-    {
       "file": "src/btx_fix_mcp/subservers/fix/__init__.py",
       "commits": 1,
       "authors": 1,
       "lines_added": 0,
       "lines_deleted": 0,
       "total_changes": 0,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/__init__.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 0,
-      "lines_deleted": 0,
-      "total_changes": 0,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/quality.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 449,
-      "lines_deleted": 0,
-      "total_changes": 449,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 855,
-      "lines_deleted": 0,
-      "total_changes": 855,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 189,
-      "lines_deleted": 0,
-      "total_changes": 189,
       "churn_score": 1
     },
     {
@@ -352,60 +514,6 @@
       "churn_score": 1
     },
     {
-      "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 203,
-      "lines_deleted": 0,
-      "total_changes": 203,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 239,
-      "lines_deleted": 0,
-      "total_changes": 239,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/quality/static.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 81,
-      "lines_deleted": 0,
-      "total_changes": 81,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 142,
-      "lines_deleted": 0,
-      "total_changes": 142,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/scope.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 281,
-      "lines_deleted": 0,
-      "total_changes": 281,
-      "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/security.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 410,
-      "lines_deleted": 0,
-      "total_changes": 410,
-      "churn_score": 1
-    },
-    {
       "file": "src/btx_fix_mcp/tools/__init__.py",
       "commits": 1,
       "authors": 1,
@@ -413,18 +521,9 @@
       "lines_deleted": 0,
       "total_changes": 0,
       "churn_score": 1
-    },
-    {
-      "file": "src/btx_fix_mcp/tools_venv.py",
-      "commits": 1,
-      "authors": 1,
-      "lines_added": 327,
-      "lines_deleted": 0,
-      "total_changes": 327,
-      "churn_score": 1
     }
   ],
   "high_churn_files": [],
-  "total_commits_analyzed": 1,
+  "total_commits_analyzed": 3,
   "analysis_period_days": 90
 }

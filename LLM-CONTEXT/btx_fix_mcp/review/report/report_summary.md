@@ -1,12 +1,12 @@
 # Code Review Report
 
-**Generated**: 2025-11-21T15:27:03.602919
+**Generated**: 2025-11-21T19:42:05.823643
 
 ---
 
 ## Overall Verdict
 
-### ❌ Code review failed - 17 critical issues found
+### ❌ Code review failed - 13 critical issues found
 
 **Status**: `REJECTED`
 
@@ -20,10 +20,10 @@
 - **Sub-servers run**: 6
 - **Sub-servers passed**: 3
 - **Sub-servers failed**: 0
-- **Files analyzed**: 55
-- **Total issues**: 420
-- **Critical issues**: 17
-- **Warnings**: 370
+- **Files analyzed**: 58
+- **Total issues**: 375
+- **Critical issues**: 13
+- **Warnings**: 318
 
 ---
 
@@ -34,31 +34,31 @@
 **Status**: `SUCCESS`
 
 **Key Metrics:**
-- total_files: 1581
-- code_files: 55
-- test_files: 48
+- total_files: 2459
+- code_files: 58
+- test_files: 60
 - doc_files: 60
-- config_files: 317
+- config_files: 318
 
 ### ⚠️ Quality
 
 **Status**: `PARTIAL`
 
 **Key Metrics:**
-- files_analyzed: 55
-- python_files: 55
+- files_analyzed: 58
+- python_files: 58
 - js_files: 0
-- total_functions: 418
-- high_complexity_count: 34
+- total_functions: 496
+- high_complexity_count: 30
 
-**Issues**: 301 (15 critical, 253 warnings)
+**Issues**: 238 (11 critical, 183 warnings)
 
 ### ✅ Security
 
 **Status**: `SUCCESS`
 
 **Key Metrics:**
-- files_scanned: 55
+- files_scanned: 58
 - issues_found: 0
 - high_severity: 0
 - medium_severity: 0
@@ -73,57 +73,52 @@
 - total_dependencies: 174
 - direct_dependencies: 9
 - vulnerabilities_count: 0
-- outdated_count: 8
+- outdated_count: 7
 
-**Issues**: 8 (0 critical, 8 warnings)
+**Issues**: 7 (0 critical, 7 warnings)
 
 ### ✅ Docs
 
 **Status**: `SUCCESS`
 
 **Key Metrics:**
-- files_analyzed: 55
-- docstring_coverage: 97.0
-- missing_docstrings: 55
-- has_readme: True
-- has_changelog: True
+- files_analyzed: 58
+- coverage_percent: 90.7
+- missing_docstrings: 82
+- project_docs_found: 3
+- total_issues: 82
 
-**Issues**: 55 (0 critical, 55 warnings)
+**Issues**: 82 (0 critical, 82 warnings)
 
 ### ⚠️ Perf
 
 **Status**: `PARTIAL`
 
 **Key Metrics:**
-- files_analyzed: 55
-- pattern_issues: 11
+- files_analyzed: 58
+- patterns_found: 8
 - hotspots_found: 5
-- total_issues: 56
-- critical_issues: 2
+- total_issues: 48
 
-**Issues**: 56 (2 critical, 54 warnings)
+**Issues**: 48 (2 critical, 46 warnings)
 
 ---
 
 ## Critical Issues (Must Fix)
 
-- **[quality]** `scripts/_utils.py:0` Function 'get_project_metadata' has complexity 29 (threshold: 10)
+- **[quality]** `src/btx_fix_mcp/subservers/review/deps.py:0` Function '_generate_summary' has complexity 21 (threshold: 10)
 - **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:0` Function 'execute' has complexity 34 (threshold: 10)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:0` Function '_generate_comprehensive_summary' has complexity 31 (threshold: 10)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:0` Function '_compile_all_issues' has complexity 27 (threshold: 10)
 - **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:0` Function '_run_analyzers_parallel' has complexity 21 (threshold: 10)
 - **[quality]** `src/btx_fix_mcp/subservers/review/quality/metrics.py:0` Function '_analyze_code_churn' has complexity 21 (threshold: 10)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:76` Function '__init__' is 110 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:222` Function '_run_analyzers_parallel' is 102 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:338` Function 'execute' is 143 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:583` Function '_compile_all_issues' is 160 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:889` Function '_generate_comprehensive_summary' is 132 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/metrics.py:120` Function '_analyze_code_churn' is 119 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/security.py:373` Function '_generate_summary' is 110 lines (max: 50)
-- **[quality]** `src/btx_fix_mcp/subservers/review/deps.py:34` Class 'DepsSubServer' is a god object (19 methods, 643 lines)
-- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:69` Class 'QualitySubServer' is a god object (13 methods, 952 lines)
-- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_execute_python_project takes 7.78s
-- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_summary_includes_mindset takes 7.45s
+- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:272` Function '_run_analyzers_parallel' is 112 lines (max: 50)
+- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:396` Function 'execute' is 139 lines (max: 50)
+- **[quality]** `src/btx_fix_mcp/subservers/review/quality/metrics.py:124` Function '_analyze_code_churn' is 122 lines (max: 50)
+- **[quality]** `src/btx_fix_mcp/subservers/review/report.py:296` Function '_generate_report' is 109 lines (max: 50)
+- **[quality]** `src/btx_fix_mcp/subservers/review/security.py:352` Function '_generate_summary' is 116 lines (max: 50)
+- **[quality]** `src/btx_fix_mcp/subservers/review/deps.py:46` Class 'DepsSubServer' is a god object (13 methods, 503 lines)
+- **[quality]** `src/btx_fix_mcp/subservers/review/quality/__init__.py:69` Class 'QualitySubServer' is a god object (41 methods, 717 lines)
+- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_execute_python_project takes 6.49s
+- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_summary_includes_mindset takes 5.97s
 
 ---
 

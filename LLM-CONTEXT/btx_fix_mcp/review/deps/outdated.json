@@ -18,12 +18,6 @@
     "latest_filetype": "wheel"
   },
   {
-    "name": "pip",
-    "version": "24.3.1",
-    "latest_version": "25.3",
-    "latest_filetype": "wheel"
-  },
-  {
     "name": "responses",
     "version": "0.21.0",
     "latest_version": "0.25.8",

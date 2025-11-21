@@ -13,11 +13,11 @@
 
 - High severity: 0
 - Medium severity: 0
-- Files scanned: 55
+- Files scanned: 58
 
 ## Overview
 
-**Files Scanned**: 55
+**Files Scanned**: 58
 **Issues Found**: 0
 
 ## Configuration
