@@ -12,29 +12,29 @@
 **❌ REJECTED**
 
 - Critical issues: 6 (14.0%)
-- Warnings: 66 (153.5%)
+- Warnings: 51 (118.6%)
 - Total items analyzed: 43
 
 ## Overview
 
 **Files Analyzed**: 43 (43 Python, 0 JS/TS)
-**Functions Analyzed**: 503
-**Total Issues Found**: 99
+**Functions Analyzed**: 531
+**Total Issues Found**: 84
 **Critical Issues**: 6
 
 ## Code Metrics
 
-- Total LOC: **11,297**
-- Source LOC (SLOC): **6,888**
-- Comments: **331**
-- Comment Ratio: **4.8%**
+- Total LOC: **11,429**
+- Source LOC (SLOC): **6,954**
+- Comments: **316**
+- Comment Ratio: **4.5%**
 
 ## Quality Issues Summary
 
-- Functions >50 lines: **17**
+- Functions >50 lines: **16**
 - High cyclomatic complexity (>10): **0**
-- High cognitive complexity (>15): **4**
-- Functions with nesting >3: **12**
+- High cognitive complexity (>15): **1**
+- Functions with nesting >3: **1**
 - Code duplication blocks: **30**
 - God objects: **5**
 - Highly coupled modules: **0**
@@ -63,16 +63,16 @@
 ## Critical Issues (Must Fix)
 
 - 🔴 `src/btx_fix_mcp/subservers/review/deps.py`: Class 'DepsSubServer' is a god object (27 methods, 623 lines)
-- 🔴 `src/btx_fix_mcp/subservers/review/docs.py`: Class 'DocsSubServer' is a god object (42 methods, 714 lines)
-- 🔴 `src/btx_fix_mcp/subservers/review/perf.py`: Class 'PerfSubServer' is a god object (19 methods, 526 lines)
+- 🔴 `src/btx_fix_mcp/subservers/review/docs.py`: Class 'DocsSubServer' is a god object (46 methods, 737 lines)
+- 🔴 `src/btx_fix_mcp/subservers/review/perf.py`: Class 'PerfSubServer' is a god object (29 methods, 555 lines)
 - 🔴 `src/btx_fix_mcp/subservers/review/quality/architecture.py`: Class 'ArchitectureAnalyzer' is a god object (22 methods, 303 lines)
 - 🔴 `src/btx_fix_mcp/subservers/review/security.py`: Class 'SecuritySubServer' is a god object (25 methods, 606 lines)
 - 🔴 : Test run timed out
 
 ## Refactoring Recommendations
 
-1. **Break Down Long Functions**: 17 functions exceed 50 lines
-2. **Reduce Cognitive Complexity**: 4 functions are too complex
+1. **Break Down Long Functions**: 16 functions exceed 50 lines
+2. **Reduce Cognitive Complexity**: 1 functions are too complex
 3. **Extract Duplicated Code**: 30 duplicate blocks found
 4. **Refactor God Objects**: 5 classes need decomposition
 5. **Add Type Annotations**: Coverage is 0%

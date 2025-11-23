@@ -82,16 +82,6 @@
   {
     "type": "too_long",
     "severity": "warning",
-    "message": "Function 'validate_outputs' is 61 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
-    "line": 26,
-    "value": 61,
-    "threshold": 50,
-    "name": "validate_outputs"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
     "message": "Function 'get_file_history' is 60 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/common/git.py",
     "line": 359,

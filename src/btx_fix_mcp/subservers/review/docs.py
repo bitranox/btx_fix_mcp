@@ -288,17 +288,25 @@ class DocsSubServer(BaseSubServer):
             return int(match.group(1))
         return None
 
+    def _process_total_line(self, line: str, coverage: dict[str, Any]) -> None:
+        """Process TOTAL line from interrogate output."""
+        percentage = self._parse_coverage_percentage(line)
+        if percentage is not None:
+            coverage["coverage_percent"] = percentage
+
+    def _process_missing_line(self, line: str, coverage: dict[str, Any]) -> None:
+        """Process missing count line from interrogate output."""
+        missing = self._parse_missing_count(line)
+        if missing is not None:
+            coverage["missing"] = missing
+
     def _parse_interrogate_output(self, output: str, coverage: dict[str, Any]) -> None:
         """Parse interrogate output to extract coverage metrics."""
         for line in output.split("\n"):
             if "TOTAL" in line and "%" in line:
-                percentage = self._parse_coverage_percentage(line)
-                if percentage is not None:
-                    coverage["coverage_percent"] = percentage
+                self._process_total_line(line, coverage)
             elif "missing" in line.lower():
-                missing = self._parse_missing_count(line)
-                if missing is not None:
-                    coverage["missing"] = missing
+                self._process_missing_line(line, coverage)
 
         coverage["raw_output"] = output
 

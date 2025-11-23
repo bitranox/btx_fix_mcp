@@ -66,7 +66,7 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/common/files.py",
-    "mi": 67.86156247868219,
+    "mi": 66.9090000798041,
     "rank": "A"
   },
   {
@@ -91,7 +91,7 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/common/protocol.py",
-    "mi": 54.68071320817803,
+    "mi": 54.87643230000949,
     "rank": "A"
   },
   {
@@ -111,17 +111,17 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
-    "mi": 41.369966946272044,
+    "mi": 38.14402365755044,
     "rank": "A"
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "mi": 18.367572667381697,
+    "mi": 16.51386265720877,
     "rank": "B"
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "mi": 29.581896992396455,
+    "mi": 25.83066191734524,
     "rank": "A"
   },
   {
@@ -211,7 +211,7 @@
   },
   {
     "file": "src/btx_fix_mcp/tools_venv.py",
-    "mi": 58.65511575101553,
+    "mi": 58.1661354157419,
     "rank": "A"
   }
 ]

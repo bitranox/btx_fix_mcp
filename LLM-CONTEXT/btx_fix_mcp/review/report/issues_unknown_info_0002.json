@@ -184,7 +184,7 @@
     "relative_file": "src/btx_fix_mcp/tools_venv.py"
   },
   {
-    "code": "317             return output\n318     except Exception:\n319         pass\n320     return None\n",
+    "code": "327             return _extract_version_from_output(output)\n328     except Exception:\n329         pass\n330     return None\n",
     "col_offset": 4,
     "end_col_offset": 12,
     "filename": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/src/btx_fix_mcp/tools_venv.py",
@@ -195,10 +195,10 @@
     },
     "issue_severity": "LOW",
     "issue_text": "Try, Except, Pass detected.",
-    "line_number": 318,
+    "line_number": 328,
     "line_range": [
-      318,
-      319
+      328,
+      329
     ],
     "more_info": "https://bandit.readthedocs.io/en/1.9.1/plugins/b110_try_except_pass.html",
     "test_id": "B110",
