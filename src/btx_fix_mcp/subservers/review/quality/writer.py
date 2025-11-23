@@ -74,6 +74,28 @@ class ResultsWriter:
             path = self._save_text("duplication_analysis.txt", results["duplication"]["raw_output"])
             artifacts["duplication"] = path
 
+    def _save_if_exists(
+        self, results: dict[str, Any], key: str, filename: str, artifact_key: str, artifacts: dict[str, Path]
+    ) -> None:
+        """Save result if key exists in results."""
+        if results.get(key):
+            path = self._save_json(filename, results[key])
+            artifacts[artifact_key] = path
+
+    def _save_nested_if_exists(
+        self,
+        results: dict[str, Any],
+        parent_key: str,
+        child_key: str,
+        filename: str,
+        artifact_key: str,
+        artifacts: dict[str, Path],
+    ) -> None:
+        """Save nested result if parent and child keys exist."""
+        if results.get(parent_key, {}).get(child_key):
+            path = self._save_json(filename, results[parent_key][child_key])
+            artifacts[artifact_key] = path
+
     def _save_dict_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
         """Save dictionary-based results from various analyzers.
 
@@ -82,14 +104,10 @@ class ResultsWriter:
             artifacts: Artifacts dictionary to update
         """
         # Ruff static analysis
-        if results.get("static", {}).get("ruff_json"):
-            path = self._save_json("ruff_report.json", results["static"]["ruff_json"])
-            artifacts["ruff"] = path
+        self._save_nested_if_exists(results, "static", "ruff_json", "ruff_report.json", "ruff", artifacts)
 
         # Test analysis
-        if results.get("tests"):
-            path = self._save_json("test_analysis.json", results["tests"])
-            artifacts["test_analysis"] = path
+        self._save_if_exists(results, "tests", "test_analysis.json", "test_analysis", artifacts)
 
         # Architecture analysis
         if results.get("architecture"):
@@ -102,39 +120,25 @@ class ResultsWriter:
             artifacts["architecture"] = path
 
         # Type coverage
-        if results.get("type_coverage"):
-            path = self._save_json("type_coverage.json", results["type_coverage"])
-            artifacts["type_coverage"] = path
+        self._save_if_exists(results, "type_coverage", "type_coverage.json", "type_coverage", artifacts)
 
         # Dead code detection
-        if results.get("dead_code"):
-            path = self._save_json("dead_code.json", results["dead_code"])
-            artifacts["dead_code"] = path
+        self._save_if_exists(results, "dead_code", "dead_code.json", "dead_code", artifacts)
 
         # Import cycles
-        if results.get("import_cycles"):
-            path = self._save_json("import_cycles.json", results["import_cycles"])
-            artifacts["import_cycles"] = path
+        self._save_if_exists(results, "import_cycles", "import_cycles.json", "import_cycles", artifacts)
 
         # Docstring coverage
-        if results.get("docstring_coverage"):
-            path = self._save_json("docstring_coverage.json", results["docstring_coverage"])
-            artifacts["docstring_coverage"] = path
+        self._save_if_exists(results, "docstring_coverage", "docstring_coverage.json", "docstring_coverage", artifacts)
 
         # Code churn
-        if results.get("code_churn"):
-            path = self._save_json("code_churn.json", results["code_churn"])
-            artifacts["code_churn"] = path
+        self._save_if_exists(results, "code_churn", "code_churn.json", "code_churn", artifacts)
 
         # JavaScript/TypeScript analysis
-        if results.get("js_analysis", {}).get("issues"):
-            path = self._save_json("eslint_report.json", results["js_analysis"])
-            artifacts["eslint"] = path
+        self._save_nested_if_exists(results, "js_analysis", "issues", "eslint_report.json", "eslint", artifacts)
 
         # Beartype runtime checking
-        if results.get("beartype"):
-            path = self._save_json("beartype_check.json", results["beartype"])
-            artifacts["beartype"] = path
+        self._save_if_exists(results, "beartype", "beartype_check.json", "beartype", artifacts)
 
     def _save_issues(self, all_issues: list[dict], artifacts: dict[str, Path]) -> None:
         """Save compiled issues list in chunked format.
