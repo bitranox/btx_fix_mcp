@@ -524,59 +524,58 @@ class DocsSubServer(BaseSubServer):
             self.logger.warning(f"Error checking README sections: {e}")
             return []
 
+    def _save_docstring_coverage(self, results: dict[str, Any], artifacts: dict) -> None:
+        """Save docstring coverage results."""
+        if not results.get("docstring_coverage"):
+            return
+        path = self.output_dir / "docstring_coverage.json"
+        coverage_data = {k: v for k, v in results["docstring_coverage"].items() if k != "raw_output"}
+        path.write_text(json.dumps(coverage_data, indent=2))
+        artifacts["docstring_coverage"] = path
+
+    def _save_missing_docstrings(self, results: dict[str, Any], artifacts: dict) -> None:
+        """Save missing docstrings results."""
+        missing_docstrings = results.get("missing_docstrings", [])
+        if not missing_docstrings:
+            return
+        path = self.output_dir / "missing_docstrings.json"
+        missing_dicts = [i.to_dict() if hasattr(i, "to_dict") else i for i in missing_docstrings]
+        path.write_text(json.dumps(missing_dicts, indent=2))
+        artifacts["missing_docstrings"] = path
+
+    def _save_project_docs(self, results: dict[str, Any], artifacts: dict) -> None:
+        """Save project documentation results."""
+        project_docs = results.get("project_docs", {})
+        if not project_docs:
+            return
+        path = self.output_dir / "project_docs.json"
+        doc_data = dict(project_docs)
+        doc_data["issues"] = [i.to_dict() if hasattr(i, "to_dict") else i for i in project_docs.get("issues", [])]
+        path.write_text(json.dumps(doc_data, indent=2))
+        artifacts["project_docs"] = path
+
+    def _save_chunked_issues(self, all_issues: list[BaseIssue], artifacts: dict) -> None:
+        """Save chunked issues to report directory."""
+        if not all_issues:
+            return
+
+        report_dir = self.output_dir.parent / "report"
+        issues_dicts = [i.to_dict() for i in all_issues]
+        issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
+
+        cleanup_chunked_issues(output_dir=report_dir, issue_types=issue_types, prefix="issues")
+        written_files = write_chunked_issues(issues=issues_dicts, output_dir=report_dir, prefix="issues")
+
+        if written_files:
+            artifacts["issues"] = written_files[0]
+
     def _save_results(self, results: dict[str, Any], all_issues: list[BaseIssue]) -> dict[str, Path]:
         """Save all results to files."""
         artifacts = {}
-        report_dir = self.output_dir.parent / "report"
-
-        if results.get("docstring_coverage"):
-            path = self.output_dir / "docstring_coverage.json"
-            # Remove raw_output for JSON serialization
-            coverage_data = {k: v for k, v in results["docstring_coverage"].items() if k != "raw_output"}
-            path.write_text(json.dumps(coverage_data, indent=2))
-            artifacts["docstring_coverage"] = path
-
-        missing_docstrings = results.get("missing_docstrings", [])
-        if missing_docstrings:
-            path = self.output_dir / "missing_docstrings.json"
-            # Convert dataclasses to dicts
-            missing_dicts = [i.to_dict() if hasattr(i, "to_dict") else i for i in missing_docstrings]
-            path.write_text(json.dumps(missing_dicts, indent=2))
-            artifacts["missing_docstrings"] = path
-
-        project_docs = results.get("project_docs", {})
-        if project_docs:
-            path = self.output_dir / "project_docs.json"
-            # Convert issues in project_docs to dicts
-            doc_data = dict(project_docs)
-            doc_data["issues"] = [i.to_dict() if hasattr(i, "to_dict") else i for i in project_docs.get("issues", [])]
-            path.write_text(json.dumps(doc_data, indent=2))
-            artifacts["project_docs"] = path
-
-        if all_issues:
-            # Convert to dicts
-            issues_dicts = [i.to_dict() for i in all_issues]
-
-            # Get unique issue types
-            issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
-
-            # Cleanup old chunked files
-            cleanup_chunked_issues(
-                output_dir=report_dir,
-                issue_types=issue_types,
-                prefix="issues",
-            )
-
-            # Write chunked issues
-            written_files = write_chunked_issues(
-                issues=issues_dicts,
-                output_dir=report_dir,
-                prefix="issues",
-            )
-
-            if written_files:
-                artifacts["issues"] = written_files[0]
-
+        self._save_docstring_coverage(results, artifacts)
+        self._save_missing_docstrings(results, artifacts)
+        self._save_project_docs(results, artifacts)
+        self._save_chunked_issues(all_issues, artifacts)
         return artifacts
 
     def _compile_metrics(self, files: list[str], results: dict[str, Any], all_issues: list[BaseIssue]) -> dict[str, Any]:
