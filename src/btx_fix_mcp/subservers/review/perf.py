@@ -266,6 +266,57 @@ class PerfSubServer(BaseSubServer):
 
         return issues
 
+    def _run_pytest_with_profiling(self) -> subprocess.CompletedProcess | None:
+        """Run pytest with profiling flags."""
+        try:
+            timeout = get_timeout("profile_tests", 300, start_dir=str(self.repo_path))
+            return subprocess.run(
+                ["python", "-m", "pytest", "tests/", "-v", "--tb=no", "-q", "--durations=10"],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+                cwd=str(self.repo_path),
+            )
+        except FileNotFoundError:
+            self.logger.info("pytest not available")
+            return None
+        except subprocess.TimeoutExpired:
+            self.logger.warning("Test profiling timed out")
+            return None
+        except Exception as e:
+            self.logger.warning(f"Profiling error: {e}")
+            return None
+
+    def _parse_test_duration(self, line: str) -> tuple[float, str] | None:
+        """Parse duration and test name from pytest --durations output."""
+        parts = line.strip().split()
+        if len(parts) < 2:
+            return None
+        try:
+            duration = float(parts[0].rstrip("s"))
+            test_name = parts[-1] if len(parts) > 1 else "unknown"
+            return (duration, test_name)
+        except ValueError:
+            return None
+
+    def _extract_slow_tests(self, output: str) -> list[dict[str, Any]]:
+        """Extract slow tests from pytest output."""
+        hotspots = []
+        for line in output.split("\n"):
+            if "s call" in line or "s setup" in line:
+                parsed = self._parse_test_duration(line)
+                if parsed:
+                    duration, test_name = parsed
+                    if duration > 1.0:  # Tests taking > 1 second
+                        hotspots.append(
+                            {
+                                "name": test_name,
+                                "duration": duration,
+                                "type": "slow_test",
+                            }
+                        )
+        return hotspots
+
     def _profile_tests(self) -> dict[str, Any]:
         """Run tests with profiling enabled."""
         results = {"profile": {}, "hotspots": [], "timing": {}}
@@ -275,45 +326,12 @@ class PerfSubServer(BaseSubServer):
             self.logger.info("No tests directory found")
             return results
 
-        try:
-            # Run pytest with profiling
-            timeout = get_timeout("profile_tests", 300, start_dir=str(self.repo_path))
-            result = subprocess.run(
-                ["python", "-m", "pytest", "tests/", "-v", "--tb=no", "-q", "--durations=10"],
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                cwd=str(self.repo_path),
-            )
+        result = self._run_pytest_with_profiling()
+        if result is None:
+            return results
 
-            results["timing"]["raw_output"] = result.stdout
-
-            # Parse slow tests from --durations output
-            for line in result.stdout.split("\n"):
-                if "s call" in line or "s setup" in line:
-                    parts = line.strip().split()
-                    if len(parts) >= 2:
-                        try:
-                            duration = float(parts[0].rstrip("s"))
-                            test_name = parts[-1] if len(parts) > 1 else "unknown"
-                            if duration > 1.0:  # Tests taking > 1 second
-                                results["hotspots"].append(
-                                    {
-                                        "name": test_name,
-                                        "duration": duration,
-                                        "type": "slow_test",
-                                    }
-                                )
-                        except ValueError:
-                            pass
-
-        except FileNotFoundError:
-            self.logger.info("pytest not available")
-        except subprocess.TimeoutExpired:
-            self.logger.warning("Test profiling timed out")
-        except Exception as e:
-            self.logger.warning(f"Profiling error: {e}")
-
+        results["timing"]["raw_output"] = result.stdout
+        results["hotspots"] = self._extract_slow_tests(result.stdout)
         return results
 
     def _analyze_complexity(self, files: list[str]) -> list[PerformanceIssue]:
