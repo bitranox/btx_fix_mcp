@@ -24,6 +24,8 @@
 
 - Severity Threshold: low
 - Confidence Threshold: low
+- Critical Status Threshold: 1 high severity issues
+- Warning Status Threshold: 5 medium severity issues
 
 ## Issues by Severity
 

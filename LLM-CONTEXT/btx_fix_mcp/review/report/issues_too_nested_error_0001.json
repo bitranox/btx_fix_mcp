@@ -1,0 +1,12 @@
+[
+  {
+    "type": "too_nested",
+    "severity": "error",
+    "message": "Function '_find_missing_docstrings' has nesting depth 8 (max: 3)",
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "line": 275,
+    "value": 8,
+    "threshold": 3,
+    "name": "_find_missing_docstrings"
+  }
+]

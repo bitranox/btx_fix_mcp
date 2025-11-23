@@ -61,19 +61,19 @@
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
-    "loc": 518,
+    "loc": 530,
     "lloc": 192,
-    "sloc": 309,
+    "sloc": 317,
     "comments": 10,
-    "multi": 94,
+    "multi": 98,
     "blank": 101,
     "single_comments": 14
   },
   {
     "file": "src/btx_fix_mcp/servers/review_handlers.py",
-    "loc": 116,
+    "loc": 124,
     "lloc": 47,
-    "sloc": 60,
+    "sloc": 68,
     "comments": 2,
     "multi": 14,
     "blank": 32,
@@ -81,9 +81,9 @@
   },
   {
     "file": "src/btx_fix_mcp/servers/review_tools.py",
-    "loc": 222,
+    "loc": 239,
     "lloc": 43,
-    "sloc": 176,
+    "sloc": 193,
     "comments": 0,
     "multi": 8,
     "blank": 30,
@@ -101,13 +101,13 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/base.py",
-    "loc": 185,
+    "loc": 188,
     "lloc": 89,
     "sloc": 79,
     "comments": 5,
-    "multi": 65,
-    "blank": 33,
-    "single_comments": 8
+    "multi": 68,
+    "blank": 34,
+    "single_comments": 7
   },
   {
     "file": "src/btx_fix_mcp/subservers/common/__init__.py",
@@ -231,23 +231,23 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "loc": 589,
-    "lloc": 264,
-    "sloc": 428,
-    "comments": 35,
-    "multi": 35,
-    "blank": 82,
-    "single_comments": 44
+    "loc": 673,
+    "lloc": 289,
+    "sloc": 487,
+    "comments": 41,
+    "multi": 45,
+    "blank": 91,
+    "single_comments": 50
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "loc": 514,
-    "lloc": 255,
-    "sloc": 381,
-    "comments": 33,
-    "multi": 14,
-    "blank": 79,
-    "single_comments": 40
+    "loc": 538,
+    "lloc": 266,
+    "sloc": 391,
+    "comments": 43,
+    "multi": 20,
+    "blank": 85,
+    "single_comments": 42
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
@@ -401,13 +401,13 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "loc": 589,
-    "lloc": 283,
-    "sloc": 392,
-    "comments": 35,
-    "multi": 48,
-    "blank": 99,
-    "single_comments": 50
+    "loc": 610,
+    "lloc": 291,
+    "sloc": 404,
+    "comments": 38,
+    "multi": 54,
+    "blank": 101,
+    "single_comments": 51
   },
   {
     "file": "src/btx_fix_mcp/tools/__init__.py",

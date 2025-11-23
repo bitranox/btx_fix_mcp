@@ -10,6 +10,15 @@
       "churn_score": 7
     },
     {
+      "file": "src/btx_fix_mcp/subservers/review/security.py",
+      "commits": 6,
+      "authors": 1,
+      "lines_added": 760,
+      "lines_deleted": 150,
+      "total_changes": 910,
+      "churn_score": 6
+    },
+    {
       "file": "src/btx_fix_mcp/subservers/common/issues.py",
       "commits": 5,
       "authors": 1,
@@ -73,13 +82,40 @@
       "churn_score": 5
     },
     {
-      "file": "src/btx_fix_mcp/subservers/review/security.py",
-      "commits": 5,
+      "file": "src/btx_fix_mcp/servers/review.py",
+      "commits": 4,
       "authors": 1,
-      "lines_added": 736,
-      "lines_deleted": 147,
-      "total_changes": 883,
-      "churn_score": 5
+      "lines_added": 530,
+      "lines_deleted": 0,
+      "total_changes": 530,
+      "churn_score": 4
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/perf.py",
+      "commits": 4,
+      "authors": 1,
+      "lines_added": 557,
+      "lines_deleted": 19,
+      "total_changes": 576,
+      "churn_score": 4
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/review/docs.py",
+      "commits": 4,
+      "authors": 1,
+      "lines_added": 686,
+      "lines_deleted": 13,
+      "total_changes": 699,
+      "churn_score": 4
+    },
+    {
+      "file": "src/btx_fix_mcp/subservers/base.py",
+      "commits": 4,
+      "authors": 1,
+      "lines_added": 237,
+      "lines_deleted": 49,
+      "total_changes": 286,
+      "churn_score": 4
     },
     {
       "file": "src/btx_fix_mcp/subservers/common/files.py",
@@ -154,6 +190,24 @@
       "churn_score": 4
     },
     {
+      "file": "src/btx_fix_mcp/servers/review_handlers.py",
+      "commits": 3,
+      "authors": 1,
+      "lines_added": 126,
+      "lines_deleted": 2,
+      "total_changes": 128,
+      "churn_score": 3
+    },
+    {
+      "file": "src/btx_fix_mcp/servers/review_tools.py",
+      "commits": 3,
+      "authors": 1,
+      "lines_added": 239,
+      "lines_deleted": 0,
+      "total_changes": 239,
+      "churn_score": 3
+    },
+    {
       "file": "src/btx_fix_mcp/cli.py",
       "commits": 3,
       "authors": 1,
@@ -169,24 +223,6 @@
       "lines_added": 9,
       "lines_deleted": 0,
       "total_changes": 9,
-      "churn_score": 3
-    },
-    {
-      "file": "src/btx_fix_mcp/servers/review.py",
-      "commits": 3,
-      "authors": 1,
-      "lines_added": 518,
-      "lines_deleted": 0,
-      "total_changes": 518,
-      "churn_score": 3
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/base.py",
-      "commits": 3,
-      "authors": 1,
-      "lines_added": 232,
-      "lines_deleted": 47,
-      "total_changes": 279,
       "churn_score": 3
     },
     {
@@ -214,24 +250,6 @@
       "lines_added": 214,
       "lines_deleted": 5,
       "total_changes": 219,
-      "churn_score": 3
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/docs.py",
-      "commits": 3,
-      "authors": 1,
-      "lines_added": 602,
-      "lines_deleted": 13,
-      "total_changes": 615,
-      "churn_score": 3
-    },
-    {
-      "file": "src/btx_fix_mcp/subservers/review/perf.py",
-      "commits": 3,
-      "authors": 1,
-      "lines_added": 526,
-      "lines_deleted": 12,
-      "total_changes": 538,
       "churn_score": 3
     },
     {
@@ -316,24 +334,6 @@
       "churn_score": 2
     },
     {
-      "file": "src/btx_fix_mcp/servers/review_handlers.py",
-      "commits": 2,
-      "authors": 1,
-      "lines_added": 116,
-      "lines_deleted": 0,
-      "total_changes": 116,
-      "churn_score": 2
-    },
-    {
-      "file": "src/btx_fix_mcp/servers/review_tools.py",
-      "commits": 2,
-      "authors": 1,
-      "lines_added": 222,
-      "lines_deleted": 0,
-      "total_changes": 222,
-      "churn_score": 2
-    },
-    {
       "file": "src/btx_fix_mcp/subservers/__init__.py",
       "commits": 2,
       "authors": 1,
@@ -389,6 +389,6 @@
     }
   ],
   "high_churn_files": [],
-  "total_commits_analyzed": 14,
+  "total_commits_analyzed": 19,
   "analysis_period_days": 90
 }

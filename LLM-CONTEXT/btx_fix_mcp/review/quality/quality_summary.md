@@ -11,28 +11,28 @@
 
 **❌ REJECTED**
 
-- Critical issues: 8 (18.6%)
-- Warnings: 102 (237.2%)
+- Critical issues: 9 (20.9%)
+- Warnings: 104 (241.9%)
 - Total items analyzed: 43
 
 ## Overview
 
 **Files Analyzed**: 43 (43 Python, 0 JS/TS)
-**Functions Analyzed**: 420
-**Total Issues Found**: 136
-**Critical Issues**: 8
+**Functions Analyzed**: 421
+**Total Issues Found**: 139
+**Critical Issues**: 9
 
 ## Code Metrics
 
-- Total LOC: **10,855**
-- Source LOC (SLOC): **6,558**
-- Comments: **390**
-- Comment Ratio: **5.9%**
+- Total LOC: **11,024**
+- Source LOC (SLOC): **6,672**
+- Comments: **409**
+- Comment Ratio: **6.1%**
 
 ## Quality Issues Summary
 
-- Functions >50 lines: **29**
-- High cyclomatic complexity (>10): **19**
+- Functions >50 lines: **31**
+- High cyclomatic complexity (>10): **20**
 - High cognitive complexity (>15): **9**
 - Functions with nesting >3: **14**
 - Code duplication blocks: **32**
@@ -65,16 +65,17 @@
 - 🔴 `src/btx_fix_mcp/subservers/review/docs.py`: Function '_generate_summary' has complexity 21 (threshold: 10)
 - 🔴 `src/btx_fix_mcp/subservers/review/perf.py`: Function '_generate_summary' has complexity 22 (threshold: 10)
 - 🔴 `src/btx_fix_mcp/subservers/review/security.py`: Function '_run_bandit' has complexity 21 (threshold: 10)
+- 🔴 `src/btx_fix_mcp/subservers/review/docs.py`: Function '_find_missing_docstrings' has nesting depth 8 (max: 3)
 - 🔴 `src/btx_fix_mcp/subservers/review/deps.py`: Class 'DepsSubServer' is a god object (27 methods, 623 lines)
-- 🔴 `src/btx_fix_mcp/subservers/review/docs.py`: Class 'DocsSubServer' is a god object (11 methods, 545 lines)
+- 🔴 `src/btx_fix_mcp/subservers/review/docs.py`: Class 'DocsSubServer' is a god object (12 methods, 629 lines)
 - 🔴 `src/btx_fix_mcp/subservers/review/quality/architecture.py`: Class 'ArchitectureAnalyzer' is a god object (22 methods, 303 lines)
-- 🔴 `src/btx_fix_mcp/subservers/review/security.py`: Class 'SecuritySubServer' is a god object (16 methods, 550 lines)
+- 🔴 `src/btx_fix_mcp/subservers/review/security.py`: Class 'SecuritySubServer' is a god object (16 methods, 571 lines)
 - 🔴 : Test run timed out
 
 ## Refactoring Recommendations
 
-1. **Break Down Long Functions**: 29 functions exceed 50 lines
-2. **Reduce Cyclomatic Complexity**: 19 functions exceed threshold
+1. **Break Down Long Functions**: 31 functions exceed 50 lines
+2. **Reduce Cyclomatic Complexity**: 20 functions exceed threshold
 3. **Reduce Cognitive Complexity**: 9 functions are too complex
 4. **Extract Duplicated Code**: 32 duplicate blocks found
 5. **Refactor God Objects**: 4 classes need decomposition

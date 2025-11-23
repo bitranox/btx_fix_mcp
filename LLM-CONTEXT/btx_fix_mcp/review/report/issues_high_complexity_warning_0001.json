@@ -2,9 +2,29 @@
   {
     "type": "high_complexity",
     "severity": "warning",
+    "message": "Function '__init__' has complexity 16 (threshold: 10)",
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "line": 78,
+    "value": 16,
+    "threshold": 10,
+    "name": "__init__"
+  },
+  {
+    "type": "high_complexity",
+    "severity": "warning",
+    "message": "Function '_find_missing_docstrings' has complexity 15 (threshold: 10)",
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "line": 275,
+    "value": 15,
+    "threshold": 10,
+    "name": "_find_missing_docstrings"
+  },
+  {
+    "type": "high_complexity",
+    "severity": "warning",
     "message": "Function '_check_project_docs' has complexity 15 (threshold: 10)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 328,
+    "line": 412,
     "value": 15,
     "threshold": 10,
     "name": "_check_project_docs"
@@ -24,7 +44,7 @@
     "severity": "warning",
     "message": "Function '_save_results' has complexity 14 (threshold: 10)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 443,
+    "line": 527,
     "value": 14,
     "threshold": 10,
     "name": "_save_results"
@@ -38,16 +58,6 @@
     "value": 14,
     "threshold": 10,
     "name": "build_analyzer_tasks"
-  },
-  {
-    "type": "high_complexity",
-    "severity": "warning",
-    "message": "Function '__init__' has complexity 14 (threshold: 10)",
-    "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "line": 74,
-    "value": 14,
-    "threshold": 10,
-    "name": "__init__"
   },
   {
     "type": "high_complexity",
@@ -72,9 +82,19 @@
   {
     "type": "high_complexity",
     "severity": "warning",
+    "message": "Function '_validate_docstring_style' has complexity 12 (threshold: 10)",
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "line": 338,
+    "value": 12,
+    "threshold": 10,
+    "name": "_validate_docstring_style"
+  },
+  {
+    "type": "high_complexity",
+    "severity": "warning",
     "message": "Function '_profile_tests' has complexity 12 (threshold: 10)",
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "line": 260,
+    "line": 268,
     "value": 12,
     "threshold": 10,
     "name": "_profile_tests"
@@ -118,16 +138,6 @@
     "value": 11,
     "threshold": 10,
     "name": "execute"
-  },
-  {
-    "type": "high_complexity",
-    "severity": "warning",
-    "message": "Function '_find_missing_docstrings' has complexity 11 (threshold: 10)",
-    "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 275,
-    "value": 11,
-    "threshold": 10,
-    "name": "_find_missing_docstrings"
   },
   {
     "type": "high_complexity",

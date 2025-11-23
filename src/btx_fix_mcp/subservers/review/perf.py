@@ -69,6 +69,7 @@ class PerfSubServer(BaseSubServer):
         run_profiling: bool | None = None,
         profile_tests: bool | None = None,
         detect_patterns: bool | None = None,
+        nested_loop_threshold: int | None = None,
         mcp_mode: bool = False,
     ):
         """Initialize perf sub-server."""
@@ -106,7 +107,7 @@ class PerfSubServer(BaseSubServer):
         # Thresholds
         self.hotspot_threshold = config.get("hotspot_threshold", 5.0)  # % of total time
         self.min_improvement = config.get("min_improvement", 5.0)  # % improvement to justify
-        self.nested_loop_threshold = config.get("nested_loop_threshold", 2)  # Nesting depth
+        self.nested_loop_threshold = nested_loop_threshold if nested_loop_threshold is not None else config.get("nested_loop_threshold", 2)  # Nesting depth
         self.runtime_threshold_ms = config.get("runtime_threshold_ms", 100)  # Runtime threshold (future use)
         self.memory_threshold_mb = config.get("memory_threshold_mb", 50)  # Memory threshold (future use)
 

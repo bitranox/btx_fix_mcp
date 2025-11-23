@@ -72,77 +72,77 @@
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "run_deps",
-    "line": 197,
+    "line": 203,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "run_docs",
-    "line": 243,
+    "line": 249,
     "complexity": 2,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "run_perf",
-    "line": 287,
+    "line": 296,
     "complexity": 2,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "run_all",
-    "line": 363,
+    "line": 375,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "_run_scope_step",
-    "line": 417,
+    "line": 429,
     "complexity": 2,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "_run_parallel_analyses",
-    "line": 432,
+    "line": 444,
     "complexity": 6,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "_run_report_step",
-    "line": 473,
+    "line": 485,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "_determine_final_status",
-    "line": 481,
+    "line": 493,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "make_task",
-    "line": 441,
+    "line": 453,
     "complexity": 2,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review.py",
     "name": "task",
-    "line": 444,
+    "line": 456,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/servers/review_handlers.py",
     "name": "handle_tool_call",
-    "line": 88,
+    "line": 96,
     "complexity": 2,
     "exceeds_threshold": false
   },
@@ -156,35 +156,35 @@
   {
     "file": "src/btx_fix_mcp/subservers/base.py",
     "name": "__init__",
-    "line": 69,
+    "line": 72,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/base.py",
     "name": "save_status",
-    "line": 103,
+    "line": 106,
     "complexity": 2,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/base.py",
     "name": "save_summary",
-    "line": 116,
+    "line": 119,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/base.py",
     "name": "save_json",
-    "line": 126,
+    "line": 129,
     "complexity": 1,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/base.py",
     "name": "run",
-    "line": 137,
+    "line": 140,
     "complexity": 2,
     "exceeds_threshold": false
   },
@@ -759,34 +759,41 @@
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
     "name": "_find_missing_docstrings",
     "line": 275,
-    "complexity": 28,
+    "complexity": 52,
     "exceeds_threshold": true
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_validate_docstring_style",
+    "line": 338,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
     "name": "_check_project_docs",
-    "line": 328,
+    "line": 412,
     "complexity": 18,
     "exceeds_threshold": true
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
     "name": "_check_readme_sections",
-    "line": 418,
+    "line": 502,
     "complexity": 5,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
     "name": "_save_results",
-    "line": 443,
+    "line": 527,
     "complexity": 6,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
     "name": "_generate_summary",
-    "line": 508,
+    "line": 592,
     "complexity": 9,
     "exceeds_threshold": false
   },
@@ -800,63 +807,63 @@
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "validate_inputs",
-    "line": 110,
+    "line": 118,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "execute",
-    "line": 123,
+    "line": 131,
     "complexity": 5,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_get_python_files",
-    "line": 206,
+    "line": 214,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_detect_patterns",
-    "line": 217,
+    "line": 225,
     "complexity": 14,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_profile_tests",
-    "line": 260,
+    "line": 268,
     "complexity": 19,
     "exceeds_threshold": true
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_analyze_complexity",
-    "line": 310,
-    "complexity": 19,
+    "line": 318,
+    "complexity": 24,
     "exceeds_threshold": true
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_hotspots_to_issues",
-    "line": 346,
+    "line": 370,
     "complexity": 6,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_save_results",
-    "line": 369,
+    "line": 393,
     "complexity": 6,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
     "name": "_generate_summary",
-    "line": 426,
+    "line": 450,
     "complexity": 15,
     "exceeds_threshold": false
   },
@@ -1654,91 +1661,91 @@
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "__init__",
-    "line": 74,
+    "line": 78,
     "complexity": 9,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_load_config",
-    "line": 144,
+    "line": 156,
     "complexity": 7,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "validate_inputs",
-    "line": 167,
+    "line": 179,
     "complexity": 5,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "execute",
-    "line": 186,
-    "complexity": 2,
+    "line": 198,
+    "complexity": 5,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_get_python_files",
-    "line": 265,
+    "line": 284,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_run_bandit",
-    "line": 280,
+    "line": 299,
     "complexity": 28,
     "exceeds_threshold": true
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_filter_issues",
-    "line": 356,
+    "line": 375,
     "complexity": 4,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_categorize_issues",
-    "line": 371,
+    "line": 390,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_save_results",
-    "line": 388,
+    "line": 407,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_format_high_severity_issues",
-    "line": 509,
+    "line": 530,
     "complexity": 4,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_format_medium_severity_issues",
-    "line": 537,
+    "line": 558,
     "complexity": 4,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_format_recommendations",
-    "line": 564,
+    "line": 585,
     "complexity": 3,
     "exceeds_threshold": false
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
     "name": "_format_approval_status",
-    "line": 580,
+    "line": 601,
     "complexity": 3,
     "exceeds_threshold": false
   },

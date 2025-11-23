@@ -793,7 +793,7 @@
     "relative_file": "src/btx_fix_mcp/subservers/review/perf.py"
   },
   {
-    "code": "271             timeout = get_timeout(\"profile_tests\", 300, start_dir=str(self.repo_path))\n272             result = subprocess.run(\n273                 [\"python\", \"-m\", \"pytest\", \"tests/\", \"-v\", \"--tb=no\", \"-q\", \"--durations=10\"],\n274                 capture_output=True,\n275                 text=True,\n276                 timeout=timeout,\n277                 cwd=str(self.repo_path),\n278             )\n279 \n",
+    "code": "279             timeout = get_timeout(\"profile_tests\", 300, start_dir=str(self.repo_path))\n280             result = subprocess.run(\n281                 [\"python\", \"-m\", \"pytest\", \"tests/\", \"-v\", \"--tb=no\", \"-q\", \"--durations=10\"],\n282                 capture_output=True,\n283                 text=True,\n284                 timeout=timeout,\n285                 cwd=str(self.repo_path),\n286             )\n287 \n",
     "col_offset": 21,
     "end_col_offset": 13,
     "filename": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/src/btx_fix_mcp/subservers/review/perf.py",
@@ -804,15 +804,15 @@
     },
     "issue_severity": "LOW",
     "issue_text": "Starting a process with a partial executable path",
-    "line_number": 272,
+    "line_number": 280,
     "line_range": [
-      272,
-      273,
-      274,
-      275,
-      276,
-      277,
-      278
+      280,
+      281,
+      282,
+      283,
+      284,
+      285,
+      286
     ],
     "more_info": "https://bandit.readthedocs.io/en/1.9.1/plugins/b607_start_process_with_partial_path.html",
     "test_id": "B607",
@@ -820,7 +820,7 @@
     "relative_file": "src/btx_fix_mcp/subservers/review/perf.py"
   },
   {
-    "code": "271             timeout = get_timeout(\"profile_tests\", 300, start_dir=str(self.repo_path))\n272             result = subprocess.run(\n273                 [\"python\", \"-m\", \"pytest\", \"tests/\", \"-v\", \"--tb=no\", \"-q\", \"--durations=10\"],\n274                 capture_output=True,\n275                 text=True,\n276                 timeout=timeout,\n277                 cwd=str(self.repo_path),\n278             )\n279 \n",
+    "code": "279             timeout = get_timeout(\"profile_tests\", 300, start_dir=str(self.repo_path))\n280             result = subprocess.run(\n281                 [\"python\", \"-m\", \"pytest\", \"tests/\", \"-v\", \"--tb=no\", \"-q\", \"--durations=10\"],\n282                 capture_output=True,\n283                 text=True,\n284                 timeout=timeout,\n285                 cwd=str(self.repo_path),\n286             )\n287 \n",
     "col_offset": 21,
     "end_col_offset": 13,
     "filename": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/src/btx_fix_mcp/subservers/review/perf.py",
@@ -831,15 +831,15 @@
     },
     "issue_severity": "LOW",
     "issue_text": "subprocess call - check for execution of untrusted input.",
-    "line_number": 272,
+    "line_number": 280,
     "line_range": [
-      272,
-      273,
-      274,
-      275,
-      276,
-      277,
-      278
+      280,
+      281,
+      282,
+      283,
+      284,
+      285,
+      286
     ],
     "more_info": "https://bandit.readthedocs.io/en/1.9.1/plugins/b603_subprocess_without_shell_equals_true.html",
     "test_id": "B603",
@@ -1316,7 +1316,7 @@
     "relative_file": "src/btx_fix_mcp/subservers/review/security.py"
   },
   {
-    "code": "324             timeout = get_timeout(\"tool_analysis\", 60, start_dir=str(self.repo_path))\n325             result = subprocess.run(\n326                 cmd,\n327                 capture_output=True,\n328                 text=True,\n329                 timeout=timeout,\n330             )\n331 \n",
+    "code": "343             timeout = get_timeout(\"tool_analysis\", 60, start_dir=str(self.repo_path))\n344             result = subprocess.run(\n345                 cmd,\n346                 capture_output=True,\n347                 text=True,\n348                 timeout=timeout,\n349             )\n350 \n",
     "col_offset": 21,
     "end_col_offset": 13,
     "filename": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/src/btx_fix_mcp/subservers/review/security.py",
@@ -1327,14 +1327,14 @@
     },
     "issue_severity": "LOW",
     "issue_text": "subprocess call - check for execution of untrusted input.",
-    "line_number": 325,
+    "line_number": 344,
     "line_range": [
-      325,
-      326,
-      327,
-      328,
-      329,
-      330
+      344,
+      345,
+      346,
+      347,
+      348,
+      349
     ],
     "more_info": "https://bandit.readthedocs.io/en/1.9.1/plugins/b603_subprocess_without_shell_equals_true.html",
     "test_id": "B603",
