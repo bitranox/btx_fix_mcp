@@ -54,6 +54,54 @@ class DocsSubServer(BaseSubServer):
     REQUIRED_PROJECT_DOCS = ["README.md", "README.rst", "README.txt"]
     OPTIONAL_PROJECT_DOCS = ["CHANGELOG.md", "CONTRIBUTING.md", "LICENSE"]
 
+    def _init_directories(self, input_dir: Path | None, output_dir: Path | None, name: str, repo_path: Path) -> tuple[Path, Path]:
+        """Initialize input and output directories."""
+        base_config = get_config(start_dir=str(repo_path))
+        output_base = base_config.get("review", {}).get("output_dir", "LLM-CONTEXT/btx_fix_mcp/review")
+
+        if input_dir is None:
+            input_dir = Path.cwd() / output_base / "scope"
+        if output_dir is None:
+            output_dir = Path.cwd() / output_base / name
+
+        return input_dir, output_dir
+
+    def _init_logger(self, name: str, mcp_mode: bool):
+        """Initialize logger based on mode."""
+        if mcp_mode:
+            return get_mcp_logger(f"btx_fix_mcp.{name}")
+        else:
+            return setup_logger(name, log_file=None, level=20)
+
+    def _apply_feature_overrides(
+        self, check_docstrings: bool | None, check_project_docs: bool | None, config: dict
+    ) -> tuple[bool, bool]:
+        """Apply feature flag overrides."""
+        check_docs = check_docstrings if check_docstrings is not None else config.get("check_docstrings", True)
+        check_proj = check_project_docs if check_project_docs is not None else config.get("check_project_docs", True)
+        return check_docs, check_proj
+
+    def _apply_threshold_overrides(
+        self, min_coverage: int | None, docstring_style: str | None, config: dict
+    ) -> tuple[int, str]:
+        """Apply threshold and style overrides."""
+        coverage = min_coverage if min_coverage is not None else config.get("min_coverage", 80)
+        style = docstring_style if docstring_style is not None else config.get("docstring_style", "google")
+        return coverage, style
+
+    def _apply_project_doc_overrides(
+        self,
+        require_readme: bool | None,
+        require_changelog: bool | None,
+        required_readme_sections: list[str] | None,
+        config: dict,
+    ) -> tuple[bool, bool, list[str]]:
+        """Apply project documentation requirement overrides."""
+        readme = require_readme if require_readme is not None else config.get("require_readme", True)
+        changelog = require_changelog if require_changelog is not None else config.get("require_changelog", False)
+        sections = required_readme_sections if required_readme_sections is not None else config.get("required_readme_sections", [])
+        return readme, changelog, sections
+
     def __init__(
         self,
         name: str = "docs",
@@ -85,24 +133,12 @@ class DocsSubServer(BaseSubServer):
             require_changelog: If True, report missing CHANGELOG (default: False)
             required_readme_sections: List of required README sections
         """
-        # Get output base from config for standalone use
-        base_config = get_config(start_dir=str(repo_path or Path.cwd()))
-        output_base = base_config.get("review", {}).get("output_dir", "LLM-CONTEXT/btx_fix_mcp/review")
-
-        if input_dir is None:
-            input_dir = Path.cwd() / output_base / "scope"
-        if output_dir is None:
-            output_dir = Path.cwd() / output_base / name
+        self.repo_path = repo_path or Path.cwd()
+        input_dir, output_dir = self._init_directories(input_dir, output_dir, name, self.repo_path)
 
         super().__init__(name=name, input_dir=input_dir, output_dir=output_dir)
-        self.repo_path = repo_path or Path.cwd()
         self.mcp_mode = mcp_mode
-
-        # Initialize logger
-        if mcp_mode:
-            self.logger = get_mcp_logger(f"btx_fix_mcp.{name}")
-        else:
-            self.logger = setup_logger(name, log_file=None, level=20)
+        self.logger = self._init_logger(name, mcp_mode)
 
         # Load config
         config = get_subserver_config("docs", start_dir=str(self.repo_path))
@@ -111,18 +147,12 @@ class DocsSubServer(BaseSubServer):
         # Load reviewer mindset
         self.mindset = get_mindset(DOCS_MINDSET, config)
 
-        # Feature flags
-        self.check_docstrings = check_docstrings if check_docstrings is not None else config.get("check_docstrings", True)
-        self.check_project_docs = check_project_docs if check_project_docs is not None else config.get("check_project_docs", True)
-
-        # Thresholds
-        self.min_coverage = min_coverage if min_coverage is not None else config.get("min_coverage", 80)
-        self.docstring_style = docstring_style if docstring_style is not None else config.get("docstring_style", "google")
-
-        # Project docs validation settings
-        self.require_readme = require_readme if require_readme is not None else config.get("require_readme", True)
-        self.require_changelog = require_changelog if require_changelog is not None else config.get("require_changelog", False)
-        self.required_readme_sections = required_readme_sections if required_readme_sections is not None else config.get("required_readme_sections", [])
+        # Apply overrides
+        self.check_docstrings, self.check_project_docs = self._apply_feature_overrides(check_docstrings, check_project_docs, config)
+        self.min_coverage, self.docstring_style = self._apply_threshold_overrides(min_coverage, docstring_style, config)
+        self.require_readme, self.require_changelog, self.required_readme_sections = self._apply_project_doc_overrides(
+            require_readme, require_changelog, required_readme_sections, config
+        )
 
     def validate_inputs(self) -> tuple[bool, list[str]]:
         """Validate inputs for documentation analysis."""
@@ -353,6 +383,44 @@ class DocsSubServer(BaseSubServer):
             issues.extend(self._analyze_file_for_docstrings(file_path))
         return issues
 
+    def _get_style_patterns(self) -> dict:
+        """Get docstring style patterns."""
+        return {
+            "google": {
+                "args": ["Args:", "Arguments:"],
+                "returns": ["Returns:", "Return:"],
+                "raises": ["Raises:", "Raise:"],
+                "yields": ["Yields:", "Yield:"],
+            },
+            "numpy": {
+                "args": ["Parameters", "----------"],
+                "returns": ["Returns", "-------"],
+                "raises": ["Raises", "------"],
+                "yields": ["Yields", "------"],
+            },
+            "sphinx": {
+                "args": [":param", ":type"],
+                "returns": [":return:", ":rtype:"],
+                "raises": [":raises:", ":raise:"],
+                "yields": [":yields:"],
+            },
+        }
+
+    def _has_style_indicators(self, docstring: str, style: str, style_patterns: dict) -> bool:
+        """Check if docstring has indicators of a particular style."""
+        if style not in style_patterns:
+            return False
+        return any(pattern in docstring for pattern in style_patterns[style]["args"])
+
+    def _detect_used_style(self, docstring: str, expected_style: str, style_patterns: dict) -> str | None:
+        """Detect which style is actually used in the docstring."""
+        other_styles = [s for s in style_patterns.keys() if s != expected_style]
+        for other_style in other_styles:
+            for patterns in style_patterns[other_style].values():
+                if any(pattern in docstring for pattern in patterns):
+                    return other_style
+        return None
+
     def _validate_docstring_style(
         self,
         docstring: str,
@@ -376,119 +444,80 @@ class DocsSubServer(BaseSubServer):
         if not docstring or not self.docstring_style:
             return None
 
-        # Define style indicators
-        style_patterns = {
-            "google": {
-                "args": ["Args:", "Arguments:"],
-                "returns": ["Returns:", "Return:"],
-                "raises": ["Raises:", "Raise:"],
-                "yields": ["Yields:", "Yield:"],
-            },
-            "numpy": {
-                "args": ["Parameters", "----------"],
-                "returns": ["Returns", "-------"],
-                "raises": ["Raises", "------"],
-                "yields": ["Yields", "------"],
-            },
-            "sphinx": {
-                "args": [":param", ":type"],
-                "returns": [":return:", ":rtype:"],
-                "raises": [":raises:", ":raise:"],
-                "yields": [":yields:"],
-            },
-        }
-
         expected_style = self.docstring_style.lower()
+        style_patterns = self._get_style_patterns()
+
         if expected_style not in style_patterns:
             return None
 
-        # Check if docstring has function parameters (likely needs Args/Parameters section)
-        has_params_indicator = any(
-            pattern in docstring for pattern in style_patterns[expected_style]["args"]
-        )
-
         # If expected style is used, no issue
-        if has_params_indicator:
+        if self._has_style_indicators(docstring, expected_style, style_patterns):
             return None
 
         # Check if a different style is being used
-        other_styles = [s for s in style_patterns.keys() if s != expected_style]
-        for other_style in other_styles:
-            if any(pattern in docstring for patterns in style_patterns[other_style].values() for pattern in patterns):
-                return DocstringIssue(
-                    type="docstring_style_mismatch",
-                    severity="info",
-                    file=file_path,
-                    line=line,
-                    name=name,
-                    doc_type=doc_type,
-                    message=f"{doc_type.capitalize()} '{name}' uses {other_style} style but project expects {expected_style}",
-                )
+        used_style = self._detect_used_style(docstring, expected_style, style_patterns)
+        if used_style:
+            return DocstringIssue(
+                type="docstring_style_mismatch",
+                severity="info",
+                file=file_path,
+                line=line,
+                name=name,
+                doc_type=doc_type,
+                message=f"{doc_type.capitalize()} '{name}' uses {used_style} style but project expects {expected_style}",
+            )
 
         return None
 
-    def _check_project_docs(self) -> dict[str, Any]:
-        """Check project documentation files."""
-        issues: list[ProjectDocIssue] = []
-        result: dict[str, Any] = {
-            "readme": False,
-            "readme_path": None,
-            "changelog": False,
-            "contributing": False,
-            "license": False,
-            "issues": issues,
-        }
-
-        # Check README
-        readme_found = False
-        readme_path = None
+    def _find_readme_file(self) -> tuple[bool, Path | None]:
+        """Find README file in project root."""
         for readme in self.REQUIRED_PROJECT_DOCS:
-            if (self.repo_path / readme).exists():
-                readme_found = True
-                readme_path = self.repo_path / readme
-                result["readme"] = True
-                result["readme_path"] = str(readme_path)
-                break
+            readme_path = self.repo_path / readme
+            if readme_path.exists():
+                return True, readme_path
+        return False, None
 
-        if not readme_found and self.require_readme:
+    def _check_readme_file(self, issues: list[ProjectDocIssue]) -> tuple[bool, Path | None]:
+        """Check for README file and add issues if missing."""
+        readme_found, readme_path = self._find_readme_file()
+
+        if not readme_found:
+            severity = "critical" if self.require_readme else "warning"
             issues.append(
                 ProjectDocIssue(
                     type="missing_readme",
-                    severity="critical",
+                    severity=severity,
                     message="No README file found (README.md, README.rst, or README.txt)",
+                    doc_file="README",
+                    required=self.require_readme,
+                )
+            )
+
+        return readme_found, readme_path
+
+    def _check_readme_sections_if_required(self, readme_path: Path | None, issues: list[ProjectDocIssue]) -> None:
+        """Check README sections if file exists and sections are required."""
+        if not readme_path or not self.required_readme_sections:
+            return
+
+        missing_sections = self._check_readme_sections(readme_path)
+        for section in missing_sections:
+            issues.append(
+                ProjectDocIssue(
+                    type="missing_readme_section",
+                    severity="warning",
+                    message=f"README is missing required section: {section}",
                     doc_file="README",
                     required=True,
                 )
             )
-        elif not readme_found:
-            issues.append(
-                ProjectDocIssue(
-                    type="missing_readme",
-                    severity="warning",
-                    message="No README file found (README.md, README.rst, or README.txt)",
-                    doc_file="README",
-                    required=False,
-                )
-            )
 
-        # Check README sections if README exists and sections are required
-        if readme_found and readme_path and self.required_readme_sections:
-            missing_sections = self._check_readme_sections(readme_path)
-            for section in missing_sections:
-                issues.append(
-                    ProjectDocIssue(
-                        type="missing_readme_section",
-                        severity="warning",
-                        message=f"README is missing required section: {section}",
-                        doc_file="README",
-                        required=True,
-                    )
-                )
-
-        # Check CHANGELOG
+    def _check_changelog_file(self, issues: list[ProjectDocIssue]) -> bool:
+        """Check for CHANGELOG file."""
         if (self.repo_path / "CHANGELOG.md").exists():
-            result["changelog"] = True
-        elif self.require_changelog:
+            return True
+
+        if self.require_changelog:
             issues.append(
                 ProjectDocIssue(
                     type="missing_changelog",
@@ -498,24 +527,45 @@ class DocsSubServer(BaseSubServer):
                     required=True,
                 )
             )
+        return False
 
-        # Check optional docs
-        if (self.repo_path / "CONTRIBUTING.md").exists():
-            result["contributing"] = True
+    def _check_license_file(self, issues: list[ProjectDocIssue]) -> bool:
+        """Check for LICENSE file."""
         if (self.repo_path / "LICENSE").exists() or (self.repo_path / "LICENSE.md").exists():
-            result["license"] = True
-        else:
-            issues.append(
-                ProjectDocIssue(
-                    type="missing_license",
-                    severity="warning",
-                    message="No LICENSE file found",
-                    doc_file="LICENSE",
-                    required=False,
-                )
-            )
+            return True
 
-        return result
+        issues.append(
+            ProjectDocIssue(
+                type="missing_license",
+                severity="warning",
+                message="No LICENSE file found",
+                doc_file="LICENSE",
+                required=False,
+            )
+        )
+        return False
+
+    def _check_project_docs(self) -> dict[str, Any]:
+        """Check project documentation files."""
+        issues: list[ProjectDocIssue] = []
+
+        # Check README
+        readme_found, readme_path = self._check_readme_file(issues)
+        self._check_readme_sections_if_required(readme_path, issues)
+
+        # Check other project docs
+        changelog_found = self._check_changelog_file(issues)
+        contributing_found = (self.repo_path / "CONTRIBUTING.md").exists()
+        license_found = self._check_license_file(issues)
+
+        return {
+            "readme": readme_found,
+            "readme_path": str(readme_path) if readme_path else None,
+            "changelog": changelog_found,
+            "contributing": contributing_found,
+            "license": license_found,
+            "issues": issues,
+        }
 
     def _check_readme_sections(self, readme_path: Path) -> list[str]:
         """Check if README contains required sections.
@@ -606,6 +656,19 @@ class DocsSubServer(BaseSubServer):
             total_issues=len(all_issues),
         ).model_dump()
 
+    def _extract_docstring_item_data(self, item) -> tuple[str, int, str, str]:
+        """Extract data from docstring issue item (object or dict)."""
+        file_path = item.file if hasattr(item, "file") else item.get("file", "")
+        line_num = item.line if hasattr(item, "line") else item.get("line", 0)
+        doc_type = item.doc_type if hasattr(item, "doc_type") else item.get("kind", "")
+        name = item.name if hasattr(item, "name") else item.get("name", "")
+        return file_path, line_num, doc_type, name
+
+    def _format_docstring_item(self, item) -> str:
+        """Format a single docstring item."""
+        file_path, line_num, doc_type, name = self._extract_docstring_item_data(item)
+        return f"- `{file_path}:{line_num}` - {doc_type} `{name}`"
+
     def _format_missing_docstrings_section(self, missing: list) -> list[str]:
         """Format missing docstrings section."""
         if not missing:
@@ -617,11 +680,7 @@ class DocsSubServer(BaseSubServer):
 
         lines = [header, ""]
         for item in missing[:limit]:
-            file_path = item.file if hasattr(item, "file") else item.get("file", "")
-            line_num = item.line if hasattr(item, "line") else item.get("line", 0)
-            doc_type = item.doc_type if hasattr(item, "doc_type") else item.get("kind", "")
-            name = item.name if hasattr(item, "name") else item.get("name", "")
-            lines.append(f"- `{file_path}:{line_num}` - {doc_type} `{name}`")
+            lines.append(self._format_docstring_item(item))
 
         if limit is not None and len(missing) > limit:
             lines.append("")

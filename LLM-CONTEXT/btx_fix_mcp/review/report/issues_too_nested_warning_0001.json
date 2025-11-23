@@ -2,32 +2,22 @@
   {
     "type": "too_nested",
     "severity": "warning",
-    "message": "Function 'categorize_files' has nesting depth 6 (max: 3)",
-    "file": "src/btx_fix_mcp/subservers/common/files.py",
-    "line": 146,
-    "value": 6,
-    "threshold": 3,
-    "name": "categorize_files"
-  },
-  {
-    "type": "too_nested",
-    "severity": "warning",
-    "message": "Function '_profile_tests' has nesting depth 6 (max: 3)",
-    "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "line": 269,
-    "value": 6,
-    "threshold": 3,
-    "name": "_profile_tests"
-  },
-  {
-    "type": "too_nested",
-    "severity": "warning",
     "message": "Function '_analyze_complexity' has nesting depth 6 (max: 3)",
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "line": 319,
+    "line": 337,
     "value": 6,
     "threshold": 3,
     "name": "_analyze_complexity"
+  },
+  {
+    "type": "too_nested",
+    "severity": "warning",
+    "message": "Function '_determine_category' has nesting depth 5 (max: 3)",
+    "file": "src/btx_fix_mcp/subservers/common/files.py",
+    "line": 188,
+    "value": 5,
+    "threshold": 3,
+    "name": "_determine_category"
   },
   {
     "type": "too_nested",
@@ -54,20 +44,10 @@
     "severity": "warning",
     "message": "Function '_check_docstring_coverage' has nesting depth 5 (max: 3)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 238,
+    "line": 243,
     "value": 5,
     "threshold": 3,
     "name": "_check_docstring_coverage"
-  },
-  {
-    "type": "too_nested",
-    "severity": "warning",
-    "message": "Function '_run_bandit' has nesting depth 5 (max: 3)",
-    "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "line": 299,
-    "value": 5,
-    "threshold": 3,
-    "name": "_run_bandit"
   },
   {
     "type": "too_nested",
@@ -102,12 +82,12 @@
   {
     "type": "too_nested",
     "severity": "warning",
-    "message": "Function 'execute' has nesting depth 4 (max: 3)",
+    "message": "Function '_analyze_file_for_docstrings' has nesting depth 4 (max: 3)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 140,
+    "line": 327,
     "value": 4,
     "threshold": 3,
-    "name": "execute"
+    "name": "_analyze_file_for_docstrings"
   },
   {
     "type": "too_nested",
@@ -118,6 +98,16 @@
     "value": 4,
     "threshold": 3,
     "name": "_detect_patterns"
+  },
+  {
+    "type": "too_nested",
+    "severity": "warning",
+    "message": "Function '_extract_slow_tests' has nesting depth 4 (max: 3)",
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "line": 302,
+    "value": 4,
+    "threshold": 3,
+    "name": "_extract_slow_tests"
   },
   {
     "type": "too_nested",

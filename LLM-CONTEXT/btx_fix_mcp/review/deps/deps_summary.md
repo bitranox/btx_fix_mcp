@@ -12,7 +12,7 @@
 **⚠️ APPROVED WITH COMMENTS**
 
 - Critical issues: 0 (0.0%)
-- Warnings: 7 (4.0%)
+- Warnings: 8 (4.6%)
 - Total dependencies analyzed: 174
 
 ## Overview
@@ -20,7 +20,7 @@
 **Project Type**: python
 **Total Dependencies**: 174
 **Direct Dependencies**: 10
-**Total Issues**: 7
+**Total Issues**: 8
 
 ## Security Vulnerabilities
 
@@ -28,8 +28,9 @@
 
 ## Outdated Packages
 
-⚠️ **7 packages are outdated**
+⚠️ **8 packages are outdated**
 
+- **check_zpools**: 2.1.8 → 2.3.0
 - **click**: 8.2.1 → 8.3.1
 - **cyclonedx-python-lib**: 9.1.0 → 11.5.0
 - **mando**: 0.7.1 → 0.8.2

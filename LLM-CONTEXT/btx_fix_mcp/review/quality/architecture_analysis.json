@@ -13,8 +13,8 @@
       "file": "src/btx_fix_mcp/subservers/review/docs.py",
       "class": "DocsSubServer",
       "line": 44,
-      "methods": 16,
-      "lines": 638,
+      "methods": 27,
+      "lines": 655,
       "methods_threshold": 20,
       "lines_threshold": 500
     },
@@ -22,8 +22,8 @@
       "file": "src/btx_fix_mcp/subservers/review/perf.py",
       "class": "PerfSubServer",
       "line": 43,
-      "methods": 16,
-      "lines": 508,
+      "methods": 19,
+      "lines": 526,
       "methods_threshold": 20,
       "lines_threshold": 500
     },
@@ -40,8 +40,8 @@
       "file": "src/btx_fix_mcp/subservers/review/security.py",
       "class": "SecuritySubServer",
       "line": 39,
-      "methods": 16,
-      "lines": 571,
+      "methods": 25,
+      "lines": 606,
       "methods_threshold": 20,
       "lines_threshold": 500
     }

@@ -131,12 +131,12 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/common/files.py",
-    "loc": 211,
-    "lloc": 65,
-    "sloc": 90,
-    "comments": 7,
+    "loc": 232,
+    "lloc": 86,
+    "sloc": 105,
+    "comments": 1,
     "multi": 66,
-    "blank": 47,
+    "blank": 53,
     "single_comments": 8
   },
   {
@@ -231,33 +231,33 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "loc": 682,
-    "lloc": 304,
-    "sloc": 494,
-    "comments": 38,
+    "loc": 699,
+    "lloc": 345,
+    "sloc": 515,
+    "comments": 20,
     "multi": 45,
-    "blank": 92,
-    "single_comments": 51
-  },
-  {
-    "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "loc": 551,
-    "lloc": 285,
-    "sloc": 402,
-    "comments": 39,
-    "multi": 20,
-    "blank": 86,
+    "blank": 96,
     "single_comments": 43
   },
   {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "loc": 569,
+    "lloc": 305,
+    "sloc": 419,
+    "comments": 37,
+    "multi": 20,
+    "blank": 86,
+    "single_comments": 44
+  },
+  {
     "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
-    "loc": 246,
-    "lloc": 93,
-    "sloc": 154,
-    "comments": 18,
+    "loc": 257,
+    "lloc": 113,
+    "sloc": 167,
+    "comments": 8,
     "multi": 39,
-    "blank": 33,
-    "single_comments": 20
+    "blank": 36,
+    "single_comments": 15
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
@@ -331,13 +331,13 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/results.py",
-    "loc": 200,
-    "lloc": 59,
-    "sloc": 103,
+    "loc": 216,
+    "lloc": 71,
+    "sloc": 111,
     "comments": 3,
     "multi": 59,
-    "blank": 34,
-    "single_comments": 4
+    "blank": 38,
+    "single_comments": 8
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/static.py",
@@ -371,13 +371,13 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
-    "loc": 195,
-    "lloc": 84,
+    "loc": 199,
+    "lloc": 76,
     "sloc": 95,
     "comments": 14,
     "multi": 46,
-    "blank": 39,
-    "single_comments": 15
+    "blank": 41,
+    "single_comments": 17
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/report.py",
@@ -401,13 +401,13 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "loc": 610,
-    "lloc": 291,
-    "sloc": 404,
-    "comments": 38,
+    "loc": 645,
+    "lloc": 324,
+    "sloc": 439,
+    "comments": 25,
     "multi": 54,
-    "blank": 101,
-    "single_comments": 51
+    "blank": 105,
+    "single_comments": 47
   },
   {
     "file": "src/btx_fix_mcp/tools/__init__.py",

@@ -4,7 +4,7 @@
     "severity": "warning",
     "message": "Function '_check_project_docs' is 88 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 412,
+    "line": 430,
     "value": 88,
     "threshold": 50,
     "name": "_check_project_docs"
@@ -12,29 +12,9 @@
   {
     "type": "too_long",
     "severity": "warning",
-    "message": "Function 'execute' is 86 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
-    "line": 160,
-    "value": 86,
-    "threshold": 50,
-    "name": "execute"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
-    "message": "Function 'execute' is 85 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 140,
-    "value": 85,
-    "threshold": 50,
-    "name": "execute"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
     "message": "Function 'execute' is 84 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "line": 198,
+    "line": 230,
     "value": 84,
     "threshold": 50,
     "name": "execute"
@@ -52,32 +32,12 @@
   {
     "type": "too_long",
     "severity": "warning",
-    "message": "Function '__init__' is 76 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "line": 78,
-    "value": 76,
-    "threshold": 50,
-    "name": "__init__"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
     "message": "Function '__init__' is 75 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
     "line": 79,
     "value": 75,
     "threshold": 50,
     "name": "__init__"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
-    "message": "Function '_run_bandit' is 74 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "line": 299,
-    "value": 74,
-    "threshold": 50,
-    "name": "_run_bandit"
   },
   {
     "type": "too_long",
@@ -104,7 +64,7 @@
     "severity": "warning",
     "message": "Function '_validate_docstring_style' is 72 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 338,
+    "line": 356,
     "value": 72,
     "threshold": 50,
     "name": "_validate_docstring_style"
@@ -152,16 +112,6 @@
   {
     "type": "too_long",
     "severity": "warning",
-    "message": "Function 'categorize_files' is 65 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/common/files.py",
-    "line": 146,
-    "value": 65,
-    "threshold": 50,
-    "name": "categorize_files"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
     "message": "Function 'compile_all_issues' is 63 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/review/quality/issues.py",
     "line": 61,
@@ -182,32 +132,12 @@
   {
     "type": "too_long",
     "severity": "warning",
-    "message": "Function '_find_missing_docstrings' is 61 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 275,
-    "value": 61,
-    "threshold": 50,
-    "name": "_find_missing_docstrings"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
     "message": "Function 'get_file_history' is 60 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/common/git.py",
     "line": 359,
     "value": 60,
     "threshold": 50,
     "name": "get_file_history"
-  },
-  {
-    "type": "too_long",
-    "severity": "warning",
-    "message": "Function '_save_dict_results' is 60 lines (max: 50)",
-    "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
-    "line": 77,
-    "value": 60,
-    "threshold": 50,
-    "name": "_save_dict_results"
   },
   {
     "type": "too_long",
@@ -252,12 +182,22 @@
   {
     "type": "too_long",
     "severity": "warning",
-    "message": "Function '_save_results' is 53 lines (max: 50)",
+    "message": "Function '__init__' is 54 lines (max: 50)",
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "line": 132,
+    "value": 54,
+    "threshold": 50,
+    "name": "__init__"
+  },
+  {
+    "type": "too_long",
+    "severity": "warning",
+    "message": "Function 'execute' is 53 lines (max: 50)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 527,
+    "line": 177,
     "value": 53,
     "threshold": 50,
-    "name": "_save_results"
+    "name": "execute"
   },
   {
     "type": "too_long",

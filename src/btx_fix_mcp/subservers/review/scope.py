@@ -251,6 +251,74 @@ class ScopeSubServer(BaseSubServer):
 
         return artifacts
 
+    def _get_git_branch(self) -> str:
+        """Get current git branch or N/A."""
+        if not GitOperations.is_git_repo(self.repo_path):
+            return "N/A"
+        try:
+            return GitOperations.get_current_branch(self.repo_path) or "N/A"
+        except GitOperationError:
+            return "N/A"
+
+    def _format_overview_section(self, files: list[Path], branch: str) -> list[str]:
+        """Format overview section of summary."""
+        return [
+            "# Scope Analysis Report",
+            "",
+            "## Overview",
+            "",
+            f"**Mode**: {self.mode}",
+            f"**Repository**: {self.repo_path}",
+            f"**Branch**: {branch}",
+            f"**Total Files**: {len(files)}",
+            "",
+        ]
+
+    def _format_category_breakdown(self, categorized: dict[str, list[Path]]) -> list[str]:
+        """Format file breakdown by category."""
+        lines = ["## File Breakdown by Category", ""]
+        for category in ["CODE", "TEST", "DOCS", "CONFIG", "BUILD", "OTHER"]:
+            count = len(categorized.get(category, []))
+            if count > 0:
+                lines.append(f"- **{category}**: {count} files")
+        return lines
+
+    def _format_sample_files(self, files: list[Path]) -> list[str]:
+        """Format sample files section."""
+        if not files:
+            return []
+
+        lines = []
+        limit = get_display_limit("max_sample_files", 10, start_dir=str(self.repo_path))
+        display_count = len(files) if limit is None else min(limit, len(files))
+
+        header = "## Sample Files" if limit is None else f"## Sample Files (showing {display_count} of {len(files)})"
+        lines.extend(["", header, ""])
+
+        for f in files[:limit]:
+            rel_path = f.relative_to(self.repo_path)
+            lines.append(f"- `{rel_path}`")
+
+        if limit is not None and len(files) > limit:
+            lines.append("")
+            lines.append(
+                f"*Note: {len(files) - limit} more files not shown. Set `output.display.max_sample_files = 0` in config for unlimited display.*"
+            )
+
+        return lines
+
+    def _format_next_steps(self) -> list[str]:
+        """Format next steps section."""
+        return [
+            "",
+            "## Next Steps",
+            "",
+            "1. Review code files for quality issues",
+            "2. Check test coverage",
+            "3. Scan for security vulnerabilities",
+            "4. Review documentation completeness",
+        ]
+
     def _generate_summary(self, files: list[Path], categorized: dict[str, list[Path]]) -> str:
         """Generate markdown summary.
 
@@ -261,62 +329,12 @@ class ScopeSubServer(BaseSubServer):
         Returns:
             Markdown summary string
         """
-        # Get git info if available
-        branch = "N/A"
-        if GitOperations.is_git_repo(self.repo_path):
-            try:
-                branch = GitOperations.get_current_branch(self.repo_path) or "N/A"
-            except GitOperationError:
-                pass
+        branch = self._get_git_branch()
 
-        summary_lines = [
-            "# Scope Analysis Report",
-            "",
-            "## Overview",
-            "",
-            f"**Mode**: {self.mode}",
-            f"**Repository**: {self.repo_path}",
-            f"**Branch**: {branch}",
-            f"**Total Files**: {len(files)}",
-            "",
-            "## File Breakdown by Category",
-            "",
-        ]
-
-        # Add category counts
-        for category in ["CODE", "TEST", "DOCS", "CONFIG", "BUILD", "OTHER"]:
-            count = len(categorized.get(category, []))
-            if count > 0:
-                summary_lines.append(f"- **{category}**: {count} files")
-
-        # Add sample files
-        if files:
-            limit = get_display_limit("max_sample_files", 10, start_dir=str(self.repo_path))
-            display_count = len(files) if limit is None else min(limit, len(files))
-
-            header = "## Sample Files" if limit is None else f"## Sample Files (showing {display_count} of {len(files)})"
-            summary_lines.extend(["", header, ""])
-
-            for f in files[:limit]:
-                rel_path = f.relative_to(self.repo_path)
-                summary_lines.append(f"- `{rel_path}`")
-
-            if limit is not None and len(files) > limit:
-                summary_lines.append("")
-                summary_lines.append(
-                    f"*Note: {len(files) - limit} more files not shown. Set `output.display.max_sample_files = 0` in config for unlimited display.*"
-                )
-
-        summary_lines.extend(
-            [
-                "",
-                "## Next Steps",
-                "",
-                "1. Review code files for quality issues",
-                "2. Check test coverage",
-                "3. Scan for security vulnerabilities",
-                "4. Review documentation completeness",
-            ]
-        )
+        summary_lines = []
+        summary_lines.extend(self._format_overview_section(files, branch))
+        summary_lines.extend(self._format_category_breakdown(categorized))
+        summary_lines.extend(self._format_sample_files(files))
+        summary_lines.extend(self._format_next_steps())
 
         return "\n".join(summary_lines)

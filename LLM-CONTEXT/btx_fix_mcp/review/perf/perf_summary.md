@@ -12,7 +12,7 @@
 **🔧 NEEDS WORK**
 
 - Critical issues: 2
-- Warnings: 50
+- Warnings: 47
 - Files analyzed: 43
 
 ## Overview
@@ -20,14 +20,14 @@
 **Files Analyzed**: 43
 **Pattern Issues**: 7
 **Performance Hotspots**: 4
-**Total Issues**: 52
+**Total Issues**: 49
 
 ## Performance Hotspots (showing 4 of 4)
 
-- **tests/subservers/review/test_deps.py::TestDepsSubServer::test_execute_python_project**: 7.35s
-- **tests/subservers/review/test_deps.py::TestDepsSubServer::test_summary_includes_mindset**: 6.61s
-- **tests/servers/test_review.py::TestReviewMCPServer::test_run_quality**: 1.45s
-- **tests/servers/test_review.py::TestReviewMCPServer::test_run_all**: 1.30s
+- **tests/subservers/review/test_deps.py::TestDepsSubServer::test_summary_includes_mindset**: 7.59s
+- **tests/subservers/review/test_deps.py::TestDepsSubServer::test_execute_python_project**: 7.45s
+- **tests/servers/test_review.py::TestReviewMCPServer::test_run_all**: 1.35s
+- **tests/servers/test_review.py::TestReviewMCPServer::test_run_quality**: 1.33s
 
 ## Anti-Pattern Detections (showing 7 of 7)
 

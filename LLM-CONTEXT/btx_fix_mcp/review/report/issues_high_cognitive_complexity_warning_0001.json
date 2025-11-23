@@ -2,39 +2,9 @@
   {
     "type": "high_cognitive_complexity",
     "severity": "warning",
-    "message": "Function '_find_missing_docstrings' has cognitive complexity 52 (threshold: 15)",
-    "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 275,
-    "value": 52,
-    "threshold": 15,
-    "name": "_find_missing_docstrings"
-  },
-  {
-    "type": "high_cognitive_complexity",
-    "severity": "warning",
-    "message": "Function '_run_bandit' has cognitive complexity 28 (threshold: 15)",
-    "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "line": 299,
-    "value": 28,
-    "threshold": 15,
-    "name": "_run_bandit"
-  },
-  {
-    "type": "high_cognitive_complexity",
-    "severity": "warning",
-    "message": "Function 'categorize_files' has cognitive complexity 24 (threshold: 15)",
-    "file": "src/btx_fix_mcp/subservers/common/files.py",
-    "line": 146,
-    "value": 24,
-    "threshold": 15,
-    "name": "categorize_files"
-  },
-  {
-    "type": "high_cognitive_complexity",
-    "severity": "warning",
     "message": "Function '_analyze_complexity' has cognitive complexity 24 (threshold: 15)",
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "line": 319,
+    "line": 337,
     "value": 24,
     "threshold": 15,
     "name": "_analyze_complexity"
@@ -42,19 +12,9 @@
   {
     "type": "high_cognitive_complexity",
     "severity": "warning",
-    "message": "Function '_profile_tests' has cognitive complexity 19 (threshold: 15)",
-    "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "line": 269,
-    "value": 19,
-    "threshold": 15,
-    "name": "_profile_tests"
-  },
-  {
-    "type": "high_cognitive_complexity",
-    "severity": "warning",
     "message": "Function '_check_project_docs' has cognitive complexity 18 (threshold: 15)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 412,
+    "line": 430,
     "value": 18,
     "threshold": 15,
     "name": "_check_project_docs"
@@ -84,7 +44,7 @@
     "severity": "warning",
     "message": "Function '_check_docstring_coverage' has cognitive complexity 16 (threshold: 15)",
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "line": 238,
+    "line": 243,
     "value": 16,
     "threshold": 15,
     "name": "_check_docstring_coverage"

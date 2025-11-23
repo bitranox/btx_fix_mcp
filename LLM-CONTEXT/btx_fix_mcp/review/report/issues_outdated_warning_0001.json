@@ -2,6 +2,14 @@
   {
     "type": "outdated",
     "severity": "warning",
+    "message": "Outdated package: check_zpools 2.1.8 -> 2.3.0",
+    "package": "check_zpools",
+    "version": "2.1.8",
+    "latest": "2.3.0"
+  },
+  {
+    "type": "outdated",
+    "severity": "warning",
     "message": "Outdated package: click 8.2.1 -> 8.3.1",
     "package": "click",
     "version": "8.2.1",

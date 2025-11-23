@@ -413,14 +413,26 @@ class ReportSubServer(BaseSubServer):
 
         return lines
 
-    def _format_critical_issues(self, results: dict[str, dict]) -> list[str]:
-        """Format critical issues summary section."""
+    def _collect_critical_issues(self, results: dict[str, dict]) -> list[dict]:
+        """Collect all critical/error issues from results."""
         all_critical = []
         for name, result in results.items():
             for issue in result.get("issues", []):
                 if issue.get("severity") in ("critical", "error"):
                     issue["source"] = name
                     all_critical.append(issue)
+        return all_critical
+
+    def _format_critical_issue(self, issue: dict) -> str:
+        """Format a single critical issue."""
+        source = issue.get("source", "unknown")
+        message = issue.get("message", "No description")
+        file_info = f"`{issue.get('file', '')}:{issue.get('line', '')}`" if issue.get("file") else ""
+        return f"- **[{source}]** {file_info} {message}"
+
+    def _format_critical_issues(self, results: dict[str, dict]) -> list[str]:
+        """Format critical issues summary section."""
+        all_critical = self._collect_critical_issues(results)
 
         if not all_critical:
             return []
@@ -432,10 +444,7 @@ class ReportSubServer(BaseSubServer):
         lines = ["---", "", header, ""]
 
         for issue in all_critical[:limit]:
-            source = issue.get("source", "unknown")
-            message = issue.get("message", "No description")
-            file_info = f"`{issue.get('file', '')}:{issue.get('line', '')}`" if issue.get("file") else ""
-            lines.append(f"- **[{source}]** {file_info} {message}")
+            lines.append(self._format_critical_issue(issue))
 
         if limit is not None and len(all_critical) > limit:
             lines.append("")

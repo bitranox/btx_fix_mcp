@@ -66,7 +66,7 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/common/files.py",
-    "mi": 69.42743331007983,
+    "mi": 67.86156247868219,
     "rank": "A"
   },
   {
@@ -116,17 +116,17 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/docs.py",
-    "mi": 27.694891411191225,
+    "mi": 23.125838628981978,
     "rank": "A"
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/perf.py",
-    "mi": 31.578698220645308,
+    "mi": 29.581896992396455,
     "rank": "A"
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
-    "mi": 66.04135434182825,
+    "mi": 61.29588719536949,
     "rank": "A"
   },
   {
@@ -166,7 +166,7 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/results.py",
-    "mi": 73.97487612511462,
+    "mi": 72.55037111736107,
     "rank": "A"
   },
   {
@@ -186,7 +186,7 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
-    "mi": 70.0958157737384,
+    "mi": 71.71648947468758,
     "rank": "A"
   },
   {
@@ -201,7 +201,7 @@
   },
   {
     "file": "src/btx_fix_mcp/subservers/review/security.py",
-    "mi": 34.93769875785856,
+    "mi": 30.921710401984317,
     "rank": "A"
   },
   {
