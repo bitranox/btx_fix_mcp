@@ -106,6 +106,14 @@ class PerfSubServer(BaseSubServer):
         # Thresholds
         self.hotspot_threshold = config.get("hotspot_threshold", 5.0)  # % of total time
         self.min_improvement = config.get("min_improvement", 5.0)  # % improvement to justify
+        self.nested_loop_threshold = config.get("nested_loop_threshold", 2)  # Nesting depth
+        self.runtime_threshold_ms = config.get("runtime_threshold_ms", 100)  # Runtime threshold (future use)
+        self.memory_threshold_mb = config.get("memory_threshold_mb", 50)  # Memory threshold (future use)
+
+        # Feature flags for future implementation
+        self.estimate_runtime = config.get("estimate_runtime", True)  # Not yet implemented
+        self.estimate_memory = config.get("estimate_memory", True)  # Not yet implemented
+        self.detect_complexity = config.get("detect_complexity", True)  # Partially implemented
 
     def validate_inputs(self) -> tuple[bool, list[str]]:
         """Validate inputs for performance analysis."""
@@ -308,7 +316,13 @@ class PerfSubServer(BaseSubServer):
         return results
 
     def _analyze_complexity(self, files: list[str]) -> list[PerformanceIssue]:
-        """Analyze algorithmic complexity patterns."""
+        """Analyze algorithmic complexity patterns.
+
+        Uses nested_loop_threshold to determine warning level:
+        - Threshold 2: Warns on 2+ levels of nesting (O(n²))
+        - Threshold 3: Warns on 3+ levels of nesting (O(n³))
+        - etc.
+        """
         issues: list[PerformanceIssue] = []
 
         for file_path in files:
@@ -316,27 +330,37 @@ class PerfSubServer(BaseSubServer):
                 content = Path(file_path).read_text()
 
                 # Check for potential O(n²) or worse patterns
-                if content.count("for ") >= 2:
+                if content.count("for ") >= self.nested_loop_threshold:
                     # Nested loops indicator
                     lines = content.split("\n")
-                    indent_stack = []
+                    indent_stack: list[tuple[int, int]] = []  # [(indent_level, line_number)]
 
                     for i, line in enumerate(lines, 1):
                         stripped = line.lstrip()
                         if stripped.startswith("for ") or stripped.startswith("while "):
                             current_indent = len(line) - len(stripped)
-                            # Check if nested
-                            if indent_stack and current_indent > indent_stack[-1]:
+
+                            # Remove loops at same or lower indentation from stack
+                            while indent_stack and current_indent <= indent_stack[-1][0]:
+                                indent_stack.pop()
+
+                            # Track nesting depth
+                            nesting_depth = len(indent_stack) + 1
+
+                            # Warn if nesting exceeds threshold
+                            if nesting_depth >= self.nested_loop_threshold:
+                                complexity = "O(n^{})".format(nesting_depth)
                                 issues.append(
                                     PerformanceIssue(
                                         type="nested_iteration",
                                         severity="warning",
                                         file=file_path,
                                         line=i,
-                                        message="Nested iteration detected - potential O(n²) complexity",
+                                        message=f"Nested iteration depth {nesting_depth} detected - potential {complexity} complexity (threshold: {self.nested_loop_threshold})",
                                     )
                                 )
-                            indent_stack.append(current_indent)
+
+                            indent_stack.append((current_indent, i))
 
             except Exception as e:
                 self.logger.warning(f"Error analyzing complexity in {file_path}: {e}")
