@@ -157,23 +157,70 @@ class QualitySubServer(BaseSubServer):
         """Validate inputs for quality analysis."""
         return self.file_manager.validate_inputs()
 
+    def _load_and_validate_files(self) -> tuple[list[str], list[str]] | None:
+        """Load files to analyze and return None if no files found."""
+        log_step(self.logger, 1, "Loading files to analyze")
+        python_files = self.file_manager.load_python_files()
+        js_files = self.file_manager.load_js_files() if self.quality_config.features.js_analysis else []
+
+        if not python_files and not js_files:
+            log_result(self.logger, True, "No files to analyze")
+            return None
+
+        log_file_list(self.logger, python_files, "Python files", max_display=10)
+        if js_files:
+            log_file_list(self.logger, js_files, "JS/TS files", max_display=10)
+
+        return python_files, js_files
+
+    def _run_core_analyzers(self, python_files: list[str], js_files: list[str]) -> dict:
+        """Run core analyzers in parallel."""
+        log_step(self.logger, 2, "Analyzing complexity metrics")
+        with LogContext(self.logger, "Complexity analysis"):
+            return self.orchestrator.run_all(python_files, js_files)
+
+    def _run_special_analyzers(self, results: dict, js_files: list[str]) -> None:
+        """Run special analyzers (JS/TS, Beartype)."""
+        if self.quality_config.features.js_analysis and js_files:
+            log_step(self.logger, 18, "Analyzing JavaScript/TypeScript")
+            with LogContext(self.logger, "JS/TS analysis"):
+                results["js_analysis"] = self.js_analyzer.analyze(js_files)
+
+        if self.quality_config.features.beartype:
+            log_step(self.logger, 19, "Running beartype runtime type check")
+            with LogContext(self.logger, "Beartype check"):
+                results["beartype"] = self.beartype_analyzer.analyze()
+
+    def _compile_and_save_results(
+        self, results: dict, python_files: list[str], js_files: list[str]
+    ) -> tuple[list, dict, dict, str]:
+        """Compile issues, save results, and generate summary."""
+        log_step(self.logger, 20, "Compiling issues")
+        all_issues = self.results_compiler.compile_issues(results, self.quality_config)
+
+        log_step(self.logger, 21, "Saving results")
+        artifacts = self.results_writer.save_all_results(results, all_issues)
+
+        metrics = self.results_compiler.compile_metrics(python_files, js_files, results, all_issues)
+        summary = generate_comprehensive_summary(metrics, results, all_issues, self.mindset, self.quality_config)
+
+        return all_issues, artifacts, metrics, summary
+
+    def _determine_status(self, all_issues: list) -> str:
+        """Determine analysis status based on critical issues."""
+        critical_issues = [i for i in all_issues if i.get("severity") == "error"]
+        return "SUCCESS" if not critical_issues else "PARTIAL"
+
     def execute(self) -> SubServerResult:
         """Execute comprehensive quality analysis."""
         log_section(self.logger, "QUALITY ANALYSIS")
 
         try:
-            # Ensure tools venv is initialized
             log_step(self.logger, 0, "Ensuring tools venv is initialized")
             ensure_tools_venv()
 
-            # Load files to analyze
-            log_step(self.logger, 1, "Loading files to analyze")
-            python_files = self.file_manager.load_python_files()
-            js_files = self.file_manager.load_js_files() if self.quality_config.features.js_analysis else []
-
-            # Check if we have files to analyze
-            if not python_files and not js_files:
-                log_result(self.logger, True, "No files to analyze")
+            files_result = self._load_and_validate_files()
+            if files_result is None:
                 return SubServerResult(
                     status="SUCCESS",
                     summary="# Quality Analysis\n\nNo files to analyze.",
@@ -181,49 +228,13 @@ class QualitySubServer(BaseSubServer):
                     metrics={"files_analyzed": 0},
                 )
 
-            log_file_list(self.logger, python_files, "Python files", max_display=10)
-            if js_files:
-                log_file_list(self.logger, js_files, "JS/TS files", max_display=10)
+            python_files, js_files = files_result
+            results = self._run_core_analyzers(python_files, js_files)
+            self._run_special_analyzers(results, js_files)
+            all_issues, artifacts, metrics, summary = self._compile_and_save_results(results, python_files, js_files)
+            status = self._determine_status(all_issues)
 
-            # Run main analyzers in parallel
-            log_step(self.logger, 2, "Analyzing complexity metrics")
-            with LogContext(self.logger, "Complexity analysis"):
-                results = self.orchestrator.run_all(python_files, js_files)
-
-            # Run special analyzers
-            if self.quality_config.features.js_analysis and js_files:
-                log_step(self.logger, 18, "Analyzing JavaScript/TypeScript")
-                with LogContext(self.logger, "JS/TS analysis"):
-                    results["js_analysis"] = self.js_analyzer.analyze(js_files)
-
-            if self.quality_config.features.beartype:
-                log_step(self.logger, 19, "Running beartype runtime type check")
-                with LogContext(self.logger, "Beartype check"):
-                    results["beartype"] = self.beartype_analyzer.analyze()
-
-            # Compile issues and metrics
-            log_step(self.logger, 20, "Compiling issues")
-            all_issues = self.results_compiler.compile_issues(results, self.quality_config)
-
-            # Save results
-            log_step(self.logger, 21, "Saving results")
-            artifacts = self.results_writer.save_all_results(results, all_issues)
-
-            # Compile metrics
-            metrics = self.results_compiler.compile_metrics(python_files, js_files, results, all_issues)
-
-            # Generate summary
-            summary = generate_comprehensive_summary(metrics, results, all_issues, self.mindset, self.quality_config)
-
-            # Determine status
-            critical_issues = [i for i in all_issues if i.get("severity") == "error"]
-            status = "SUCCESS" if not critical_issues else "PARTIAL"
-            log_result(
-                self.logger,
-                status == "SUCCESS",
-                f"Analysis complete: {len(all_issues)} issues found",
-            )
-
+            log_result(self.logger, status == "SUCCESS", f"Analysis complete: {len(all_issues)} issues found")
             return SubServerResult(
                 status=status,
                 summary=summary,
