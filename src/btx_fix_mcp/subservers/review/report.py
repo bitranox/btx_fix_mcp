@@ -176,6 +176,59 @@ class ReportSubServer(BaseSubServer):
                 errors=[str(e)],
             )
 
+    def _create_default_result(self) -> dict[str, Any]:
+        """Create default result structure for sub-server."""
+        return {
+            "status": "NOT_RUN",
+            "summary": "",
+            "metrics": {},
+            "issues": [],
+        }
+
+    def _read_status(self, subserver_dir: Path, result: dict[str, Any]) -> None:
+        """Read status.txt file into result."""
+        status_file = subserver_dir / "status.txt"
+        if status_file.exists():
+            result["status"] = status_file.read_text().strip()
+
+    def _read_summary(self, subserver_dir: Path, subserver: str, result: dict[str, Any]) -> None:
+        """Read summary markdown file into result."""
+        summary_file = subserver_dir / f"{subserver}_summary.md"
+        if summary_file.exists():
+            result["summary"] = summary_file.read_text()
+
+    def _read_metrics(self, subserver_dir: Path, result: dict[str, Any]) -> None:
+        """Read metrics from result.json into result."""
+        result_file = subserver_dir / "result.json"
+        if not result_file.exists():
+            return
+
+        try:
+            data = json.loads(result_file.read_text())
+            result["metrics"] = data.get("metrics", {})
+        except json.JSONDecodeError:
+            pass
+
+    def _read_issues(self, subserver_dir: Path, result: dict[str, Any]) -> None:
+        """Read issues.json into result."""
+        issues_file = subserver_dir / "issues.json"
+        if not issues_file.exists():
+            return
+
+        try:
+            result["issues"] = json.loads(issues_file.read_text())
+        except json.JSONDecodeError:
+            pass
+
+    def _gather_subserver_result(self, subserver: str, subserver_dir: Path) -> dict[str, Any]:
+        """Gather all result files for a single sub-server."""
+        result = self._create_default_result()
+        self._read_status(subserver_dir, result)
+        self._read_summary(subserver_dir, subserver, result)
+        self._read_metrics(subserver_dir, result)
+        self._read_issues(subserver_dir, result)
+        return result
+
     def _gather_results(self) -> dict[str, dict[str, Any]]:
         """Gather results from all sub-servers."""
         results = {}
@@ -185,41 +238,7 @@ class ReportSubServer(BaseSubServer):
             if not subserver_dir.exists():
                 continue
 
-            result: dict[str, Any] = {
-                "status": "NOT_RUN",
-                "summary": "",
-                "metrics": {},
-                "issues": [],
-            }
-
-            # Read status
-            status_file = subserver_dir / "status.txt"
-            if status_file.exists():
-                result["status"] = status_file.read_text().strip()
-
-            # Read summary
-            summary_file = subserver_dir / f"{subserver}_summary.md"
-            if summary_file.exists():
-                result["summary"] = summary_file.read_text()
-
-            # Read result.json for metrics
-            result_file = subserver_dir / "result.json"
-            if result_file.exists():
-                try:
-                    data = json.loads(result_file.read_text())
-                    result["metrics"] = data.get("metrics", {})
-                except json.JSONDecodeError:
-                    pass
-
-            # Read issues
-            issues_file = subserver_dir / "issues.json"
-            if issues_file.exists():
-                try:
-                    result["issues"] = json.loads(issues_file.read_text())
-                except json.JSONDecodeError:
-                    pass
-
-            results[subserver] = result
+            results[subserver] = self._gather_subserver_result(subserver, subserver_dir)
 
         return results
 
