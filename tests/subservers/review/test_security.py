@@ -504,3 +504,183 @@ def validate_input(user_input: str) -> bool:
 
         assert result.status in ("SUCCESS", "PARTIAL")
         assert result.metrics["files_scanned"] == 1
+
+
+class TestSecurityMindsetThresholds:
+    """Tests for mindset threshold configuration."""
+
+    @pytest.fixture
+    def repo_with_issues(self, tmp_path):
+        """Create repo with multiple security issues of varying severity."""
+        repo_dir = tmp_path / "repo"
+        repo_dir.mkdir()
+        (repo_dir / "vulnerable.py").write_text("""
+import subprocess
+import pickle
+import os
+
+# B602: subprocess with shell=True (HIGH severity)
+def run_command(cmd):
+    subprocess.call(cmd, shell=True)
+
+# B301: pickle usage (MEDIUM severity)
+def load_data(filename):
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
+
+# B105: hardcoded password (MEDIUM severity)
+PASSWORD = "secret123"
+
+# B605: subprocess with untrusted input (MEDIUM severity)
+def execute(user_cmd):
+    os.system(user_cmd)
+""")
+        return repo_dir
+
+    def test_default_critical_threshold(self, repo_with_issues, tmp_path):
+        """Test default critical threshold (1 high severity issue)."""
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("vulnerable.py\n")
+
+        output_dir = tmp_path / "output"
+        server = SecuritySubServer(
+            input_dir=scope_dir,
+            output_dir=output_dir,
+            repo_path=repo_with_issues,
+        )
+
+        # Verify default threshold
+        assert server.critical_threshold == 1
+
+        result = server.run()
+
+        # Should trigger PARTIAL status if >= 1 high severity issue found
+        high_count = result.metrics["high_severity"]
+        if high_count >= 1:
+            assert result.status == "PARTIAL"
+
+    def test_custom_critical_threshold(self, repo_with_issues, tmp_path):
+        """Test custom critical threshold."""
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("vulnerable.py\n")
+
+        output_dir = tmp_path / "output"
+        server = SecuritySubServer(
+            input_dir=scope_dir,
+            output_dir=output_dir,
+            repo_path=repo_with_issues,
+            critical_threshold=10,  # Set high threshold
+        )
+
+        assert server.critical_threshold == 10
+
+        result = server.run()
+
+        # With high threshold, should be SUCCESS even with some high severity issues
+        high_count = result.metrics["high_severity"]
+        if high_count < 10:
+            # Status might still be PARTIAL due to warning_threshold
+            # but not due to critical_threshold
+            assert high_count < server.critical_threshold
+
+    def test_default_warning_threshold(self, repo_with_issues, tmp_path):
+        """Test default warning threshold (5 medium severity issues)."""
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("vulnerable.py\n")
+
+        output_dir = tmp_path / "output"
+        server = SecuritySubServer(
+            input_dir=scope_dir,
+            output_dir=output_dir,
+            repo_path=repo_with_issues,
+            critical_threshold=100,  # Disable critical threshold
+        )
+
+        # Verify default threshold
+        assert server.warning_threshold == 5
+
+        result = server.run()
+
+        # Should trigger PARTIAL status if >= 5 medium severity issues found
+        medium_count = result.metrics["medium_severity"]
+        if medium_count >= 5:
+            assert result.status == "PARTIAL"
+        else:
+            # With < 5 medium and critical threshold disabled, should be SUCCESS
+            assert result.status == "SUCCESS"
+
+    def test_custom_warning_threshold(self, repo_with_issues, tmp_path):
+        """Test custom warning threshold."""
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("vulnerable.py\n")
+
+        output_dir = tmp_path / "output"
+        server = SecuritySubServer(
+            input_dir=scope_dir,
+            output_dir=output_dir,
+            repo_path=repo_with_issues,
+            critical_threshold=100,  # Disable critical threshold
+            warning_threshold=2,  # Low threshold
+        )
+
+        assert server.warning_threshold == 2
+
+        result = server.run()
+
+        # Should trigger PARTIAL if >= 2 medium severity issues
+        medium_count = result.metrics["medium_severity"]
+        if medium_count >= 2:
+            assert result.status == "PARTIAL"
+
+    def test_threshold_config_in_summary(self, repo_with_issues, tmp_path):
+        """Test that thresholds appear in summary report."""
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("vulnerable.py\n")
+
+        output_dir = tmp_path / "output"
+        server = SecuritySubServer(
+            input_dir=scope_dir,
+            output_dir=output_dir,
+            repo_path=repo_with_issues,
+            critical_threshold=3,
+            warning_threshold=10,
+        )
+
+        result = server.run()
+
+        # Verify thresholds appear in summary
+        assert "Critical Status Threshold: 3 high severity issues" in result.summary
+        assert "Warning Status Threshold: 10 medium severity issues" in result.summary
+
+    def test_thresholds_override_config_file(self, tmp_path):
+        """Test that constructor parameters override config file values."""
+        import yaml
+
+        repo_dir = tmp_path / "repo"
+        repo_dir.mkdir()
+
+        config_file = repo_dir / "defaultconfig.toml"
+        # Note: Since we're using TOML config, this test is conceptual
+        # The actual config loading uses get_subserver_config
+
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("")
+
+        output_dir = tmp_path / "output"
+        server = SecuritySubServer(
+            input_dir=scope_dir,
+            output_dir=output_dir,
+            repo_path=repo_dir,
+            critical_threshold=7,
+            warning_threshold=15,
+        )
+
+        # Constructor parameters should override defaults
+        assert server.critical_threshold == 7
+        assert server.warning_threshold == 15

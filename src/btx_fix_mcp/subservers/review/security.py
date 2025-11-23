@@ -57,6 +57,8 @@ class SecuritySubServer(BaseSubServer):
         bandit_config: Path to bandit config file (overrides config)
         skip_tests: List of test IDs to skip (e.g., ["B101", "B102"])
         exclude_paths: Additional paths to exclude from scan
+        critical_threshold: Number of high severity issues to trigger CRITICAL status (default: 1)
+        warning_threshold: Number of medium severity issues to trigger WARNING status (default: 5)
 
     Example:
         >>> server = SecuritySubServer(
@@ -64,7 +66,9 @@ class SecuritySubServer(BaseSubServer):
         ...     output_dir=Path("LLM-CONTEXT/btx_fix_mcp/review/security"),
         ...     severity_threshold="medium",
         ...     skip_tests=["B101"],
-        ...     exclude_paths=["**/tests/*"]
+        ...     exclude_paths=["**/tests/*"],
+        ...     critical_threshold=2,
+        ...     warning_threshold=10
         ... )
         >>> result = server.run()
     """
@@ -84,6 +88,8 @@ class SecuritySubServer(BaseSubServer):
         bandit_config: str | None = None,
         skip_tests: list[str] | None = None,
         exclude_paths: list[str] | None = None,
+        critical_threshold: int | None = None,
+        warning_threshold: int | None = None,
     ):
         """Initialize security sub-server.
 
@@ -100,6 +106,8 @@ class SecuritySubServer(BaseSubServer):
             bandit_config: Path to bandit config file (overrides config)
             skip_tests: List of test IDs to skip (overrides config)
             exclude_paths: Additional paths to exclude (overrides config)
+            critical_threshold: Number of high severity issues to trigger CRITICAL status (overrides config)
+            warning_threshold: Number of medium severity issues to trigger WARNING status (overrides config)
         """
         # Get output base from config for standalone use
         base_config = get_config(start_dir=str(repo_path or Path.cwd()))
@@ -140,6 +148,10 @@ class SecuritySubServer(BaseSubServer):
         self.bandit_config = bandit_config or full_config.get("bandit_config", "")
         self.skip_tests = skip_tests if skip_tests is not None else full_config.get("skip_tests", [])
         self.exclude_paths = exclude_paths if exclude_paths is not None else full_config.get("exclude_paths", [])
+
+        # Load mindset thresholds with parameter overrides
+        self.critical_threshold = critical_threshold if critical_threshold is not None else full_config.get("critical_threshold", 1)
+        self.warning_threshold = warning_threshold if warning_threshold is not None else full_config.get("warning_threshold", 5)
 
     def _load_config(self, config_file: Path | None) -> dict | None:
         """Load configuration from file."""
@@ -223,9 +235,16 @@ class SecuritySubServer(BaseSubServer):
             # Step 6: Generate summary
             summary = self._generate_summary(python_files, filtered_issues, categorized)
 
-            # Determine status
+            # Determine status based on thresholds
             high_severity = [i for i in filtered_issues if i.get("issue_severity") == "HIGH"]
-            status = "SUCCESS" if not high_severity else "PARTIAL"
+            medium_severity = [i for i in filtered_issues if i.get("issue_severity") == "MEDIUM"]
+
+            if len(high_severity) >= self.critical_threshold:
+                status = "PARTIAL"  # CRITICAL - too many high severity issues
+            elif len(medium_severity) >= self.warning_threshold:
+                status = "PARTIAL"  # WARNING - too many medium severity issues
+            else:
+                status = "SUCCESS"
 
             log_result(
                 self.logger,
@@ -497,6 +516,8 @@ class SecuritySubServer(BaseSubServer):
             "",
             f"- Severity Threshold: {self.severity_threshold}",
             f"- Confidence Threshold: {self.confidence_threshold}",
+            f"- Critical Status Threshold: {self.critical_threshold} high severity issues",
+            f"- Warning Status Threshold: {self.warning_threshold} medium severity issues",
             "",
             "## Issues by Severity",
             "",

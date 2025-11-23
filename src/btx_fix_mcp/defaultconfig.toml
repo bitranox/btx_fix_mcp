@@ -275,6 +275,13 @@ skip_tests = []
 # Additional paths to exclude from security scan
 exclude_paths = []
 
+# Mindset thresholds for status determination
+# Number of high severity issues to trigger CRITICAL status
+critical_threshold = 1
+
+# Number of medium severity issues to trigger WARNING status
+warning_threshold = 5
+
 
 # -----------------------------------------------------------------------------
 # Pylint Integration (for quality analysis)
