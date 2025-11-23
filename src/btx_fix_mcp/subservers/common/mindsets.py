@@ -147,6 +147,70 @@ class AnalysisVerdict:
     recommendations: list[str] = field(default_factory=list)
 
 
+def _calculate_issue_ratios(critical_count: int, warning_count: int, total_items: int) -> tuple[float, float]:
+    """Calculate critical and warning ratios as percentages."""
+    if total_items == 0:
+        return 0.0, 0.0
+    critical_ratio = (critical_count / total_items) * 100
+    warning_ratio = (warning_count / total_items) * 100
+    return critical_ratio, warning_ratio
+
+
+def _get_effective_thresholds(mindset: ReviewerMindset, thresholds: dict[str, Any] | None) -> tuple[float, float]:
+    """Get effective thresholds, applying overrides if provided."""
+    crit_threshold = mindset.judgment.critical_threshold
+    warn_threshold = mindset.judgment.warning_threshold
+
+    if thresholds:
+        crit_threshold = thresholds.get("critical_threshold", crit_threshold)
+        warn_threshold = thresholds.get("warning_threshold", warn_threshold)
+
+    return crit_threshold, warn_threshold
+
+
+def _determine_verdict(
+    critical_count: int,
+    warning_count: int,
+    critical_ratio: float,
+    warning_ratio: float,
+    crit_threshold: float,
+    warn_threshold: float,
+    mindset: ReviewerMindset,
+) -> tuple[str, str]:
+    """Determine verdict and verdict text based on issue counts and thresholds."""
+    if critical_ratio > crit_threshold or (critical_count > 0 and crit_threshold <= 1):
+        return "REJECT", mindset.judgment.verdict_reject
+    elif warning_ratio > warn_threshold:
+        return "NEEDS_WORK", mindset.judgment.verdict_needs_work
+    elif warning_count > 0:
+        return "WARNING", mindset.judgment.verdict_warning
+    else:
+        return "PASS", mindset.judgment.verdict_pass
+
+
+def _generate_findings(critical_count: int, warning_count: int, critical_ratio: float, warning_ratio: float) -> list[str]:
+    """Generate findings summary list."""
+    findings = []
+    if critical_count > 0:
+        findings.append(f"🔴 {critical_count} critical issues ({critical_ratio:.1f}%)")
+    if warning_count > 0:
+        findings.append(f"🟠 {warning_count} warnings ({warning_ratio:.1f}%)")
+    if not findings:
+        findings.append("🟢 No significant issues found")
+    return findings
+
+
+def _generate_recommendations(verdict: str, mindset: ReviewerMindset) -> list[str]:
+    """Generate recommendations based on verdict and mindset."""
+    if verdict not in ("REJECT", "NEEDS_WORK"):
+        return []
+
+    recommendations = ["Address critical issues before merging"]
+    if mindset.questions:
+        recommendations.append(f"Ask yourself: {mindset.questions[0]}")
+    return recommendations
+
+
 def evaluate_results(
     mindset: ReviewerMindset,
     critical_issues: list[dict[str, Any]],
@@ -169,47 +233,13 @@ def evaluate_results(
     critical_count = len(critical_issues)
     warning_count = len(warnings)
 
-    # Calculate ratios (avoid division by zero)
-    critical_ratio = (critical_count / total_items * 100) if total_items > 0 else 0
-    warning_ratio = (warning_count / total_items * 100) if total_items > 0 else 0
-
-    # Get thresholds from mindset or overrides
-    crit_threshold = mindset.judgment.critical_threshold
-    warn_threshold = mindset.judgment.warning_threshold
-
-    if thresholds:
-        crit_threshold = thresholds.get("critical_threshold", crit_threshold)
-        warn_threshold = thresholds.get("warning_threshold", warn_threshold)
-
-    # Determine verdict
-    if critical_ratio > crit_threshold or critical_count > 0 and crit_threshold <= 1:
-        verdict = "REJECT"
-        verdict_text = mindset.judgment.verdict_reject
-    elif warning_ratio > warn_threshold:
-        verdict = "NEEDS_WORK"
-        verdict_text = mindset.judgment.verdict_needs_work
-    elif warning_count > 0:
-        verdict = "WARNING"
-        verdict_text = mindset.judgment.verdict_warning
-    else:
-        verdict = "PASS"
-        verdict_text = mindset.judgment.verdict_pass
-
-    # Generate findings summary
-    findings = []
-    if critical_count > 0:
-        findings.append(f"🔴 {critical_count} critical issues ({critical_ratio:.1f}%)")
-    if warning_count > 0:
-        findings.append(f"🟠 {warning_count} warnings ({warning_ratio:.1f}%)")
-    if not findings:
-        findings.append("🟢 No significant issues found")
-
-    # Generate recommendations based on mindset
-    recommendations = []
-    if verdict in ("REJECT", "NEEDS_WORK"):
-        recommendations.append("Address critical issues before merging")
-        if mindset.questions:
-            recommendations.append(f"Ask yourself: {mindset.questions[0]}")
+    critical_ratio, warning_ratio = _calculate_issue_ratios(critical_count, warning_count, total_items)
+    crit_threshold, warn_threshold = _get_effective_thresholds(mindset, thresholds)
+    verdict, verdict_text = _determine_verdict(
+        critical_count, warning_count, critical_ratio, warning_ratio, crit_threshold, warn_threshold, mindset
+    )
+    findings = _generate_findings(critical_count, warning_count, critical_ratio, warning_ratio)
+    recommendations = _generate_recommendations(verdict, mindset)
 
     return AnalysisVerdict(
         verdict=verdict,

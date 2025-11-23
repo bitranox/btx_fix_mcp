@@ -589,24 +589,34 @@ class DocsSubServer(BaseSubServer):
             total_issues=len(all_issues),
         ).model_dump()
 
-    def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue], files: list[str]) -> str:
-        """Generate markdown summary with mindset evaluation."""
-        metrics = self._compile_metrics(files, results, all_issues)
-        doc_cov = results.get("docstring_coverage", {})
-        project_docs = results.get("project_docs", {})
+    def _format_missing_docstrings_section(self, missing: list) -> list[str]:
+        """Format missing docstrings section."""
+        if not missing:
+            return []
 
-        # Evaluate with mindset (convert to dicts for evaluate_results)
-        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
-        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        limit = get_display_limit("max_missing_docstrings", 15, start_dir=str(self.repo_path))
+        display_count = len(missing) if limit is None else min(limit, len(missing))
+        header = "## Missing Docstrings" if limit is None else f"## Missing Docstrings (showing {display_count} of {len(missing)})"
 
-        verdict = evaluate_results(
-            self.mindset,
-            critical_issues,
-            warning_issues,
-            max(len(files), 1),
-        )
+        lines = [header, ""]
+        for item in missing[:limit]:
+            file_path = item.file if hasattr(item, "file") else item.get("file", "")
+            line_num = item.line if hasattr(item, "line") else item.get("line", 0)
+            doc_type = item.doc_type if hasattr(item, "doc_type") else item.get("kind", "")
+            name = item.name if hasattr(item, "name") else item.get("name", "")
+            lines.append(f"- `{file_path}:{line_num}` - {doc_type} `{name}`")
 
-        lines = [
+        if limit is not None and len(missing) > limit:
+            lines.append("")
+            lines.append(
+                f"*Note: {len(missing) - limit} more missing docstrings not shown. Set `output.display.max_missing_docstrings = 0` in config for unlimited display.*"
+            )
+        lines.append("")
+        return lines
+
+    def _format_header_section(self, verdict, files_count: int) -> list[str]:
+        """Format report header with mindset and verdict."""
+        return [
             "# Documentation Analysis Report",
             "",
             "## Reviewer Mindset",
@@ -621,8 +631,13 @@ class DocsSubServer(BaseSubServer):
             "",
             f"- Critical issues: {verdict.critical_count}",
             f"- Warnings: {verdict.warning_count}",
-            f"- Files analyzed: {len(files)}",
+            f"- Files analyzed: {files_count}",
             "",
+        ]
+
+    def _format_overview_section(self, metrics: dict, doc_cov: dict, project_docs: dict) -> list[str]:
+        """Format overview and project documentation sections."""
+        return [
             "## Overview",
             "",
             f"**Files Analyzed**: {metrics['files_analyzed']}",
@@ -639,35 +654,29 @@ class DocsSubServer(BaseSubServer):
             "",
         ]
 
-        # Missing docstrings
-        missing = results.get("missing_docstrings", [])
-        if missing:
-            limit = get_display_limit("max_missing_docstrings", 15, start_dir=str(self.repo_path))
-            display_count = len(missing) if limit is None else min(limit, len(missing))
-
-            header = "## Missing Docstrings" if limit is None else f"## Missing Docstrings (showing {display_count} of {len(missing)})"
-            lines.extend([header, ""])
-
-            for item in missing[:limit]:
-                file_path = item.file if hasattr(item, "file") else item.get("file", "")
-                line_num = item.line if hasattr(item, "line") else item.get("line", 0)
-                doc_type = item.doc_type if hasattr(item, "doc_type") else item.get("kind", "")
-                name = item.name if hasattr(item, "name") else item.get("name", "")
-                lines.append(f"- `{file_path}:{line_num}` - {doc_type} `{name}`")
-
-            if limit is not None and len(missing) > limit:
-                lines.append("")
-                lines.append(
-                    f"*Note: {len(missing) - limit} more missing docstrings not shown. Set `output.display.max_missing_docstrings = 0` in config for unlimited display.*"
-                )
-            lines.append("")
-
-        # Approval status
-        lines.extend(["## Approval Status", ""])
-        lines.append(f"**{verdict.verdict_text}**")
+    def _format_approval_section(self, verdict) -> list[str]:
+        """Format approval status section."""
+        lines = ["## Approval Status", "", f"**{verdict.verdict_text}**"]
         if verdict.recommendations:
             lines.append("")
             for rec in verdict.recommendations:
                 lines.append(f"- {rec}")
+        return lines
+
+    def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue], files: list[str]) -> str:
+        """Generate markdown summary with mindset evaluation."""
+        metrics = self._compile_metrics(files, results, all_issues)
+        doc_cov = results.get("docstring_coverage", {})
+        project_docs = results.get("project_docs", {})
+
+        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
+        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        verdict = evaluate_results(self.mindset, critical_issues, warning_issues, max(len(files), 1))
+
+        lines = []
+        lines.extend(self._format_header_section(verdict, len(files)))
+        lines.extend(self._format_overview_section(metrics, doc_cov, project_docs))
+        lines.extend(self._format_missing_docstrings_section(results.get("missing_docstrings", [])))
+        lines.extend(self._format_approval_section(verdict))
 
         return "\n".join(lines)

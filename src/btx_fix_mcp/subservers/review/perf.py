@@ -448,22 +448,52 @@ class PerfSubServer(BaseSubServer):
             total_issues=len(all_issues),
         ).model_dump()
 
-    def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue], files: list[str]) -> str:
-        """Generate markdown summary with mindset evaluation."""
-        metrics = self._compile_metrics(files, results, all_issues)
+    def _format_hotspots_section(self, hotspots: list) -> list[str]:
+        """Format performance hotspots section."""
+        if not hotspots:
+            return []
 
-        # Evaluate with mindset (convert to dicts for evaluate_results)
-        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
-        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        limit = get_display_limit("max_hotspots", 10, start_dir=str(self.repo_path))
+        display_count = len(hotspots) if limit is None else min(limit, len(hotspots))
+        header = "## Performance Hotspots" if limit is None else f"## Performance Hotspots (showing {display_count} of {len(hotspots)})"
 
-        verdict = evaluate_results(
-            self.mindset,
-            critical_issues,
-            warning_issues,
-            max(len(files), 1),
-        )
+        lines = [header, ""]
+        for hs in hotspots[:limit]:
+            lines.append(f"- **{hs.get('name', 'unknown')}**: {hs.get('duration', 0):.2f}s")
 
-        lines = [
+        if limit is not None and len(hotspots) > limit:
+            lines.append("")
+            lines.append(f"*Note: {len(hotspots) - limit} more hotspots not shown. Set `output.display.max_hotspots = 0` in config for unlimited display.*")
+        lines.append("")
+        return lines
+
+    def _format_pattern_issues_section(self, pattern_issues: list) -> list[str]:
+        """Format anti-pattern detections section."""
+        if not pattern_issues:
+            return []
+
+        limit = get_display_limit("max_pattern_issues", 10, start_dir=str(self.repo_path))
+        display_count = len(pattern_issues) if limit is None else min(limit, len(pattern_issues))
+        header = "## Anti-Pattern Detections" if limit is None else f"## Anti-Pattern Detections (showing {display_count} of {len(pattern_issues)})"
+
+        lines = [header, ""]
+        for issue in pattern_issues[:limit]:
+            file_path = issue.file if hasattr(issue, "file") else issue.get("file", "")
+            line_num = issue.line if hasattr(issue, "line") else issue.get("line", 0)
+            message = issue.message if hasattr(issue, "message") else issue.get("message", "")
+            lines.append(f"- `{file_path}:{line_num}` - {message}")
+
+        if limit is not None and len(pattern_issues) > limit:
+            lines.append("")
+            lines.append(
+                f"*Note: {len(pattern_issues) - limit} more pattern issues not shown. Set `output.display.max_pattern_issues = 0` in config for unlimited display.*"
+            )
+        lines.append("")
+        return lines
+
+    def _format_perf_header_section(self, verdict, files_count: int) -> list[str]:
+        """Format report header with mindset and verdict."""
+        return [
             "# Performance Analysis Report",
             "",
             "## Reviewer Mindset",
@@ -478,8 +508,13 @@ class PerfSubServer(BaseSubServer):
             "",
             f"- Critical issues: {verdict.critical_count}",
             f"- Warnings: {verdict.warning_count}",
-            f"- Files analyzed: {len(files)}",
+            f"- Files analyzed: {files_count}",
             "",
+        ]
+
+    def _format_perf_overview_section(self, metrics: dict) -> list[str]:
+        """Format overview section."""
+        return [
             "## Overview",
             "",
             f"**Files Analyzed**: {metrics['files_analyzed']}",
@@ -489,51 +524,28 @@ class PerfSubServer(BaseSubServer):
             "",
         ]
 
-        # Hotspots
-        hotspots = results.get("hotspots", [])
-        if hotspots:
-            limit = get_display_limit("max_hotspots", 10, start_dir=str(self.repo_path))
-            display_count = len(hotspots) if limit is None else min(limit, len(hotspots))
-
-            header = "## Performance Hotspots" if limit is None else f"## Performance Hotspots (showing {display_count} of {len(hotspots)})"
-            lines.extend([header, ""])
-
-            for hs in hotspots[:limit]:
-                lines.append(f"- **{hs.get('name', 'unknown')}**: {hs.get('duration', 0):.2f}s")
-
-            if limit is not None and len(hotspots) > limit:
-                lines.append("")
-                lines.append(f"*Note: {len(hotspots) - limit} more hotspots not shown. Set `output.display.max_hotspots = 0` in config for unlimited display.*")
-            lines.append("")
-
-        # Pattern issues
-        pattern_issues = results.get("pattern_issues", [])
-        if pattern_issues:
-            limit = get_display_limit("max_pattern_issues", 10, start_dir=str(self.repo_path))
-            display_count = len(pattern_issues) if limit is None else min(limit, len(pattern_issues))
-
-            header = "## Anti-Pattern Detections" if limit is None else f"## Anti-Pattern Detections (showing {display_count} of {len(pattern_issues)})"
-            lines.extend([header, ""])
-
-            for issue in pattern_issues[:limit]:
-                file_path = issue.file if hasattr(issue, "file") else issue.get("file", "")
-                line_num = issue.line if hasattr(issue, "line") else issue.get("line", 0)
-                message = issue.message if hasattr(issue, "message") else issue.get("message", "")
-                lines.append(f"- `{file_path}:{line_num}` - {message}")
-
-            if limit is not None and len(pattern_issues) > limit:
-                lines.append("")
-                lines.append(
-                    f"*Note: {len(pattern_issues) - limit} more pattern issues not shown. Set `output.display.max_pattern_issues = 0` in config for unlimited display.*"
-                )
-            lines.append("")
-
-        # Approval status
-        lines.extend(["## Approval Status", ""])
-        lines.append(f"**{verdict.verdict_text}**")
+    def _format_perf_approval_section(self, verdict) -> list[str]:
+        """Format approval status section."""
+        lines = ["## Approval Status", "", f"**{verdict.verdict_text}**"]
         if verdict.recommendations:
             lines.append("")
             for rec in verdict.recommendations:
                 lines.append(f"- {rec}")
+        return lines
+
+    def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue], files: list[str]) -> str:
+        """Generate markdown summary with mindset evaluation."""
+        metrics = self._compile_metrics(files, results, all_issues)
+
+        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
+        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        verdict = evaluate_results(self.mindset, critical_issues, warning_issues, max(len(files), 1))
+
+        lines = []
+        lines.extend(self._format_perf_header_section(verdict, len(files)))
+        lines.extend(self._format_perf_overview_section(metrics))
+        lines.extend(self._format_hotspots_section(results.get("hotspots", [])))
+        lines.extend(self._format_pattern_issues_section(results.get("pattern_issues", [])))
+        lines.extend(self._format_perf_approval_section(verdict))
 
         return "\n".join(lines)

@@ -46,6 +46,70 @@ class AnalyzerOrchestrator:
 
         self._analyzers_initialized = True
 
+    def _add_complexity_task(self, tasks: list, python_files: list[str]) -> None:
+        """Add complexity analyzer task (always enabled)."""
+        tasks.append(
+            (
+                "complexity",
+                self.complexity_analyzer.analyze,
+                python_files,
+                ["complexity", "maintainability", "cognitive", "function_issues"],
+            )
+        )
+
+    def _add_static_task(self, tasks: list, python_files: list[str], features) -> None:
+        """Add static analyzer task if enabled."""
+        if features.static_analysis or features.duplication_detection:
+            tasks.append(
+                (
+                    "static",
+                    self.static_analyzer.analyze,
+                    python_files,
+                    ["static", "duplication"],
+                )
+            )
+
+    def _add_test_task(self, tasks: list, python_files: list[str], features) -> None:
+        """Add test analyzer task if enabled."""
+        if features.test_analysis:
+            tasks.append(("tests", self.test_analyzer.analyze, python_files, ["tests"]))
+
+    def _add_architecture_task(self, tasks: list, python_files: list[str], features) -> None:
+        """Add architecture analyzer task if enabled."""
+        if features.architecture_analysis or features.runtime_check_detection or features.import_cycle_detection:
+            tasks.append(
+                (
+                    "architecture",
+                    self.architecture_analyzer.analyze,
+                    python_files,
+                    ["architecture", "import_cycles", "runtime_checks"],
+                )
+            )
+
+    def _add_metrics_task(self, tasks: list, all_files: list[str], features) -> None:
+        """Add metrics analyzer task if enabled."""
+        if features.halstead_metrics or features.raw_metrics or features.code_churn:
+            tasks.append(
+                (
+                    "metrics",
+                    self.metrics_analyzer.analyze,
+                    all_files,
+                    ["halstead", "raw_metrics", "code_churn"],
+                )
+            )
+
+    def _add_type_task(self, tasks: list, python_files: list[str], features) -> None:
+        """Add type analyzer task if enabled."""
+        if features.type_coverage or features.dead_code_detection or features.docstring_coverage:
+            tasks.append(
+                (
+                    "types",
+                    self.type_analyzer.analyze,
+                    python_files,
+                    ["type_coverage", "dead_code", "docstring_coverage"],
+                )
+            )
+
     def build_analyzer_tasks(self, python_files: list[str], js_files: list[str]) -> list[tuple[str, Any, list[str], list[str]]]:
         """Build list of analyzer tasks based on enabled features.
 
@@ -63,63 +127,12 @@ class AnalyzerOrchestrator:
         all_files = python_files + js_files
         features = self.quality_config.features
 
-        # Complexity analyzer (always enabled)
-        tasks.append(
-            (
-                "complexity",
-                self.complexity_analyzer.analyze,
-                python_files,
-                ["complexity", "maintainability", "cognitive", "function_issues"],
-            )
-        )
-
-        # Static analyzer
-        if features.static_analysis or features.duplication_detection:
-            tasks.append(
-                (
-                    "static",
-                    self.static_analyzer.analyze,
-                    python_files,
-                    ["static", "duplication"],
-                )
-            )
-
-        # Test analyzer
-        if features.test_analysis:
-            tasks.append(("tests", self.test_analyzer.analyze, python_files, ["tests"]))
-
-        # Architecture analyzer
-        if features.architecture_analysis or features.runtime_check_detection or features.import_cycle_detection:
-            tasks.append(
-                (
-                    "architecture",
-                    self.architecture_analyzer.analyze,
-                    python_files,
-                    ["architecture", "import_cycles", "runtime_checks"],
-                )
-            )
-
-        # Metrics analyzer
-        if features.halstead_metrics or features.raw_metrics or features.code_churn:
-            tasks.append(
-                (
-                    "metrics",
-                    self.metrics_analyzer.analyze,
-                    all_files,
-                    ["halstead", "raw_metrics", "code_churn"],
-                )
-            )
-
-        # Type analyzer
-        if features.type_coverage or features.dead_code_detection or features.docstring_coverage:
-            tasks.append(
-                (
-                    "types",
-                    self.type_analyzer.analyze,
-                    python_files,
-                    ["type_coverage", "dead_code", "docstring_coverage"],
-                )
-            )
+        self._add_complexity_task(tasks, python_files)
+        self._add_static_task(tasks, python_files, features)
+        self._add_test_task(tasks, python_files, features)
+        self._add_architecture_task(tasks, python_files, features)
+        self._add_metrics_task(tasks, all_files, features)
+        self._add_type_task(tasks, python_files, features)
 
         return tasks
 
