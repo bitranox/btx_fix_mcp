@@ -23,7 +23,6 @@ details from sub-servers and orchestrators.
 
 from __future__ import annotations
 
-from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -231,3 +230,71 @@ def get_subserver_config(
         Configuration values for the sub-server.
     """
     return get_review_config(subserver, start_dir=start_dir)
+
+
+def get_timeout(
+    key: str,
+    default: int,
+    start_dir: str | None = None,
+) -> int:
+    """Get a timeout value from configuration.
+
+    Parameters
+    ----------
+    key:
+        Timeout key name (e.g., "git_quick_op", "tool_analysis").
+    default:
+        Default timeout in seconds if not configured.
+    start_dir:
+        Directory to start searching for project config files.
+
+    Returns
+    -------
+    int
+        Timeout value in seconds.
+
+    Examples
+    --------
+    >>> timeout = get_timeout("git_status", 10)
+    >>> timeout >= 1
+    True
+    """
+    timeouts = get_section("general.timeouts", start_dir=start_dir)
+    return int(timeouts.get(key, default))
+
+
+def get_display_limit(
+    key: str,
+    default: int,
+    start_dir: str | None = None,
+) -> int | None:
+    """Get a display limit from configuration.
+
+    Parameters
+    ----------
+    key:
+        Display limit key name (e.g., "max_sample_files", "max_critical_display").
+    default:
+        Default limit if not configured.
+    start_dir:
+        Directory to start searching for project config files.
+
+    Returns
+    -------
+    int or None
+        Display limit (number of items), or None if unlimited (0 in config).
+
+    Examples
+    --------
+    >>> limit = get_display_limit("max_sample_files", 10)
+    >>> limit is None or limit >= 0
+    True
+
+    Notes
+    -----
+    Returns None for unlimited display (config value = 0).
+    This allows code to use `items[:limit]` where `items[:None]` means all items.
+    """
+    display = get_section("output.display", start_dir=start_dir)
+    limit = int(display.get(key, default))
+    return None if limit == 0 else limit

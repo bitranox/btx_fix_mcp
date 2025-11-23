@@ -12,7 +12,11 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from btx_fix_mcp.config import get_config, get_subserver_config
+from btx_fix_mcp.config import get_config, get_display_limit, get_subserver_config, get_timeout
+from btx_fix_mcp.subservers.common.chunked_writer import (
+    cleanup_chunked_issues,
+    write_chunked_issues,
+)
 from btx_fix_mcp.subservers.common.issues import (
     BaseIssue,
     DependencyTree,
@@ -227,9 +231,7 @@ class DepsSubServer(BaseSubServer):
             metrics={"project_type": None, "total_dependencies": 0},
         )
 
-    def _run_vulnerability_scan(
-        self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]
-    ) -> None:
+    def _run_vulnerability_scan(self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]) -> None:
         """Run vulnerability scanning if enabled."""
         if not self.scan_vulnerabilities:
             return
@@ -240,9 +242,7 @@ class DepsSubServer(BaseSubServer):
             results["vulnerabilities"] = vuln_results
             all_issues.extend(self._vulnerabilities_to_issues(vuln_results))
 
-    def _run_outdated_check(
-        self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]
-    ) -> None:
+    def _run_outdated_check(self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]) -> None:
         """Run outdated package check if enabled."""
         if not self.check_outdated:
             return
@@ -253,9 +253,7 @@ class DepsSubServer(BaseSubServer):
             results["outdated"] = outdated
             all_issues.extend(self._outdated_to_issues(outdated))
 
-    def _run_license_check(
-        self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]
-    ) -> None:
+    def _run_license_check(self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]) -> None:
         """Run license compliance check if enabled."""
         if not self.check_licenses:
             return
@@ -321,11 +319,12 @@ class DepsSubServer(BaseSubServer):
         if project_type == "python":
             try:
                 python_path = get_tool_path("python")
+                timeout = get_timeout("tool_analysis", 60, start_dir=str(self.repo_path))
                 result = subprocess.run(
                     [str(python_path), "-m", "pip_licenses", "--format=json"],
                     capture_output=True,
                     text=True,
-                    timeout=60,
+                    timeout=timeout,
                 )
                 if result.stdout.strip():
                     licenses = json.loads(result.stdout)
@@ -342,11 +341,12 @@ class DepsSubServer(BaseSubServer):
 
         if project_type == "python":
             try:
+                timeout = get_timeout("tool_quick", 30, start_dir=str(self.repo_path))
                 result = subprocess.run(
                     ["pip", "list", "--format=json"],
                     capture_output=True,
                     text=True,
-                    timeout=30,
+                    timeout=timeout,
                 )
                 if result.stdout.strip():
                     packages = json.loads(result.stdout)
@@ -472,10 +472,30 @@ class DepsSubServer(BaseSubServer):
 
         # All issues (convert dataclasses to dicts)
         if all_issues:
-            path = self.output_dir / "issues.json"
+            report_dir = self.output_dir.parent / "report"
+
+            # Convert to dicts
             issues_dicts = [issue.to_dict() for issue in all_issues]
-            path.write_text(json.dumps(issues_dicts, indent=2))
-            artifacts["issues"] = path
+
+            # Get unique issue types
+            issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
+
+            # Cleanup old chunked files
+            cleanup_chunked_issues(
+                output_dir=report_dir,
+                issue_types=issue_types,
+                prefix="issues",
+            )
+
+            # Write chunked issues
+            written_files = write_chunked_issues(
+                issues=issues_dicts,
+                output_dir=report_dir,
+                prefix="issues",
+            )
+
+            if written_files:
+                artifacts["issues"] = written_files[0]
 
         return artifacts
 
@@ -494,7 +514,7 @@ class DepsSubServer(BaseSubServer):
             license_issues=len([i for i in all_issues if i.type == "license"]),
             critical_issues=len([i for i in all_issues if i.severity == "critical"]),
             total_issues=len(all_issues),
-        ).to_dict()
+        ).model_dump()
 
     def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue]) -> str:
         """Generate markdown summary with mindset evaluation."""
@@ -510,9 +530,7 @@ class DepsSubServer(BaseSubServer):
 
         return "\n".join(lines)
 
-    def _evaluate_mindset(
-        self, all_issues: list[BaseIssue], metrics: dict[str, Any]
-    ) -> Any:
+    def _evaluate_mindset(self, all_issues: list[BaseIssue], metrics: dict[str, Any]) -> Any:
         """Evaluate results using mindset."""
         critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
         warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
@@ -525,21 +543,11 @@ class DepsSubServer(BaseSubServer):
             total_items,
         )
 
-    def _format_header_section(
-        self, verdict: Any, metrics: dict[str, Any], results: dict[str, Any]
-    ) -> list[str]:
+    def _format_header_section(self, verdict: Any, metrics: dict[str, Any], results: dict[str, Any]) -> list[str]:
         """Format header section with mindset, verdict, and overview."""
         tree = results.get("dependency_tree")
-        tree_total = (
-            tree.total
-            if isinstance(tree, DependencyTree)
-            else tree.get("total", 0) if tree else 0
-        )
-        tree_direct = (
-            tree.direct
-            if isinstance(tree, DependencyTree)
-            else tree.get("direct", 0) if tree else 0
-        )
+        tree_total = tree.total if isinstance(tree, DependencyTree) else tree.get("total", 0) if tree else 0
+        tree_direct = tree.direct if isinstance(tree, DependencyTree) else tree.get("direct", 0) if tree else 0
 
         return [
             "# Dependency Analysis Report",
@@ -575,14 +583,22 @@ class DepsSubServer(BaseSubServer):
         vulns = results.get("vulnerabilities", [])
 
         if vulns:
-            lines.append(f"🔴 **{len(vulns)} vulnerabilities found**\n")
-            for v in vulns[:10]:
+            limit = get_display_limit("max_vulnerabilities", 10, start_dir=str(self.repo_path))
+            display_count = len(vulns) if limit is None else min(limit, len(vulns))
+
+            header = f"🔴 **{len(vulns)} vulnerabilities found**"
+            if limit is not None and len(vulns) > limit:
+                header += f" (showing {display_count})"
+            lines.append(header + "\n")
+
+            for v in vulns[:limit]:
+                lines.append(f"- **{v.get('package', '')}** {v.get('version', '')}: {v.get('vulnerability_id', '')} - {v.get('description', '')[:80]}")
+
+            if limit is not None and len(vulns) > limit:
+                lines.append("")
                 lines.append(
-                    f"- **{v.get('package', '')}** {v.get('version', '')}: "
-                    f"{v.get('vulnerability_id', '')} - {v.get('description', '')[:80]}"
+                    f"*Note: {len(vulns) - limit} more vulnerabilities not shown. Set `output.display.max_vulnerabilities = 0` in config for unlimited display.*"
                 )
-            if len(vulns) > 10:
-                lines.append(f"- ... and {len(vulns) - 10} more")
         else:
             lines.append("✅ No known vulnerabilities found")
 
@@ -595,14 +611,22 @@ class DepsSubServer(BaseSubServer):
         outdated = results.get("outdated", [])
 
         if outdated:
-            lines.append(f"⚠️ **{len(outdated)} packages are outdated**\n")
-            for pkg in outdated[:10]:
+            limit = get_display_limit("max_outdated_packages", 10, start_dir=str(self.repo_path))
+            display_count = len(outdated) if limit is None else min(limit, len(outdated))
+
+            header = f"⚠️ **{len(outdated)} packages are outdated**"
+            if limit is not None and len(outdated) > limit:
+                header += f" (showing {display_count})"
+            lines.append(header + "\n")
+
+            for pkg in outdated[:limit]:
+                lines.append(f"- **{pkg.get('name', '')}**: {pkg.get('version', '')} → {pkg.get('latest_version', '')}")
+
+            if limit is not None and len(outdated) > limit:
+                lines.append("")
                 lines.append(
-                    f"- **{pkg.get('name', '')}**: "
-                    f"{pkg.get('version', '')} → {pkg.get('latest_version', '')}"
+                    f"*Note: {len(outdated) - limit} more outdated packages not shown. Set `output.display.max_outdated_packages = 0` in config for unlimited display.*"
                 )
-            if len(outdated) > 10:
-                lines.append(f"- ... and {len(outdated) - 10} more")
         else:
             lines.append("✅ All packages are up to date")
 
@@ -615,9 +639,22 @@ class DepsSubServer(BaseSubServer):
         license_issues = [i for i in all_issues if i.type == "license"]
 
         if license_issues:
-            lines.append(f"⚠️ **{len(license_issues)} license issues found**\n")
-            for lic in license_issues[:5]:
+            limit = get_display_limit("max_license_issues", 5, start_dir=str(self.repo_path))
+            display_count = len(license_issues) if limit is None else min(limit, len(license_issues))
+
+            header = f"⚠️ **{len(license_issues)} license issues found**"
+            if limit is not None and len(license_issues) > limit:
+                header += f" (showing {display_count})"
+            lines.append(header + "\n")
+
+            for lic in license_issues[:limit]:
                 lines.append(f"- {lic.message}")
+
+            if limit is not None and len(license_issues) > limit:
+                lines.append("")
+                lines.append(
+                    f"*Note: {len(license_issues) - limit} more license issues not shown. Set `output.display.max_license_issues = 0` in config for unlimited display.*"
+                )
         else:
             lines.append("✅ All licenses are compliant")
 

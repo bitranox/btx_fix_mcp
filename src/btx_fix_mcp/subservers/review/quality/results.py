@@ -22,9 +22,7 @@ class ResultsCompiler:
         self.quality_config = quality_config
         self.repo_path = repo_path
 
-    def compile_issues(
-        self, results: dict[str, Any], config: QualityConfig
-    ) -> list[dict[str, Any]]:
+    def compile_issues(self, results: dict[str, Any], config: QualityConfig) -> list[dict[str, Any]]:
         """Compile issues from analyzer results.
 
         Args:
@@ -87,9 +85,7 @@ class ResultsCompiler:
             total_issues=issue_metrics["issues_count"],
         )
 
-    def _compile_file_metrics(
-        self, python_files: list[str], js_files: list[str]
-    ) -> dict[str, int]:
+    def _compile_file_metrics(self, python_files: list[str], js_files: list[str]) -> dict[str, int]:
         """Compile file-related metrics.
 
         Args:
@@ -122,29 +118,11 @@ class ResultsCompiler:
 
         return {
             "total_functions": len(complexity_results),
-            "high_complexity_count": len(
-                [
-                    r
-                    for r in complexity_results
-                    if r.get("complexity", 0) > thresholds.complexity
-                ]
-            ),
-            "low_mi_count": len(
-                [
-                    r
-                    for r in maintainability_results
-                    if r.get("mi", 100) < thresholds.maintainability
-                ]
-            ),
-            "functions_too_long": len(
-                [i for i in function_issues if i["issue_type"] == "TOO_LONG"]
-            ),
-            "functions_too_nested": len(
-                [i for i in function_issues if i["issue_type"] == "TOO_NESTED"]
-            ),
-            "high_cognitive_count": len(
-                [r for r in cognitive_results if r.get("exceeds_threshold")]
-            ),
+            "high_complexity_count": len([r for r in complexity_results if r.get("complexity", 0) > thresholds.complexity]),
+            "low_mi_count": len([r for r in maintainability_results if r.get("mi", 100) < thresholds.maintainability]),
+            "functions_too_long": len([i for i in function_issues if i["issue_type"] == "TOO_LONG"]),
+            "functions_too_nested": len([i for i in function_issues if i["issue_type"] == "TOO_NESTED"]),
+            "high_cognitive_count": len([r for r in cognitive_results if r.get("exceeds_threshold")]),
             "duplicate_blocks": len(results.get("duplication", {}).get("duplicates", [])),
         }
 
@@ -204,9 +182,7 @@ class ResultsCompiler:
             "high_churn_files": len(code_churn.get("high_churn_files", [])),
         }
 
-    def _compile_issue_metrics(
-        self, all_issues: list[dict], results: dict[str, Any]
-    ) -> dict[str, Any]:
+    def _compile_issue_metrics(self, all_issues: list[dict], results: dict[str, Any]) -> dict[str, Any]:
         """Compile issue-related metrics.
 
         Args:

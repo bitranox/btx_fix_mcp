@@ -8,6 +8,7 @@ It can work in two modes:
 
 from pathlib import Path
 
+from btx_fix_mcp.config import get_display_limit, get_subserver_config
 from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.files import categorize_files, find_files
 from btx_fix_mcp.subservers.common.git import GitOperationError, GitOperations
@@ -57,6 +58,8 @@ class ScopeSubServer(BaseSubServer):
         repo_path: Path | None = None,
         mode: str = "git",
         mcp_mode: bool = False,
+        exclude_patterns: list[str] | None = None,
+        include_patterns: list[str] | None = None,
     ):
         """Initialize scope sub-server.
 
@@ -68,11 +71,18 @@ class ScopeSubServer(BaseSubServer):
             mode: "git" or "full"
             mcp_mode: If True, log to stderr only (MCP protocol compatible).
                       If False, log to stdout and optional log file (standalone mode).
+            exclude_patterns: Patterns to exclude (overrides config)
+            include_patterns: Patterns to include (overrides config, default: all files)
         """
         super().__init__(name=name, input_dir=input_dir, output_dir=output_dir)
         self.repo_path = repo_path or Path.cwd()
         self.mode = mode
         self.mcp_mode = mcp_mode
+
+        # Load config
+        config = get_subserver_config("scope")
+        self.exclude_patterns = exclude_patterns or config.get("exclude_patterns", [])
+        self.include_patterns = include_patterns or config.get("include_patterns", ["**/*"])
 
         # Setup logging based on mode
         if mcp_mode:
@@ -158,7 +168,7 @@ class ScopeSubServer(BaseSubServer):
                 status="SUCCESS",
                 summary=summary,
                 artifacts=artifacts,
-                metrics=metrics.to_dict(),
+                metrics=metrics.model_dump(),
             )
 
         except Exception as e:
@@ -199,7 +209,19 @@ class ScopeSubServer(BaseSubServer):
         Returns:
             List of all file paths
         """
-        return find_files(self.repo_path, pattern="**/*")
+        all_files: list[Path] = []
+
+        # Find files matching each include pattern
+        for include_pattern in self.include_patterns:
+            files = find_files(
+                self.repo_path,
+                pattern=include_pattern,
+                exclude_patterns=self.exclude_patterns,
+            )
+            all_files.extend(files)
+
+        # Remove duplicates and sort
+        return sorted(set(all_files))
 
     def _save_results(self, files: list[Path], categorized: dict[str, list[Path]]) -> dict[str, Path]:
         """Save results to files.
@@ -269,13 +291,21 @@ class ScopeSubServer(BaseSubServer):
 
         # Add sample files
         if files:
-            summary_lines.extend(["", "## Sample Files (first 10)", ""])
-            for f in files[:10]:
+            limit = get_display_limit("max_sample_files", 10, start_dir=str(self.repo_path))
+            display_count = len(files) if limit is None else min(limit, len(files))
+
+            header = "## Sample Files" if limit is None else f"## Sample Files (showing {display_count} of {len(files)})"
+            summary_lines.extend(["", header, ""])
+
+            for f in files[:limit]:
                 rel_path = f.relative_to(self.repo_path)
                 summary_lines.append(f"- `{rel_path}`")
 
-            if len(files) > 10:
-                summary_lines.append(f"- ... and {len(files) - 10} more")
+            if limit is not None and len(files) > limit:
+                summary_lines.append("")
+                summary_lines.append(
+                    f"*Note: {len(files) - limit} more files not shown. Set `output.display.max_sample_files = 0` in config for unlimited display.*"
+                )
 
         summary_lines.extend(
             [

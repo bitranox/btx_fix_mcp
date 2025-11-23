@@ -3,6 +3,8 @@
 import subprocess
 from pathlib import Path
 
+from btx_fix_mcp.config import get_timeout
+
 
 class GitOperationError(Exception):
     """Raised when a git operation fails."""
@@ -41,11 +43,12 @@ class GitOperations:
                 cmd.extend(["-C", str(path)])
             cmd.extend(["rev-parse", "--is-inside-work-tree"])
 
+            timeout = get_timeout("git_quick_op", 5)
             result = subprocess.run(
                 cmd,
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=timeout,
             )
             return result.returncode == 0
         except (subprocess.SubprocessError, FileNotFoundError):

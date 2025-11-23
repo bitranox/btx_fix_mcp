@@ -1,0 +1,352 @@
+[
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Check docstring coverage using interrogate.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "f\"**Files Analyzed**: {metrics['files_analyzed']}\", (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Check docstring coverage using interrogate.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": ") (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Compile metrics for result.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Compile metrics for result.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Get Python files to analyze.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Gather results from all sub-servers.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "# Load config (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "# Load config using extracted config module (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Get Python files to analyze.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "pad = max(len(label) for label, _ in fields) (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "return \"\\n\".join(lines) (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "e, (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Execute performance analysis.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "return lines (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "# Load config (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "artifacts=artifacts, (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "written_files = write_chunked_issues( (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "\"\"\"Compile metrics for result.\"\"\" (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "# Validate thresholds (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "# Step 2: Pattern-based detection (duplicate-code)",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "src/btx_fix_mcp/tools_venv.py:1:0: R0801: Similar lines in 2 files",
+    "file": "",
+    "line": 0
+  },
+  {
+    "type": "code_duplication",
+    "severity": "warning",
+    "message": "(duplicate-code)",
+    "file": "",
+    "line": 0
+  }
+]

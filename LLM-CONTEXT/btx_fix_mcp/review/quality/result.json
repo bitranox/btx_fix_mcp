@@ -1,6 +1,6 @@
 {
-  "status": "SUCCESS",
-  "summary": "# Quality Analysis Report\n\n## Reviewer Mindset\n\n**You are a quality reviewer** - thorough, precise.\n\n**Your approach:**\n- \u2713 **Verify:** Verify all claims with evidence\n\n## Verdict\n\n**\ud83d\udd27 NEEDS WORK**\n\n- Critical issues: 0 (0.0%)\n- Warnings: 3 (300.0%)\n- Total items analyzed: 1\n\n## Overview\n\n**Files Analyzed**: 1 (1 Python, 0 JS/TS)\n**Functions Analyzed**: 20\n**Total Issues Found**: 3\n**Critical Issues**: 0\n\n## Code Metrics\n\n- Total LOC: **421**\n- Source LOC (SLOC): **294**\n- Comments: **16**\n- Comment Ratio: **5.4%**\n\n## Quality Issues Summary\n\n- Functions >50 lines: **1**\n- High cyclomatic complexity (>10): **0**\n- High cognitive complexity (>15): **0**\n- Functions with nesting >3: **0**\n- Code duplication blocks: **0**\n- God objects: **0**\n- Highly coupled modules: **0**\n- Import cycles: **0**\n- Dead code items: **0**\n\n## Coverage Metrics\n\n- Type coverage: **0%** (minimum: 80%)\n- Docstring coverage: **0.0%** (minimum: 80%)\n\n## Test Suite Analysis\n\n- Total tests: **0**\n- Total assertions: **0**\n- Assertions per test: **0**\n- Unit tests: 0\n- Integration tests: 0\n- E2E tests: 0\n- Test issues: **0**\n\n## Runtime Type Checking (Beartype)\n\n- Status: **\u2705 Passed**\n\n## Refactoring Recommendations\n\n1. **Break Down Long Functions**: 1 functions exceed 50 lines\n2. **Add Type Annotations**: Coverage is 0%\n3. **Add Docstrings**: Coverage is 0.0%\n\n## Approval Status\n\n**\ud83d\udd27 NEEDS WORK**\n\n- Address critical issues before merging\n- Ask yourself: Is this correct? Let me check.",
+  "status": "PARTIAL",
+  "summary": "# Quality Analysis Report\n\n## Reviewer Mindset\n\n**You are a quality reviewer** - thorough, precise.\n\n**Your approach:**\n- \u2713 **Verify:** Verify all claims with evidence\n\n## Verdict\n\n**\ud83d\udd27 NEEDS WORK**\n\n- Critical issues: 2 (3.2%)\n- Warnings: 142 (225.4%)\n- Total items analyzed: 63\n\n## Overview\n\n**Files Analyzed**: 63 (63 Python, 0 JS/TS)\n**Functions Analyzed**: 572\n**Total Issues Found**: 193\n**Critical Issues**: 2\n\n## Code Metrics\n\n- Total LOC: **12,919**\n- Source LOC (SLOC): **8,064**\n- Comments: **437**\n- Comment Ratio: **5.4%**\n\n## Quality Issues Summary\n\n- Functions >50 lines: **29**\n- High cyclomatic complexity (>10): **17**\n- High cognitive complexity (>15): **10**\n- Functions with nesting >3: **16**\n- Code duplication blocks: **66**\n- God objects: **2**\n- Highly coupled modules: **1**\n- Import cycles: **0**\n- Dead code items: **0**\n\n## Coverage Metrics\n\n- Type coverage: **0%** (minimum: 80%)\n- Docstring coverage: **0.0%** (minimum: 80%)\n\n## Test Suite Analysis\n\n- Total tests: **0**\n- Total assertions: **0**\n- Assertions per test: **0**\n- Unit tests: 0\n- Integration tests: 0\n- E2E tests: 0\n- Test issues: **0**\n\n## Runtime Type Checking (Beartype)\n\n- Status: **\u2705 Passed**\n\n## Critical Issues (Must Fix)\n\n- \ud83d\udd34 `src/btx_fix_mcp/subservers/review/deps.py`: Class 'DepsSubServer' is a god object (27 methods, 586 lines)\n- \ud83d\udd34 `src/btx_fix_mcp/subservers/review/quality/architecture.py`: Class 'ArchitectureAnalyzer' is a god object (22 methods, 279 lines)\n\n## Refactoring Recommendations\n\n1. **Break Down Long Functions**: 29 functions exceed 50 lines\n2. **Reduce Cyclomatic Complexity**: 17 functions exceed threshold\n3. **Reduce Cognitive Complexity**: 10 functions are too complex\n4. **Extract Duplicated Code**: 66 duplicate blocks found\n5. **Refactor God Objects**: 2 classes need decomposition\n6. **Add Type Annotations**: Coverage is 0%\n7. **Add Docstrings**: Coverage is 0.0%\n\n## Approval Status\n\n**\ud83d\udd27 NEEDS WORK**\n\n- Address critical issues before merging\n- Ask yourself: Is this correct? Let me check.",
   "artifacts": {
     "complexity": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/quality/complexity.json",
     "maintainability": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/quality/maintainability.json",
@@ -17,32 +17,32 @@
     "docstring_coverage": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/quality/docstring_coverage.json",
     "code_churn": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/quality/code_churn.json",
     "beartype": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/quality/beartype_check.json",
-    "issues": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/quality/issues.json"
+    "issues": "/media/srv-main-softdev/projects/MCP/btx_fix_mcp/LLM-CONTEXT/btx_fix_mcp/review/report/issues_code_duplication_warning_0001.json"
   },
   "metrics": {
-    "files_analyzed": 1,
-    "python_files": 1,
+    "files_analyzed": 63,
+    "python_files": 63,
     "js_files": 0,
-    "total_functions": 20,
-    "high_complexity_count": 0,
-    "high_cognitive_count": 0,
-    "low_mi_count": 0,
-    "functions_too_long": 1,
-    "functions_too_nested": 0,
-    "god_objects": 0,
-    "highly_coupled_modules": 0,
+    "total_functions": 572,
+    "high_complexity_count": 17,
+    "high_cognitive_count": 10,
+    "low_mi_count": 1,
+    "functions_too_long": 29,
+    "functions_too_nested": 16,
+    "god_objects": 2,
+    "highly_coupled_modules": 1,
     "import_cycles": 0,
-    "duplicate_blocks": 0,
+    "duplicate_blocks": 66,
     "dead_code_items": 0,
     "docstring_coverage_percent": 0.0,
-    "type_coverage_percent": 0,
+    "type_coverage_percent": 0.0,
     "test_coverage_percent": 0.0,
     "high_churn_files": 0,
     "beartype_passed": true,
-    "critical_issues": 0,
-    "warning_issues": 3,
-    "total_issues": 3
+    "critical_issues": 2,
+    "warning_issues": 191,
+    "total_issues": 193
   },
   "errors": [],
-  "timestamp": "2025-11-21T22:36:05.610571"
+  "timestamp": "2025-11-22T22:13:41.560966"
 }

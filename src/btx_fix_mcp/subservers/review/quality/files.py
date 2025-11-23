@@ -27,9 +27,7 @@ class FileManager:
         if not files_list.exists():
             files_list = self.input_dir / "files_code.txt"
             if not files_list.exists():
-                missing.append(
-                    f"No files list found in {self.input_dir}. Run scope sub-server first."
-                )
+                missing.append(f"No files list found in {self.input_dir}. Run scope sub-server first.")
         return len(missing) == 0, missing
 
     def load_python_files(self) -> list[str]:

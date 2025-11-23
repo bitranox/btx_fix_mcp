@@ -6,6 +6,8 @@ from logging import Logger
 from pathlib import Path
 from typing import Any
 
+from btx_fix_mcp.config import get_timeout
+
 
 class JavaScriptAnalyzer:
     """Analyzes JavaScript/TypeScript files using eslint."""
@@ -34,11 +36,12 @@ class JavaScriptAnalyzer:
             return results
 
         try:
+            timeout = get_timeout("tool_analysis", 60)
             result = subprocess.run(
                 ["eslint", "--format=json"] + files,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=timeout,
             )
             results["raw_output"] = result.stdout
 
@@ -51,17 +54,13 @@ class JavaScriptAnalyzer:
                                 {
                                     "file": file_result.get("filePath", ""),
                                     "line": message.get("line", 0),
-                                    "severity": (
-                                        "error"
-                                        if message.get("severity") == 2
-                                        else "warning"
-                                    ),
+                                    "severity": ("error" if message.get("severity") == 2 else "warning"),
                                     "message": message.get("message", ""),
                                     "rule": message.get("ruleId", ""),
                                 }
                             )
                 except json.JSONDecodeError:
-                    pass
+                    self.logger.warning("Invalid JSON output from eslint")
         except FileNotFoundError:
             self.logger.warning("eslint not found")
         except Exception as e:
@@ -101,11 +100,12 @@ class BeartypeAnalyzer:
 
         try:
             # Check if beartype is available
+            timeout = get_timeout("git_log", 10)
             beartype_check = subprocess.run(
                 ["python", "-c", "import beartype; print('available')"],
                 capture_output=True,
                 text=True,
-                timeout=10,
+                timeout=timeout,
             )
             if beartype_check.returncode != 0:
                 self.logger.info("Beartype not installed, skipping runtime type check")
@@ -116,11 +116,12 @@ class BeartypeAnalyzer:
             results["raw_output"] = "Beartype available\n"
 
             # Run actual test suite
+            timeout = get_timeout("git_log", 10)
             test_result = subprocess.run(
                 ["python", "-m", "pytest", "tests/", "-x", "--tb=short", "-q"],
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=timeout,
                 cwd=str(self.repo_path),
             )
             results["raw_output"] += test_result.stdout + test_result.stderr

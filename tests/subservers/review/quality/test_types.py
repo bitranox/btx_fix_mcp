@@ -67,8 +67,8 @@ class TestAnalyzeTypeCoverage:
     def test_type_coverage_empty_files(self, analyzer):
         """Test type coverage with empty file list."""
         result = analyzer._analyze_type_coverage([])
-        assert result["coverage_percent"] == 0
-        assert result["typed_functions"] == 0
+        assert result.coverage_percent == 0
+        assert result.typed_functions == 0
 
     def test_type_coverage_success(self, analyzer, tmp_path):
         """Test successful type coverage analysis."""
@@ -82,9 +82,9 @@ class TestAnalyzeTypeCoverage:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._analyze_type_coverage([str(code)])
 
-        assert result["typed_functions"] == 1
-        assert result["untyped_functions"] == 1
-        assert result["coverage_percent"] == 50.0
+        assert result.typed_functions == 1
+        assert result.untyped_functions == 1
+        assert result.coverage_percent == 50.0
 
     def test_type_coverage_all_typed(self, analyzer, tmp_path):
         """Test 100% type coverage."""
@@ -98,9 +98,9 @@ class TestAnalyzeTypeCoverage:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._analyze_type_coverage([str(code)])
 
-        assert result["typed_functions"] == 2
-        assert result["untyped_functions"] == 0
-        assert result["coverage_percent"] == 100.0
+        assert result.typed_functions == 2
+        assert result.untyped_functions == 0
+        assert result.coverage_percent == 100.0
 
     def test_type_coverage_with_errors(self, analyzer, tmp_path):
         """Test type coverage capturing errors."""
@@ -114,8 +114,8 @@ class TestAnalyzeTypeCoverage:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._analyze_type_coverage([str(code)])
 
-        assert len(result["errors"]) == 1
-        assert "incompatible type" in result["errors"][0]
+        assert len(result.errors) == 1
+        assert "incompatible type" in result.errors[0]
 
     def test_type_coverage_timeout(self, analyzer, tmp_path):
         """Test type coverage timeout handling."""
@@ -125,7 +125,7 @@ class TestAnalyzeTypeCoverage:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("mypy", 120)):
             result = analyzer._analyze_type_coverage([str(code)])
 
-        assert result["coverage_percent"] == 0
+        assert result.coverage_percent == 0
 
     def test_type_coverage_not_found(self, analyzer, tmp_path):
         """Test type coverage when mypy not found."""
@@ -135,7 +135,7 @@ class TestAnalyzeTypeCoverage:
         with patch("subprocess.run", side_effect=FileNotFoundError()):
             result = analyzer._analyze_type_coverage([str(code)])
 
-        assert result["coverage_percent"] == 0
+        assert result.coverage_percent == 0
 
     def test_type_coverage_other_error(self, analyzer, tmp_path):
         """Test type coverage other error handling."""
@@ -145,7 +145,7 @@ class TestAnalyzeTypeCoverage:
         with patch("subprocess.run", side_effect=Exception("unexpected error")):
             result = analyzer._analyze_type_coverage([str(code)])
 
-        assert result["coverage_percent"] == 0
+        assert result.coverage_percent == 0
 
 
 class TestDetectDeadCode:
@@ -239,8 +239,8 @@ class TestAnalyzeDocstringCoverage:
     def test_docstring_coverage_empty_files(self, analyzer):
         """Test docstring coverage with empty file list."""
         result = analyzer._analyze_docstring_coverage([])
-        assert result["coverage_percent"] == 0
-        assert result["missing"] == []
+        assert result.coverage_percent == 0
+        assert result.missing == []
 
     def test_docstring_coverage_success(self, analyzer, tmp_path):
         """Test successful docstring coverage analysis."""
@@ -253,7 +253,7 @@ class TestAnalyzeDocstringCoverage:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._analyze_docstring_coverage([str(code)])
 
-        assert result["coverage_percent"] == 80.5
+        assert result.coverage_percent == 80.5
 
     def test_docstring_coverage_failed(self, analyzer, tmp_path):
         """Test docstring coverage with low coverage."""
@@ -266,8 +266,8 @@ class TestAnalyzeDocstringCoverage:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._analyze_docstring_coverage([str(code)])
 
-        assert result["coverage_percent"] == 20.0
-        assert len(result["missing"]) >= 1
+        assert result.coverage_percent == 20.0
+        assert len(result.missing) >= 1
 
     def test_docstring_coverage_timeout(self, analyzer, tmp_path):
         """Test docstring coverage timeout."""
@@ -277,7 +277,7 @@ class TestAnalyzeDocstringCoverage:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("interrogate", 60)):
             result = analyzer._analyze_docstring_coverage([str(code)])
 
-        assert result["coverage_percent"] == 0
+        assert result.coverage_percent == 0
 
     def test_docstring_coverage_not_found(self, analyzer, tmp_path):
         """Test interrogate not found."""
@@ -287,7 +287,7 @@ class TestAnalyzeDocstringCoverage:
         with patch("subprocess.run", side_effect=FileNotFoundError()):
             result = analyzer._analyze_docstring_coverage([str(code)])
 
-        assert result["coverage_percent"] == 0
+        assert result.coverage_percent == 0
 
     def test_docstring_coverage_other_error(self, analyzer, tmp_path):
         """Test other error handling."""
@@ -297,4 +297,4 @@ class TestAnalyzeDocstringCoverage:
         with patch("subprocess.run", side_effect=Exception("unexpected error")):
             result = analyzer._analyze_docstring_coverage([str(code)])
 
-        assert result["coverage_percent"] == 0
+        assert result.coverage_percent == 0

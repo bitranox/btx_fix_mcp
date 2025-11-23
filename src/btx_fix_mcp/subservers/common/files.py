@@ -61,26 +61,32 @@ def find_files(
     Args:
         root: Root directory to search
         pattern: Glob pattern (e.g., "*.py", "**/*.js")
-        exclude_patterns: Patterns to exclude (supports glob patterns)
+        exclude_patterns: Patterns to exclude using pathlib.match() syntax.
+                         Patterns should already be normalized (e.g., "**/vendor/*" not "vendor/")
 
     Returns:
         List of matching file paths, sorted
 
+    Pattern Syntax:
+        *        - Matches one path component (e.g., "*.py")
+        **       - Matches zero or more path components (e.g., "**/test/*")
+        ?        - Matches one character
+
     Example:
         >>> from pathlib import Path
-        >>> files = find_files(Path("src"), "*.py", ["**/test_*.py"])
+        >>> files = find_files(Path("src"), "*.py", ["**/test_*.py", "**/vendor/*"])
     """
     if not root.exists():
         return []
 
     exclude_patterns = exclude_patterns or [
-        "*/node_modules/*",
-        "*/.venv/*",
-        "*/__pycache__/*",
-        "*/dist/*",
-        "*/build/*",
-        "*/.git/*",
-        "*/LLM-CONTEXT/*",
+        "**/node_modules/*",
+        "**/.venv/*",
+        "**/__pycache__/*",
+        "**/dist/*",
+        "**/build/*",
+        "**/.git/*",
+        "**/LLM-CONTEXT/*",
         "*.pyc",
         "*.pyo",
         "*.lock",
@@ -89,7 +95,7 @@ def find_files(
     files: list[Path] = []
     for file_path in root.rglob(pattern):
         if file_path.is_file():
-            # Check exclusions
+            # Check exclusions - patterns should already be normalized
             excluded = any(file_path.match(excl) for excl in exclude_patterns)
             if not excluded:
                 files.append(file_path)

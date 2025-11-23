@@ -7,6 +7,8 @@ all review subservers (deps, security, docs, perf, quality).
 from dataclasses import dataclass, asdict
 from typing import Any, Literal
 
+from pydantic import BaseModel, ConfigDict, Field
+
 # Severity levels
 SeverityType = Literal["critical", "warning", "info"]
 
@@ -185,11 +187,49 @@ class HotspotIssue(BaseIssue):
     calls: int = 0
 
 
-# --- Metrics Dataclasses ---
+# --- Coverage Metrics (Pydantic) ---
 
 
-@dataclass(slots=True)
-class DepsMetrics:
+class TypeCoverageMetrics(BaseModel):
+    """Type coverage analysis metrics.
+
+    Attributes:
+        coverage_percent: Percentage of typed functions
+        typed_functions: Count of typed functions
+        untyped_functions: Count of untyped functions
+        errors: List of type checking errors
+        raw_output: Raw mypy output
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    coverage_percent: int = 0
+    typed_functions: int = 0
+    untyped_functions: int = 0
+    errors: list[str] = Field(default_factory=list)
+    raw_output: str = ""
+
+
+class DocstringCoverageMetrics(BaseModel):
+    """Docstring coverage analysis metrics.
+
+    Attributes:
+        coverage_percent: Percentage of documented functions/classes
+        missing: List of items missing docstrings
+        raw_output: Raw interrogate output
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    coverage_percent: float = 0.0
+    missing: list[str] = Field(default_factory=list)
+    raw_output: str = ""
+
+
+# --- Metrics Dataclasses (Pydantic) ---
+
+
+class DepsMetrics(BaseModel):
     """Dependency analysis metrics.
 
     Attributes:
@@ -203,6 +243,8 @@ class DepsMetrics:
         total_issues: Total issue count
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     project_type: str | None = None
     total_dependencies: int = 0
     direct_dependencies: int = 0
@@ -212,13 +254,8 @@ class DepsMetrics:
     critical_issues: int = 0
     total_issues: int = 0
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
-
-@dataclass(slots=True)
-class SecurityMetrics:
+class SecurityMetrics(BaseModel):
     """Security analysis metrics.
 
     Attributes:
@@ -229,19 +266,16 @@ class SecurityMetrics:
         low_severity: Low severity count
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     files_scanned: int = 0
     issues_found: int = 0
     high_severity: int = 0
     medium_severity: int = 0
     low_severity: int = 0
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
-
-@dataclass(slots=True)
-class DocsMetrics:
+class DocsMetrics(BaseModel):
     """Documentation analysis metrics.
 
     Attributes:
@@ -252,19 +286,16 @@ class DocsMetrics:
         total_issues: Total issue count
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     files_analyzed: int = 0
     coverage_percent: float = 0.0
     missing_docstrings: int = 0
     project_docs_found: int = 0
     total_issues: int = 0
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
-
-@dataclass(slots=True)
-class PerfMetrics:
+class PerfMetrics(BaseModel):
     """Performance analysis metrics.
 
     Attributes:
@@ -274,18 +305,15 @@ class PerfMetrics:
         total_issues: Total issue count
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     files_analyzed: int = 0
     patterns_found: int = 0
     hotspots_found: int = 0
     total_issues: int = 0
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
-
-@dataclass(slots=True)
-class ScopeMetrics:
+class ScopeMetrics(BaseModel):
     """Scope analysis metrics.
 
     Attributes:
@@ -297,6 +325,8 @@ class ScopeMetrics:
         mode: Analysis mode (git, full, etc.)
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     total_files: int = 0
     code_files: int = 0
     test_files: int = 0
@@ -304,13 +334,8 @@ class ScopeMetrics:
     config_files: int = 0
     mode: str = "git"
 
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
-
-@dataclass(slots=True)
-class QualityMetrics:
+class QualityMetrics(BaseModel):
     """Quality analysis metrics.
 
     Attributes:
@@ -338,6 +363,8 @@ class QualityMetrics:
         total_issues: Total issues found
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     files_analyzed: int = 0
     python_files: int = 0
     js_files: int = 0
@@ -360,10 +387,6 @@ class QualityMetrics:
     critical_issues: int = 0
     warning_issues: int = 0
     total_issues: int = 0
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
 
 # Helper to convert list of issues to dicts

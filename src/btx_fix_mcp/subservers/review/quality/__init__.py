@@ -108,9 +108,7 @@ class QualitySubServer(BaseSubServer):
         """
         # Get output base from config for standalone use
         base_config = get_config(start_dir=str(repo_path or Path.cwd()))
-        output_base = base_config.get(
-            "review", {}
-        ).get("output_dir", "LLM-CONTEXT/btx_fix_mcp/review")
+        output_base = base_config.get("review", {}).get("output_dir", "LLM-CONTEXT/btx_fix_mcp/review")
 
         if input_dir is None:
             input_dir = Path.cwd() / output_base / "scope"
@@ -148,9 +146,7 @@ class QualitySubServer(BaseSubServer):
 
         # Initialize helper components
         self.file_manager = FileManager(self.input_dir, self.repo_path)
-        self.orchestrator = AnalyzerOrchestrator(
-            self.quality_config, self.repo_path, self.logger
-        )
+        self.orchestrator = AnalyzerOrchestrator(self.quality_config, self.repo_path, self.logger)
         self.orchestrator.initialize_analyzers()
         self.results_compiler = ResultsCompiler(self.quality_config, self.repo_path)
         self.results_writer = ResultsWriter(self.output_dir)
@@ -173,11 +169,7 @@ class QualitySubServer(BaseSubServer):
             # Load files to analyze
             log_step(self.logger, 1, "Loading files to analyze")
             python_files = self.file_manager.load_python_files()
-            js_files = (
-                self.file_manager.load_js_files()
-                if self.quality_config.features.js_analysis
-                else []
-            )
+            js_files = self.file_manager.load_js_files() if self.quality_config.features.js_analysis else []
 
             # Check if we have files to analyze
             if not python_files and not js_files:
@@ -211,23 +203,17 @@ class QualitySubServer(BaseSubServer):
 
             # Compile issues and metrics
             log_step(self.logger, 20, "Compiling issues")
-            all_issues = self.results_compiler.compile_issues(
-                results, self.quality_config
-            )
+            all_issues = self.results_compiler.compile_issues(results, self.quality_config)
 
             # Save results
             log_step(self.logger, 21, "Saving results")
             artifacts = self.results_writer.save_all_results(results, all_issues)
 
             # Compile metrics
-            metrics = self.results_compiler.compile_metrics(
-                python_files, js_files, results, all_issues
-            )
+            metrics = self.results_compiler.compile_metrics(python_files, js_files, results, all_issues)
 
             # Generate summary
-            summary = generate_comprehensive_summary(
-                metrics, results, all_issues, self.mindset, self.quality_config
-            )
+            summary = generate_comprehensive_summary(metrics, results, all_issues, self.mindset, self.quality_config)
 
             # Determine status
             critical_issues = [i for i in all_issues if i.get("severity") == "error"]
@@ -242,7 +228,7 @@ class QualitySubServer(BaseSubServer):
                 status=status,
                 summary=summary,
                 artifacts=artifacts,
-                metrics=metrics.to_dict(),
+                metrics=metrics.model_dump(),
             )
 
         except Exception as e:

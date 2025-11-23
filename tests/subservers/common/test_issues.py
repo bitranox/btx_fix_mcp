@@ -296,7 +296,7 @@ class TestDepsMetrics:
     def test_to_dict(self):
         """Test conversion to dictionary."""
         metrics = DepsMetrics(project_type="nodejs", total_issues=5)
-        result = metrics.to_dict()
+        result = metrics.model_dump()
 
         assert result["project_type"] == "nodejs"
         assert result["total_issues"] == 5

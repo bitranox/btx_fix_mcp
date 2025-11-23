@@ -498,6 +498,7 @@ def debug_log(logger: logging.Logger) -> Callable[[F], F]:
 
     def decorator(func: F) -> F:
         """Wrap function with debug logging."""
+
         @wraps(func)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
             """Execute function with logging."""

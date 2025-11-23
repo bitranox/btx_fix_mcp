@@ -11,33 +11,33 @@
 
 **🔧 NEEDS WORK**
 
-- Critical issues: 0 (0.0%)
-- Warnings: 3 (300.0%)
-- Total items analyzed: 1
+- Critical issues: 2 (3.2%)
+- Warnings: 142 (225.4%)
+- Total items analyzed: 63
 
 ## Overview
 
-**Files Analyzed**: 1 (1 Python, 0 JS/TS)
-**Functions Analyzed**: 20
-**Total Issues Found**: 3
-**Critical Issues**: 0
+**Files Analyzed**: 63 (63 Python, 0 JS/TS)
+**Functions Analyzed**: 572
+**Total Issues Found**: 193
+**Critical Issues**: 2
 
 ## Code Metrics
 
-- Total LOC: **421**
-- Source LOC (SLOC): **294**
-- Comments: **16**
+- Total LOC: **12,919**
+- Source LOC (SLOC): **8,064**
+- Comments: **437**
 - Comment Ratio: **5.4%**
 
 ## Quality Issues Summary
 
-- Functions >50 lines: **1**
-- High cyclomatic complexity (>10): **0**
-- High cognitive complexity (>15): **0**
-- Functions with nesting >3: **0**
-- Code duplication blocks: **0**
-- God objects: **0**
-- Highly coupled modules: **0**
+- Functions >50 lines: **29**
+- High cyclomatic complexity (>10): **17**
+- High cognitive complexity (>15): **10**
+- Functions with nesting >3: **16**
+- Code duplication blocks: **66**
+- God objects: **2**
+- Highly coupled modules: **1**
 - Import cycles: **0**
 - Dead code items: **0**
 
@@ -60,11 +60,20 @@
 
 - Status: **✅ Passed**
 
+## Critical Issues (Must Fix)
+
+- 🔴 `src/btx_fix_mcp/subservers/review/deps.py`: Class 'DepsSubServer' is a god object (27 methods, 586 lines)
+- 🔴 `src/btx_fix_mcp/subservers/review/quality/architecture.py`: Class 'ArchitectureAnalyzer' is a god object (22 methods, 279 lines)
+
 ## Refactoring Recommendations
 
-1. **Break Down Long Functions**: 1 functions exceed 50 lines
-2. **Add Type Annotations**: Coverage is 0%
-3. **Add Docstrings**: Coverage is 0.0%
+1. **Break Down Long Functions**: 29 functions exceed 50 lines
+2. **Reduce Cyclomatic Complexity**: 17 functions exceed threshold
+3. **Reduce Cognitive Complexity**: 10 functions are too complex
+4. **Extract Duplicated Code**: 66 duplicate blocks found
+5. **Refactor God Objects**: 2 classes need decomposition
+6. **Add Type Annotations**: Coverage is 0%
+7. **Add Docstrings**: Coverage is 0.0%
 
 ## Approval Status
 

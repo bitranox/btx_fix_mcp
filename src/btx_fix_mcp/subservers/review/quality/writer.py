@@ -4,21 +4,26 @@ import json
 from pathlib import Path
 from typing import Any
 
+from btx_fix_mcp.subservers.common.chunked_writer import (
+    cleanup_chunked_issues,
+    write_chunked_issues,
+)
+
 
 class ResultsWriter:
     """Writes analysis results to files."""
 
-    def __init__(self, output_dir: Path):
+    def __init__(self, output_dir: Path, report_dir: Path | None = None):
         """Initialize results writer.
 
         Args:
             output_dir: Directory to save results to
+            report_dir: Directory for chunked issue files (default: output_dir's parent/report)
         """
         self.output_dir = output_dir
+        self.report_dir = report_dir or (output_dir.parent / "report")
 
-    def save_all_results(
-        self, results: dict[str, Any], all_issues: list[dict]
-    ) -> dict[str, Path]:
+    def save_all_results(self, results: dict[str, Any], all_issues: list[dict]) -> dict[str, Path]:
         """Save all analysis results to files.
 
         Args:
@@ -37,9 +42,7 @@ class ResultsWriter:
 
         return artifacts
 
-    def _save_list_results(
-        self, results: dict[str, Any], artifacts: dict[str, Path]
-    ) -> None:
+    def _save_list_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
         """Save list-based results (complexity, maintainability, etc.).
 
         Args:
@@ -60,9 +63,7 @@ class ResultsWriter:
                 path = self._save_json(f"{key}.json", results[key])
                 artifacts[key] = path
 
-    def _save_text_results(
-        self, results: dict[str, Any], artifacts: dict[str, Path]
-    ) -> None:
+    def _save_text_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
         """Save text-based results (duplication analysis).
 
         Args:
@@ -70,14 +71,10 @@ class ResultsWriter:
             artifacts: Artifacts dictionary to update
         """
         if results.get("duplication", {}).get("raw_output"):
-            path = self._save_text(
-                "duplication_analysis.txt", results["duplication"]["raw_output"]
-            )
+            path = self._save_text("duplication_analysis.txt", results["duplication"]["raw_output"])
             artifacts["duplication"] = path
 
-    def _save_dict_results(
-        self, results: dict[str, Any], artifacts: dict[str, Path]
-    ) -> None:
+    def _save_dict_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
         """Save dictionary-based results from various analyzers.
 
         Args:
@@ -99,9 +96,7 @@ class ResultsWriter:
             arch_data = {
                 "god_objects": results["architecture"].get("god_objects", []),
                 "highly_coupled": results["architecture"].get("highly_coupled", []),
-                "module_structure": dict(
-                    results["architecture"].get("module_structure", {})
-                ),
+                "module_structure": dict(results["architecture"].get("module_structure", {})),
             }
             path = self._save_json("architecture_analysis.json", arch_data)
             artifacts["architecture"] = path
@@ -123,9 +118,7 @@ class ResultsWriter:
 
         # Docstring coverage
         if results.get("docstring_coverage"):
-            path = self._save_json(
-                "docstring_coverage.json", results["docstring_coverage"]
-            )
+            path = self._save_json("docstring_coverage.json", results["docstring_coverage"])
             artifacts["docstring_coverage"] = path
 
         # Code churn
@@ -143,18 +136,35 @@ class ResultsWriter:
             path = self._save_json("beartype_check.json", results["beartype"])
             artifacts["beartype"] = path
 
-    def _save_issues(
-        self, all_issues: list[dict], artifacts: dict[str, Path]
-    ) -> None:
-        """Save compiled issues list.
+    def _save_issues(self, all_issues: list[dict], artifacts: dict[str, Path]) -> None:
+        """Save compiled issues list in chunked format.
 
         Args:
             all_issues: List of all issues
             artifacts: Artifacts dictionary to update
         """
-        if all_issues:
-            path = self._save_json("issues.json", all_issues)
-            artifacts["issues"] = path
+        if not all_issues:
+            return
+
+        # Get unique issue types from this sub-server's issues
+        issue_types = list({issue.get("type", "unknown") for issue in all_issues})
+
+        # Cleanup old chunked files for these issue types
+        cleanup_chunked_issues(
+            output_dir=self.report_dir,
+            issue_types=issue_types,
+            prefix="issues",
+        )
+
+        # Write chunked issues
+        written_files = write_chunked_issues(
+            issues=all_issues,
+            output_dir=self.report_dir,
+            prefix="issues",
+        )
+
+        if written_files:
+            artifacts["issues"] = written_files[0]  # First chunk for reference
 
     def _save_json(self, filename: str, data: Any) -> Path:
         """Save data as JSON file.

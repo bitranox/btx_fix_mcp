@@ -5,12 +5,17 @@ a comprehensive final report with overall verdict.
 """
 
 import json
-from dataclasses import dataclass, field, asdict
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Literal
 
-from btx_fix_mcp.config import get_config
+from pydantic import BaseModel, ConfigDict, Field
+
+from btx_fix_mcp.config import get_config, get_display_limit
+from btx_fix_mcp.subservers.common.chunked_writer import (
+    cleanup_all_issues,
+    write_chunked_all_issues,
+)
 from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.logging import (
     get_mcp_logger,
@@ -25,8 +30,7 @@ from btx_fix_mcp.subservers.common.logging import (
 VerdictStatus = Literal["APPROVED", "APPROVED_WITH_COMMENTS", "NEEDS_WORK", "REJECTED", "REVIEW_INCOMPLETE"]
 
 
-@dataclass(slots=True)
-class Verdict:
+class Verdict(BaseModel):
     """Overall code review verdict.
 
     Attributes:
@@ -35,17 +39,14 @@ class Verdict:
         recommendations: List of actionable recommendations
     """
 
+    model_config = ConfigDict(extra="forbid")
+
     status: VerdictStatus
     message: str
-    recommendations: list[str] = field(default_factory=list)
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
+    recommendations: list[str] = Field(default_factory=list)
 
 
-@dataclass(slots=True)
-class ReportMetrics:
+class ReportMetrics(BaseModel):
     """Aggregated metrics from all sub-servers.
 
     Attributes:
@@ -59,18 +60,16 @@ class ReportMetrics:
         files_analyzed: Number of files analyzed
     """
 
-    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    subservers_run: list[str] = field(default_factory=list)
-    subservers_passed: list[str] = field(default_factory=list)
-    subservers_failed: list[str] = field(default_factory=list)
+    model_config = ConfigDict(extra="forbid")
+
+    timestamp: str = Field(default_factory=lambda: datetime.now().isoformat())
+    subservers_run: list[str] = Field(default_factory=list)
+    subservers_passed: list[str] = Field(default_factory=list)
+    subservers_failed: list[str] = Field(default_factory=list)
     total_issues: int = 0
     critical_issues: int = 0
     warning_issues: int = 0
     files_analyzed: int = 0
-
-    def to_dict(self) -> dict[str, Any]:
-        """Convert to dictionary for JSON serialization."""
-        return asdict(self)
 
 
 class ReportSubServer(BaseSubServer):
@@ -160,7 +159,7 @@ class ReportSubServer(BaseSubServer):
                 status="SUCCESS",
                 summary=report,
                 artifacts=artifacts,
-                metrics=overall_metrics.to_dict(),
+                metrics=overall_metrics.model_dump(),
             )
 
         except Exception as e:
@@ -229,28 +228,42 @@ class ReportSubServer(BaseSubServer):
         metrics = ReportMetrics()
 
         for name, result in results.items():
-            if result["status"] != "NOT_RUN":
-                metrics.subservers_run.append(name)
-                if result["status"] == "SUCCESS":
-                    metrics.subservers_passed.append(name)
-                elif result["status"] == "FAILED":
-                    metrics.subservers_failed.append(name)
-
-            # Aggregate issues
-            for issue in result.get("issues", []):
-                metrics.total_issues += 1
-                severity = issue.get("severity", "").lower()
-                if severity in ("critical", "error"):
-                    metrics.critical_issues += 1
-                elif severity == "warning":
-                    metrics.warning_issues += 1
-
-            # Aggregate files analyzed
-            sub_metrics = result.get("metrics", {})
-            if "files_analyzed" in sub_metrics:
-                metrics.files_analyzed = max(metrics.files_analyzed, sub_metrics["files_analyzed"])
+            self._update_subserver_status(name, result, metrics)
+            self._aggregate_issues(result, metrics)
+            self._aggregate_files_analyzed(result, metrics)
 
         return metrics
+
+    def _update_subserver_status(self, name: str, result: dict, metrics: ReportMetrics) -> None:
+        """Update sub-server run/pass/fail status."""
+        status = result["status"]
+
+        if status == "NOT_RUN":
+            return
+
+        metrics.subservers_run.append(name)
+
+        if status == "SUCCESS":
+            metrics.subservers_passed.append(name)
+        elif status == "FAILED":
+            metrics.subservers_failed.append(name)
+
+    def _aggregate_issues(self, result: dict, metrics: ReportMetrics) -> None:
+        """Aggregate issue counts by severity."""
+        for issue in result.get("issues", []):
+            metrics.total_issues += 1
+            severity = issue.get("severity", "").lower()
+
+            if severity in ("critical", "error"):
+                metrics.critical_issues += 1
+            elif severity == "warning":
+                metrics.warning_issues += 1
+
+    def _aggregate_files_analyzed(self, result: dict, metrics: ReportMetrics) -> None:
+        """Aggregate maximum files analyzed count."""
+        sub_metrics = result.get("metrics", {})
+        if "files_analyzed" in sub_metrics:
+            metrics.files_analyzed = max(metrics.files_analyzed, sub_metrics["files_analyzed"])
 
     def _determine_verdict(self, results: dict[str, dict], metrics: ReportMetrics) -> Verdict:
         """Determine overall verdict."""
@@ -379,9 +392,15 @@ class ReportSubServer(BaseSubServer):
         # Show key metrics
         sub_metrics = result.get("metrics", {})
         if sub_metrics:
+            limit = get_display_limit("max_metrics_display", 5, start_dir=str(self.repo_path))
+            items = list(sub_metrics.items())
+
             lines.append("**Key Metrics:**")
-            for key, value in list(sub_metrics.items())[:5]:
+            for key, value in items[:limit]:
                 lines.append(f"- {key}: {value}")
+
+            if limit is not None and len(items) > limit:
+                lines.append(f"- ... and {len(items) - limit} more metrics")
             lines.append("")
 
         # Show issue count
@@ -406,15 +425,23 @@ class ReportSubServer(BaseSubServer):
         if not all_critical:
             return []
 
-        lines = ["---", "", "## Critical Issues (Must Fix)", ""]
-        for issue in all_critical[:20]:
+        limit = get_display_limit("max_critical_display", 20, start_dir=str(self.repo_path))
+        display_count = len(all_critical) if limit is None else min(limit, len(all_critical))
+
+        header = "## Critical Issues (Must Fix)" if limit is None else f"## Critical Issues (Must Fix) - showing {display_count} of {len(all_critical)}"
+        lines = ["---", "", header, ""]
+
+        for issue in all_critical[:limit]:
             source = issue.get("source", "unknown")
             message = issue.get("message", "No description")
             file_info = f"`{issue.get('file', '')}:{issue.get('line', '')}`" if issue.get("file") else ""
             lines.append(f"- **[{source}]** {file_info} {message}")
 
-        if len(all_critical) > 20:
-            lines.append(f"- ... and {len(all_critical) - 20} more critical issues")
+        if limit is not None and len(all_critical) > limit:
+            lines.append("")
+            lines.append(
+                f"*Note: {len(all_critical) - limit} more critical issues not shown. Set `output.display.max_critical_display = 0` in config for unlimited display.*"
+            )
         lines.append("")
 
         return lines
@@ -444,12 +471,12 @@ class ReportSubServer(BaseSubServer):
 
         # Save metrics JSON
         metrics_path = self.output_dir / "metrics.json"
-        metrics_path.write_text(json.dumps(metrics.to_dict(), indent=2))
+        metrics_path.write_text(json.dumps(metrics.model_dump(), indent=2))
         artifacts["metrics"] = metrics_path
 
         # Save verdict JSON
         verdict_path = self.output_dir / "verdict.json"
-        verdict_path.write_text(json.dumps(verdict.to_dict(), indent=2))
+        verdict_path.write_text(json.dumps(verdict.model_dump(), indent=2))
         artifacts["verdict"] = verdict_path
 
         # Save all issues consolidated
@@ -460,8 +487,16 @@ class ReportSubServer(BaseSubServer):
                 all_issues.append(issue)
 
         if all_issues:
-            issues_path = self.output_dir / "all_issues.json"
-            issues_path.write_text(json.dumps(all_issues, indent=2))
-            artifacts["all_issues"] = issues_path
+            # Cleanup old chunked all_issues files
+            cleanup_all_issues(output_dir=self.output_dir)
+
+            # Write chunked all_issues files
+            written_files = write_chunked_all_issues(
+                all_issues=all_issues,
+                output_dir=self.output_dir,
+            )
+
+            if written_files:
+                artifacts["all_issues"] = written_files[0]
 
         return artifacts

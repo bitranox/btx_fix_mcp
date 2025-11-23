@@ -1,5 +1,1741 @@
 [
   {
+    "file": "scripts/_utils.py",
+    "name": "_get_toml_module",
+    "line": 124,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "run",
+    "line": 158,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_normalize_slug",
+    "line": 196,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_as_str_mapping",
+    "line": 214,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_as_str_dict",
+    "line": 226,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_as_sequence",
+    "line": 238,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_load_pyproject",
+    "line": 247,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_derive_import_package",
+    "line": 264,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_derive_coverage_source",
+    "line": 283,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_derive_scripts",
+    "line": 294,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_parse_entrypoint",
+    "line": 310,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_select_cli_entry",
+    "line": 317,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_parse_repo_url",
+    "line": 343,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_extract_author_info",
+    "line": 365,
+    "complexity": 17,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_extract_summary",
+    "line": 398,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "get_project_metadata",
+    "line": 422,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_extract_name",
+    "line": 483,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_extract_homepage",
+    "line": 492,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_determine_shell_command",
+    "line": 502,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "_render_metadata_module",
+    "line": 523,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "sync_metadata_module",
+    "line": 603,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "read_version_from_pyproject",
+    "line": 618,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "ensure_clean_git_tree",
+    "line": 630,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "git_delete_tag",
+    "line": 643,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "bootstrap_dev",
+    "line": 691,
+    "complexity": 21,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "github_tarball_url",
+    "line": 80,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "resolve_cli_entry",
+    "line": 85,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/_utils.py",
+    "name": "diagnostic_lines",
+    "line": 103,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/build.py",
+    "name": "_purge_dist",
+    "line": 25,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/build.py",
+    "name": "build_artifacts",
+    "line": 33,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/bump.py",
+    "name": "bump",
+    "line": 11,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/bump_version.py",
+    "name": "bump_semver",
+    "line": 24,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/bump_version.py",
+    "name": "_write_new_version",
+    "line": 35,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/bump_version.py",
+    "name": "_update_changelog",
+    "line": 47,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/bump_version.py",
+    "name": "main",
+    "line": 60,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/clean.py",
+    "name": "clean",
+    "line": 31,
+    "complexity": 10,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/cli.py",
+    "name": "env_token",
+    "line": 31,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/cli.py",
+    "name": "choose_token",
+    "line": 41,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/cli.py",
+    "name": "remote_choice",
+    "line": 86,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/cli.py",
+    "name": "bump_command",
+    "line": 181,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/help.py",
+    "name": "render_help",
+    "line": 13,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_format_env",
+    "line": 546,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_format_command",
+    "line": 553,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_mount",
+    "line": 112,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_list_view_highlighted",
+    "line": 119,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_list_view_selected",
+    "line": 128,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_key",
+    "line": 137,
+    "complexity": 11,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_focus_menu",
+    "line": 160,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_focus_button",
+    "line": 166,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_button_pressed",
+    "line": 172,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "action_run",
+    "line": 180,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "action_edit",
+    "line": 190,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_build_list",
+    "line": 197,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_update_description",
+    "line": 207,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_current_target",
+    "line": 215,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_receive_params",
+    "line": 229,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_handle_run_result",
+    "line": 245,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "compose",
+    "line": 275,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_button_pressed",
+    "line": 307,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_input_submitted",
+    "line": 311,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_focus_first_input",
+    "line": 318,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_focus_ok_button",
+    "line": 323,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_submit",
+    "line": 327,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_gather_values",
+    "line": 337,
+    "complexity": 16,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "compose",
+    "line": 382,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_unmount",
+    "line": 400,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "on_button_pressed",
+    "line": 406,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "action_cancel",
+    "line": 410,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_run_process",
+    "line": 416,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_pump",
+    "line": 446,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/menu.py",
+    "name": "_send_cancel_signal",
+    "line": 455,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/push.py",
+    "name": "push",
+    "line": 20,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/push.py",
+    "name": "_resolve_commit_message",
+    "line": 45,
+    "complexity": 9,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/release.py",
+    "name": "release",
+    "line": 31,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/release.py",
+    "name": "_ensure_clean",
+    "line": 78,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "load_module",
+    "line": 19,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "temporary_argv",
+    "line": 36,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "exit_code_from",
+    "line": 47,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "invoke_callable",
+    "line": 74,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "candid_callable",
+    "line": 92,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "run_python_module",
+    "line": 111,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "delegate_to_module_entry",
+    "line": 121,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/run_cli.py",
+    "name": "run_cli",
+    "line": 139,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/target_metadata.py",
+    "name": "_env_default",
+    "line": 58,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/target_metadata.py",
+    "name": "iter_help_rows",
+    "line": 169,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "scripts/version_current.py",
+    "name": "print_current_version",
+    "line": 10,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/behaviors.py",
+    "name": "_flush_if_possible",
+    "line": 47,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/cli.py",
+    "name": "cli",
+    "line": 62,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/cli.py",
+    "name": "review_group",
+    "line": 128,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/cli.py",
+    "name": "review_all",
+    "line": 327,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/cli.py",
+    "name": "_print_review_result",
+    "line": 362,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/cli.py",
+    "name": "main",
+    "line": 393,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "__init__",
+    "line": 47,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_scope",
+    "line": 63,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_quality",
+    "line": 103,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_security",
+    "line": 150,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_deps",
+    "line": 197,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_docs",
+    "line": 243,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_perf",
+    "line": 287,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "run_all",
+    "line": 363,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "_run_scope_step",
+    "line": 417,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "_run_parallel_analyses",
+    "line": 432,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "_run_report_step",
+    "line": 473,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "_determine_final_status",
+    "line": 481,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "make_task",
+    "line": 441,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review.py",
+    "name": "task",
+    "line": 444,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/servers/review_handlers.py",
+    "name": "handle_tool_call",
+    "line": 88,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/base.py",
+    "name": "__post_init__",
+    "line": 42,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/base.py",
+    "name": "__init__",
+    "line": 69,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/base.py",
+    "name": "save_status",
+    "line": 103,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/base.py",
+    "name": "save_summary",
+    "line": 116,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/base.py",
+    "name": "save_json",
+    "line": 126,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/base.py",
+    "name": "run",
+    "line": 137,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/chunked_writer.py",
+    "name": "group_by_type_and_severity",
+    "line": 49,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/chunked_writer.py",
+    "name": "write_chunked_issues",
+    "line": 61,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/chunked_writer.py",
+    "name": "cleanup_chunked_issues",
+    "line": 104,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/chunked_writer.py",
+    "name": "write_chunked_all_issues",
+    "line": 133,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/chunked_writer.py",
+    "name": "cleanup_all_issues",
+    "line": 175,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/files.py",
+    "name": "read_file",
+    "line": 6,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/files.py",
+    "name": "write_file",
+    "line": 28,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/files.py",
+    "name": "find_files",
+    "line": 54,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/files.py",
+    "name": "count_lines",
+    "line": 100,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/files.py",
+    "name": "categorize_files",
+    "line": 140,
+    "complexity": 24,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "is_git_repo",
+    "line": 25,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_repo_root",
+    "line": 55,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_current_branch",
+    "line": 87,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "create_commit",
+    "line": 118,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "revert_changes",
+    "line": 194,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_diff",
+    "line": 226,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_status",
+    "line": 266,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_uncommitted_files",
+    "line": 303,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_file_history",
+    "line": 356,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/git.py",
+    "name": "get_last_commit_hash",
+    "line": 419,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "setup_logger",
+    "line": 14,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_dict",
+    "line": 90,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_file_list",
+    "line": 118,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_error",
+    "line": 151,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_result",
+    "line": 201,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_metric",
+    "line": 229,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "get_mcp_logger",
+    "line": 368,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_debug",
+    "line": 395,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_error_detailed",
+    "line": 417,
+    "complexity": 9,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_function_call",
+    "line": 447,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "debug_log",
+    "line": 489,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_config_loaded",
+    "line": 528,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_subprocess_call",
+    "line": 555,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "log_subprocess_result",
+    "line": 579,
+    "complexity": 11,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "__exit__",
+    "line": 347,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "decorator",
+    "line": 499,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "redact_value",
+    "line": 542,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "name": "wrapper",
+    "line": 503,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/mindsets.py",
+    "name": "get_mindset",
+    "line": 88,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/mindsets.py",
+    "name": "evaluate_results",
+    "line": 150,
+    "complexity": 14,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/mindsets.py",
+    "name": "format_verdict_report",
+    "line": 227,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/mindsets.py",
+    "name": "format_approach",
+    "line": 46,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/mindsets.py",
+    "name": "format_questions",
+    "line": 55,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "validate_outputs",
+    "line": 26,
+    "complexity": 15,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "validate_status_file",
+    "line": 90,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "validate_summary_file",
+    "line": 124,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "create_status_file",
+    "line": 159,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "create_summary_file",
+    "line": 189,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "get_status",
+    "line": 228,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "check_all_subservers",
+    "line": 258,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/common/protocol.py",
+    "name": "wait_for_completion",
+    "line": 304,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "__init__",
+    "line": 88,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "validate_inputs",
+    "line": 147,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "execute",
+    "line": 167,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_run_vulnerability_scan",
+    "line": 234,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_run_outdated_check",
+    "line": 245,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_run_license_check",
+    "line": 256,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_determine_status",
+    "line": 273,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_detect_project_type",
+    "line": 297,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_check_licenses",
+    "line": 315,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_get_dependency_tree",
+    "line": 337,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_count_direct_deps",
+    "line": 360,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_vulnerabilities_to_issues",
+    "line": 386,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_outdated_to_issues",
+    "line": 401,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_licenses_to_issues",
+    "line": 416,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_save_results",
+    "line": 441,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_format_vulnerabilities_section",
+    "line": 578,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_format_outdated_section",
+    "line": 595,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_format_license_section",
+    "line": 612,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "name": "_format_approval_section",
+    "line": 627,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+    "name": "scan_vulnerabilities",
+    "line": 15,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+    "name": "run_pip_audit",
+    "line": 31,
+    "complexity": 11,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+    "name": "run_safety",
+    "line": 72,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+    "name": "run_npm_audit",
+    "line": 109,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+    "name": "classify_vuln_severity",
+    "line": 145,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/deps_scanners.py",
+    "name": "check_outdated_packages",
+    "line": 160,
+    "complexity": 17,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "__init__",
+    "line": 57,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "validate_inputs",
+    "line": 104,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "execute",
+    "line": 117,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_get_python_files",
+    "line": 204,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_check_docstring_coverage",
+    "line": 215,
+    "complexity": 16,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_find_missing_docstrings",
+    "line": 251,
+    "complexity": 28,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_check_project_docs",
+    "line": 304,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_save_results",
+    "line": 354,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "name": "_generate_summary",
+    "line": 419,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "__init__",
+    "line": 63,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "validate_inputs",
+    "line": 110,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "execute",
+    "line": 123,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_get_python_files",
+    "line": 206,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_detect_patterns",
+    "line": 217,
+    "complexity": 14,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_profile_tests",
+    "line": 260,
+    "complexity": 19,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_analyze_complexity",
+    "line": 309,
+    "complexity": 19,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_hotspots_to_issues",
+    "line": 345,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_save_results",
+    "line": 368,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "name": "_generate_summary",
+    "line": 425,
+    "complexity": 11,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
+    "name": "__init__",
+    "line": 79,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/__init__.py",
+    "name": "execute",
+    "line": 160,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_analyze_architecture",
+    "line": 33,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_analyze_single_file",
+    "line": 55,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_process_node",
+    "line": 82,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_check_god_object",
+    "line": 99,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_process_import",
+    "line": 129,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_process_import_from",
+    "line": 134,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_identify_highly_coupled",
+    "line": 139,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_build_import_graph",
+    "line": 162,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_extract_imports_from_file",
+    "line": 170,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_add_import_to_graph",
+    "line": 183,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_find_all_cycles",
+    "line": 191,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_dfs_find_cycle",
+    "line": 202,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_detect_runtime_checks",
+    "line": 225,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_scan_file_for_runtime_checks",
+    "line": 236,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_check_function_for_runtime_checks",
+    "line": 249,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_is_runtime_check",
+    "line": 266,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_is_attribute_runtime_check",
+    "line": 273,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "name": "_is_builtin_runtime_check",
+    "line": 292,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/base.py",
+    "name": "_get_relative_path",
+    "line": 46,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_cyclomatic",
+    "line": 37,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_file_cyclomatic",
+    "line": 50,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_parse_radon_cc_output",
+    "line": 72,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_maintainability",
+    "line": 90,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_file_maintainability",
+    "line": 103,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_parse_radon_mi_output",
+    "line": 121,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_cognitive",
+    "line": 134,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_file_cognitive",
+    "line": 147,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_record_cognitive_complexity",
+    "line": 159,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_calculate_cognitive_complexity",
+    "line": 176,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_get_child_complexity",
+    "line": 185,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_functions",
+    "line": 201,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_analyze_file_functions",
+    "line": 215,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_check_function_length",
+    "line": 234,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_check_function_nesting",
+    "line": 255,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "name": "_calculate_nesting_depth",
+    "line": 273,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/files.py",
+    "name": "validate_inputs",
+    "line": 19,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/files.py",
+    "name": "load_python_files",
+    "line": 33,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/files.py",
+    "name": "load_js_files",
+    "line": 49,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
     "file": "src/btx_fix_mcp/subservers/review/quality/issues.py",
     "name": "_add_complexity_issues",
     "line": 127,
@@ -102,6 +1838,566 @@
     "name": "_add_beartype_issues",
     "line": 409,
     "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_analyze_halstead",
+    "line": 34,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_analyze_file_halstead",
+    "line": 51,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_parse_halstead_output",
+    "line": 76,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_analyze_raw_metrics",
+    "line": 102,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_analyze_file_raw_metrics",
+    "line": 119,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_parse_raw_metrics_output",
+    "line": 144,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_analyze_code_churn",
+    "line": 162,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_is_git_repository",
+    "line": 206,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_convert_to_relative_paths",
+    "line": 224,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_run_git_log",
+    "line": 235,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_parse_git_log",
+    "line": 257,
+    "complexity": 9,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_process_numstat_line",
+    "line": 278,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "name": "_compile_churn_results",
+    "line": 305,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/orchestrator.py",
+    "name": "initialize_analyzers",
+    "line": 33,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/orchestrator.py",
+    "name": "build_analyzer_tasks",
+    "line": 49,
+    "complexity": 13,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/orchestrator.py",
+    "name": "execute_tasks",
+    "line": 126,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/orchestrator.py",
+    "name": "_run_analyzer",
+    "line": 150,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/orchestrator.py",
+    "name": "_collect_results",
+    "line": 159,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/orchestrator.py",
+    "name": "_map_analyzer_results",
+    "line": 171,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/static.py",
+    "name": "_run_ruff",
+    "line": 31,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/static.py",
+    "name": "_detect_duplication",
+    "line": 60,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/summary.py",
+    "name": "generate_comprehensive_summary",
+    "line": 18,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/summary.py",
+    "name": "_build_critical_issues_section",
+    "line": 175,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/summary.py",
+    "name": "_build_recommendations_section",
+    "line": 190,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/summary.py",
+    "name": "_build_approval_section",
+    "line": 224,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_analyze_type_coverage",
+    "line": 36,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_parse_mypy_output",
+    "line": 66,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_calculate_type_coverage_percent",
+    "line": 80,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_detect_dead_code",
+    "line": 86,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_parse_vulture_output",
+    "line": 117,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_analyze_docstring_coverage",
+    "line": 136,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/types.py",
+    "name": "_parse_interrogate_output",
+    "line": 165,
+    "complexity": 11,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
+    "name": "__init__",
+    "line": 16,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
+    "name": "_save_list_results",
+    "line": 45,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
+    "name": "_save_text_results",
+    "line": 66,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
+    "name": "_save_dict_results",
+    "line": 77,
+    "complexity": 10,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/quality/writer.py",
+    "name": "_save_issues",
+    "line": 139,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "__init__",
+    "line": 85,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "validate_inputs",
+    "line": 114,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "execute",
+    "line": 131,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_gather_results",
+    "line": 179,
+    "complexity": 17,
+    "exceeds_threshold": true
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_compile_overall_metrics",
+    "line": 226,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_update_subserver_status",
+    "line": 237,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_aggregate_issues",
+    "line": 251,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_aggregate_files_analyzed",
+    "line": 262,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_determine_verdict",
+    "line": 268,
+    "complexity": 10,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_format_header",
+    "line": 324,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_format_subserver_results",
+    "line": 366,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_format_single_subserver",
+    "line": 375,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_format_critical_issues",
+    "line": 410,
+    "complexity": 9,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/report.py",
+    "name": "_save_report",
+    "line": 443,
+    "complexity": 6,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/scope.py",
+    "name": "__init__",
+    "line": 52,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/scope.py",
+    "name": "validate_inputs",
+    "line": 85,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/scope.py",
+    "name": "execute",
+    "line": 108,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/scope.py",
+    "name": "_find_git_files",
+    "line": 178,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/scope.py",
+    "name": "_save_results",
+    "line": 204,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/scope.py",
+    "name": "_generate_summary",
+    "line": 232,
+    "complexity": 12,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "__init__",
+    "line": 69,
+    "complexity": 8,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_load_config",
+    "line": 126,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "validate_inputs",
+    "line": 149,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "execute",
+    "line": 168,
+    "complexity": 2,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_get_python_files",
+    "line": 247,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_run_bandit",
+    "line": 262,
+    "complexity": 15,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_filter_issues",
+    "line": 304,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_categorize_issues",
+    "line": 319,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_save_results",
+    "line": 336,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_format_high_severity_issues",
+    "line": 457,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_format_medium_severity_issues",
+    "line": 477,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_format_recommendations",
+    "line": 496,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/subservers/review/security.py",
+    "name": "_format_approval_status",
+    "line": 512,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "get_cache_dir",
+    "line": 51,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "get_tool_path",
+    "line": 73,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "is_venv_initialized",
+    "line": 95,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "_get_tools_from_pyproject",
+    "line": 115,
+    "complexity": 3,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "_find_python",
+    "line": 141,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "_install_uv_if_needed",
+    "line": 162,
+    "complexity": 4,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "ensure_tools_venv",
+    "line": 203,
+    "complexity": 5,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "run_tool",
+    "line": 272,
+    "complexity": 1,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "get_tool_version",
+    "line": 298,
+    "complexity": 7,
+    "exceeds_threshold": false
+  },
+  {
+    "file": "src/btx_fix_mcp/tools_venv.py",
+    "name": "cleanup_tools_venv",
+    "line": 323,
+    "complexity": 1,
     "exceeds_threshold": false
   }
 ]

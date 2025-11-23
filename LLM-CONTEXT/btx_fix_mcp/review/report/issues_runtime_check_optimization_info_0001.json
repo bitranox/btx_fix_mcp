@@ -1,0 +1,492 @@
+[
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_extract_author_info' has 4 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 365,
+    "value": 4,
+    "threshold": 0,
+    "name": "_extract_author_info"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_generate_summary' has 4 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "line": 419,
+    "value": 4,
+    "threshold": 0,
+    "name": "_generate_summary"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_get_child_complexity' has 4 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "line": 185,
+    "value": 4,
+    "threshold": 0,
+    "name": "_get_child_complexity"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_as_str_dict' has 3 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 226,
+    "value": 3,
+    "threshold": 0,
+    "name": "_as_str_dict"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_generate_summary' has 3 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "line": 425,
+    "value": 3,
+    "threshold": 0,
+    "name": "_generate_summary"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_process_node' has 3 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 82,
+    "value": 3,
+    "threshold": 0,
+    "name": "_process_node"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_as_str_mapping' has 2 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 214,
+    "value": 2,
+    "threshold": 0,
+    "name": "_as_str_mapping"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_derive_import_package' has 2 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 264,
+    "value": 2,
+    "threshold": 0,
+    "name": "_derive_import_package"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'on_key' has 2 runtime checks that could be module-level constants",
+    "file": "scripts/menu.py",
+    "line": 137,
+    "value": 2,
+    "threshold": 0,
+    "name": "on_key"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_gather_values' has 2 runtime checks that could be module-level constants",
+    "file": "scripts/menu.py",
+    "line": 337,
+    "value": 2,
+    "threshold": 0,
+    "name": "_gather_values"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'exit_code_from' has 2 runtime checks that could be module-level constants",
+    "file": "scripts/run_cli.py",
+    "line": 47,
+    "value": 2,
+    "threshold": 0,
+    "name": "exit_code_from"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_compile_metrics' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "line": 500,
+    "value": 2,
+    "threshold": 0,
+    "name": "_compile_metrics"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_format_header_section' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "line": 544,
+    "value": 2,
+    "threshold": 0,
+    "name": "_format_header_section"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_find_missing_docstrings' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "line": 251,
+    "value": 2,
+    "threshold": 0,
+    "name": "_find_missing_docstrings"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_save_results' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/docs.py",
+    "line": 354,
+    "value": 2,
+    "threshold": 0,
+    "name": "_save_results"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_check_god_object' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 99,
+    "value": 2,
+    "threshold": 0,
+    "name": "_check_god_object"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_add_import_to_graph' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 183,
+    "value": 2,
+    "threshold": 0,
+    "name": "_add_import_to_graph"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_is_attribute_runtime_check' has 2 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 273,
+    "value": 2,
+    "threshold": 0,
+    "name": "_is_attribute_runtime_check"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'run' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 158,
+    "value": 1,
+    "threshold": 0,
+    "name": "run"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_as_sequence' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 238,
+    "value": 1,
+    "threshold": 0,
+    "name": "_as_sequence"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_derive_coverage_source' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 283,
+    "value": 1,
+    "threshold": 0,
+    "name": "_derive_coverage_source"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_derive_scripts' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 294,
+    "value": 1,
+    "threshold": 0,
+    "name": "_derive_scripts"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_extract_summary' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 398,
+    "value": 1,
+    "threshold": 0,
+    "name": "_extract_summary"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'get_project_metadata' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 422,
+    "value": 1,
+    "threshold": 0,
+    "name": "get_project_metadata"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_extract_name' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 483,
+    "value": 1,
+    "threshold": 0,
+    "name": "_extract_name"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_extract_homepage' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 492,
+    "value": 1,
+    "threshold": 0,
+    "name": "_extract_homepage"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'read_version_from_pyproject' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 618,
+    "value": 1,
+    "threshold": 0,
+    "name": "read_version_from_pyproject"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'bootstrap_dev' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/_utils.py",
+    "line": 691,
+    "value": 1,
+    "threshold": 0,
+    "name": "bootstrap_dev"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'env_token' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/cli.py",
+    "line": 31,
+    "value": 1,
+    "threshold": 0,
+    "name": "env_token"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'menu_app' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/menu.py",
+    "line": 256,
+    "value": 1,
+    "threshold": 0,
+    "name": "menu_app"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'menu_app' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/menu.py",
+    "line": 360,
+    "value": 1,
+    "threshold": 0,
+    "name": "menu_app"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'candid_callable' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/run_cli.py",
+    "line": 92,
+    "value": 1,
+    "threshold": 0,
+    "name": "candid_callable"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'delegate_to_module_entry' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/run_cli.py",
+    "line": 121,
+    "value": 1,
+    "threshold": 0,
+    "name": "delegate_to_module_entry"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_env_default' has 1 runtime checks that could be module-level constants",
+    "file": "scripts/target_metadata.py",
+    "line": 58,
+    "value": 1,
+    "threshold": 0,
+    "name": "_env_default"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_flush_if_possible' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/behaviors.py",
+    "line": 47,
+    "value": 1,
+    "threshold": 0,
+    "name": "_flush_if_possible"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'main' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/cli.py",
+    "line": 393,
+    "value": 1,
+    "threshold": 0,
+    "name": "main"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_get_sort_key' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/common/chunked_writer.py",
+    "line": 21,
+    "value": 1,
+    "threshold": 0,
+    "name": "_get_sort_key"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'log_subprocess_call' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "line": 555,
+    "value": 1,
+    "threshold": 0,
+    "name": "log_subprocess_call"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function 'log_subprocess_result' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/common/logging.py",
+    "line": 579,
+    "value": 1,
+    "threshold": 0,
+    "name": "log_subprocess_result"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_save_results' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "line": 441,
+    "value": 1,
+    "threshold": 0,
+    "name": "_save_results"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_save_results' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/perf.py",
+    "line": 368,
+    "value": 1,
+    "threshold": 0,
+    "name": "_save_results"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_scan_file_for_runtime_checks' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 236,
+    "value": 1,
+    "threshold": 0,
+    "name": "_scan_file_for_runtime_checks"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_is_runtime_check' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 266,
+    "value": 1,
+    "threshold": 0,
+    "name": "_is_runtime_check"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_is_builtin_runtime_check' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 292,
+    "value": 1,
+    "threshold": 0,
+    "name": "_is_builtin_runtime_check"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_analyze_file_cognitive' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "line": 147,
+    "value": 1,
+    "threshold": 0,
+    "name": "_analyze_file_cognitive"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_analyze_file_functions' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "line": 215,
+    "value": 1,
+    "threshold": 0,
+    "name": "_analyze_file_functions"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_check_function_length' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "line": 234,
+    "value": 1,
+    "threshold": 0,
+    "name": "_check_function_length"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_calculate_nesting_depth' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/complexity.py",
+    "line": 273,
+    "value": 1,
+    "threshold": 0,
+    "name": "_calculate_nesting_depth"
+  },
+  {
+    "type": "runtime_check_optimization",
+    "severity": "info",
+    "message": "Function '_parse_halstead_output' has 1 runtime checks that could be module-level constants",
+    "file": "src/btx_fix_mcp/subservers/review/quality/metrics.py",
+    "line": 76,
+    "value": 1,
+    "threshold": 0,
+    "name": "_parse_halstead_output"
+  }
+]

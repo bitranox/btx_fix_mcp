@@ -12,7 +12,11 @@ from typing import Any
 
 import yaml
 
-from btx_fix_mcp.config import get_config, get_subserver_config
+from btx_fix_mcp.config import get_config, get_display_limit, get_subserver_config, get_timeout
+from btx_fix_mcp.subservers.common.chunked_writer import (
+    cleanup_chunked_issues,
+    write_chunked_issues,
+)
 from btx_fix_mcp.subservers.common.issues import SecurityMetrics
 from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.logging import (
@@ -50,12 +54,17 @@ class SecuritySubServer(BaseSubServer):
         severity_threshold: Minimum severity to report ("low", "medium", "high")
         confidence_threshold: Minimum confidence ("low", "medium", "high")
         config_file: Path to config file
+        bandit_config: Path to bandit config file (overrides config)
+        skip_tests: List of test IDs to skip (e.g., ["B101", "B102"])
+        exclude_paths: Additional paths to exclude from scan
 
     Example:
         >>> server = SecuritySubServer(
         ...     input_dir=Path("LLM-CONTEXT/btx_fix_mcp/review/scope"),
         ...     output_dir=Path("LLM-CONTEXT/btx_fix_mcp/review/security"),
-        ...     severity_threshold="medium"
+        ...     severity_threshold="medium",
+        ...     skip_tests=["B101"],
+        ...     exclude_paths=["**/tests/*"]
         ... )
         >>> result = server.run()
     """
@@ -72,6 +81,9 @@ class SecuritySubServer(BaseSubServer):
         confidence_threshold: str = "low",
         config_file: Path | None = None,
         mcp_mode: bool = False,
+        bandit_config: str | None = None,
+        skip_tests: list[str] | None = None,
+        exclude_paths: list[str] | None = None,
     ):
         """Initialize security sub-server.
 
@@ -85,6 +97,9 @@ class SecuritySubServer(BaseSubServer):
             config_file: Path to config file
             mcp_mode: If True, log to stderr only (MCP protocol compatible).
                       If False, log to stdout only (standalone mode).
+            bandit_config: Path to bandit config file (overrides config)
+            skip_tests: List of test IDs to skip (overrides config)
+            exclude_paths: Additional paths to exclude (overrides config)
         """
         # Get output base from config for standalone use
         base_config = get_config(start_dir=str(repo_path or Path.cwd()))
@@ -111,13 +126,20 @@ class SecuritySubServer(BaseSubServer):
         config = self._load_config(config_file)
         self.config = config or {}
 
-        # Load reviewer mindset
+        # Load from config file or defaultconfig.toml
         full_config = get_subserver_config("security", start_dir=str(self.repo_path))
+
+        # Load reviewer mindset
         self.mindset = get_mindset(SECURITY_MINDSET, full_config)
 
         # Apply config with parameter priority
         self.severity_threshold = severity_threshold if severity_threshold != "low" or config is None else config.get("severity_threshold", "low")
         self.confidence_threshold = confidence_threshold if confidence_threshold != "low" or config is None else config.get("confidence_threshold", "low")
+
+        # Load new config settings with parameter overrides
+        self.bandit_config = bandit_config or full_config.get("bandit_config", "")
+        self.skip_tests = skip_tests if skip_tests is not None else full_config.get("skip_tests", [])
+        self.exclude_paths = exclude_paths if exclude_paths is not None else full_config.get("exclude_paths", [])
 
     def _load_config(self, config_file: Path | None) -> dict | None:
         """Load configuration from file."""
@@ -223,7 +245,7 @@ class SecuritySubServer(BaseSubServer):
                 status=status,
                 summary=summary,
                 artifacts=artifacts,
-                metrics=metrics.to_dict(),
+                metrics=metrics.model_dump(),
             )
 
         except Exception as e:
@@ -264,13 +286,47 @@ class SecuritySubServer(BaseSubServer):
         if not existing_files:
             return results
 
+        # Apply exclude_paths filter
+        if self.exclude_paths:
+            filtered_files = []
+            for f in existing_files:
+                file_path = Path(f)
+                # Check if file matches any exclude pattern
+                excluded = any(file_path.match(pattern) for pattern in self.exclude_paths)
+                if not excluded:
+                    filtered_files.append(f)
+            existing_files = filtered_files
+
+        if not existing_files:
+            return results
+
         try:
+            # Build bandit command
+            cmd = ["bandit", "-f", "json", "-r"]
+
+            # Add config file if specified
+            if self.bandit_config:
+                config_path = Path(self.bandit_config)
+                if config_path.exists():
+                    cmd.extend(["-c", str(config_path)])
+                else:
+                    self.logger.warning(f"Bandit config file not found: {self.bandit_config}")
+
+            # Add skip tests if specified
+            if self.skip_tests:
+                for test_id in self.skip_tests:
+                    cmd.extend(["-s", test_id])
+
+            # Add files to scan
+            cmd.extend(existing_files)
+
             # Run bandit on all files at once for efficiency
+            timeout = get_timeout("tool_analysis", 60, start_dir=str(self.repo_path))
             result = subprocess.run(
-                ["bandit", "-f", "json", "-r"] + existing_files,
+                cmd,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=timeout,
             )
 
             # Bandit returns non-zero if it finds issues
@@ -336,6 +392,7 @@ class SecuritySubServer(BaseSubServer):
     ) -> dict[str, Path]:
         """Save analysis results to files."""
         artifacts = {}
+        report_dir = self.output_dir.parent / "report"
 
         # Save all results (unfiltered)
         all_file = self.output_dir / "bandit_full.json"
@@ -346,6 +403,28 @@ class SecuritySubServer(BaseSubServer):
         filtered_file = self.output_dir / "security_issues.json"
         filtered_file.write_text(json.dumps(filtered_results, indent=2))
         artifacts["security_issues"] = filtered_file
+
+        # Write chunked issues if any filtered results
+        if filtered_results:
+            # Get unique issue types
+            issue_types = list({issue.get("type", "unknown") for issue in filtered_results})
+
+            # Cleanup old chunked files
+            cleanup_chunked_issues(
+                output_dir=report_dir,
+                issue_types=issue_types,
+                prefix="issues",
+            )
+
+            # Write chunked issues
+            written_files = write_chunked_issues(
+                issues=filtered_results,
+                output_dir=report_dir,
+                prefix="issues",
+            )
+
+            if written_files:
+                artifacts["issues"] = written_files[0]
 
         return artifacts
 
@@ -367,9 +446,7 @@ class SecuritySubServer(BaseSubServer):
 
         return "\n".join(lines)
 
-    def _evaluate_mindset(
-        self, files: list[str], categorized: dict[str, list[dict]]
-    ) -> Any:
+    def _evaluate_mindset(self, files: list[str], categorized: dict[str, list[dict]]) -> Any:
         """Evaluate results using mindset."""
         high_issues = categorized.get("HIGH", [])
         medium_issues = categorized.get("MEDIUM", [])
@@ -429,52 +506,62 @@ class SecuritySubServer(BaseSubServer):
             "",
         ]
 
-    def _format_high_severity_issues(
-        self, categorized: dict[str, list[dict]]
-    ) -> list[str]:
+    def _format_high_severity_issues(self, categorized: dict[str, list[dict]]) -> list[str]:
         """Format high severity issues section."""
         high_issues = categorized.get("HIGH", [])
         if not high_issues:
             return []
 
-        lines = ["## 🔴 High Severity Issues", ""]
-        for issue in high_issues[:10]:
+        limit = get_display_limit("max_high_security", 10, start_dir=str(self.repo_path))
+        display_count = len(high_issues) if limit is None else min(limit, len(high_issues))
+
+        header = "## 🔴 High Severity Issues" if limit is None else f"## 🔴 High Severity Issues (showing {display_count} of {len(high_issues)})"
+        lines = [header, ""]
+
+        for issue in high_issues[:limit]:
             file_path = issue.get("relative_file", issue.get("filename", "unknown"))
             line_num = issue.get("line_number", "?")
             test_id = issue.get("test_id", "")
             message = issue.get("issue_text", "Unknown issue")
             lines.append(f"- **{file_path}:{line_num}** [{test_id}] {message}")
 
-        if len(high_issues) > 10:
-            lines.append(f"- ... and {len(high_issues) - 10} more")
+        if limit is not None and len(high_issues) > limit:
+            lines.append("")
+            lines.append(
+                f"*Note: {len(high_issues) - limit} more high severity issues not shown. Set `output.display.max_high_security = 0` in config for unlimited display.*"
+            )
         lines.append("")
 
         return lines
 
-    def _format_medium_severity_issues(
-        self, categorized: dict[str, list[dict]]
-    ) -> list[str]:
+    def _format_medium_severity_issues(self, categorized: dict[str, list[dict]]) -> list[str]:
         """Format medium severity issues section."""
         medium_issues = categorized.get("MEDIUM", [])
         if not medium_issues:
             return []
 
-        lines = ["## 🟠 Medium Severity Issues", ""]
-        for issue in medium_issues[:10]:
+        limit = get_display_limit("max_medium_security", 10, start_dir=str(self.repo_path))
+        display_count = len(medium_issues) if limit is None else min(limit, len(medium_issues))
+
+        header = "## 🟠 Medium Severity Issues" if limit is None else f"## 🟠 Medium Severity Issues (showing {display_count} of {len(medium_issues)})"
+        lines = [header, ""]
+
+        for issue in medium_issues[:limit]:
             file_path = issue.get("relative_file", issue.get("filename", "unknown"))
             line_num = issue.get("line_number", "?")
             message = issue.get("issue_text", "Unknown issue")
             lines.append(f"- `{file_path}:{line_num}`: {message}")
 
-        if len(medium_issues) > 10:
-            lines.append(f"- ... and {len(medium_issues) - 10} more")
+        if limit is not None and len(medium_issues) > limit:
+            lines.append("")
+            lines.append(
+                f"*Note: {len(medium_issues) - limit} more medium severity issues not shown. Set `output.display.max_medium_security = 0` in config for unlimited display.*"
+            )
         lines.append("")
 
         return lines
 
-    def _format_recommendations(
-        self, issues: list[dict], categorized: dict[str, list[dict]]
-    ) -> list[str]:
+    def _format_recommendations(self, issues: list[dict], categorized: dict[str, list[dict]]) -> list[str]:
         """Format recommendations section."""
         lines = ["## Recommendations", ""]
 
@@ -482,13 +569,9 @@ class SecuritySubServer(BaseSubServer):
         medium_issues = categorized.get("MEDIUM", [])
 
         if high_issues:
-            lines.append(
-                "1. **Fix high severity issues immediately** - These represent significant security risks"
-            )
+            lines.append("1. **Fix high severity issues immediately** - These represent significant security risks")
         if medium_issues:
-            lines.append(
-                "2. **Review medium severity issues** - Address before production deployment"
-            )
+            lines.append("2. **Review medium severity issues** - Address before production deployment")
         if not issues:
             lines.append("✅ No security issues detected!")
 

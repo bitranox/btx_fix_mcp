@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from btx_fix_mcp.tools_venv import get_tool_path
+from btx_fix_mcp.config import get_timeout
 
 
 def scan_vulnerabilities(
@@ -33,11 +34,12 @@ def run_pip_audit(repo_path: Path, logger: Logger) -> list[dict[str, Any]]:
     vulnerabilities = []
     try:
         python_path = get_tool_path("python")
+        timeout = get_timeout("vuln_scan", 120)
         result = subprocess.run(
             [str(python_path), "-m", "pip_audit", "--format=json", "--strict"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=timeout,
             cwd=str(repo_path),
         )
 
@@ -74,11 +76,12 @@ def run_safety(repo_path: Path, logger: Logger) -> list[dict[str, Any]]:
     vulnerabilities = []
     try:
         python_path = get_tool_path("python")
+        timeout = get_timeout("vuln_scan", 120)
         result = subprocess.run(
             [str(python_path), "-m", "safety", "check", "--json"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=timeout,
             cwd=str(repo_path),
         )
 
@@ -110,11 +113,12 @@ def run_npm_audit(repo_path: Path, logger: Logger) -> list[dict[str, Any]]:
     """Run npm audit for Node.js vulnerability scanning."""
     vulnerabilities = []
     try:
+        timeout = get_timeout("vuln_scan", 120)
         result = subprocess.run(
             ["npm", "audit", "--json"],
             capture_output=True,
             text=True,
-            timeout=120,
+            timeout=timeout,
             cwd=str(repo_path),
         )
 
@@ -167,11 +171,12 @@ def check_outdated_packages(
 
     if project_type == "python":
         try:
+            timeout = get_timeout("tool_analysis", 60)
             result = subprocess.run(
                 ["pip", "list", "--outdated", "--format=json"],
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=timeout,
             )
             if result.stdout.strip():
                 outdated = json.loads(result.stdout)
@@ -180,11 +185,12 @@ def check_outdated_packages(
 
     elif project_type == "nodejs":
         try:
+            timeout = get_timeout("tool_analysis", 60)
             result = subprocess.run(
                 ["npm", "outdated", "--json"],
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=timeout,
                 cwd=str(repo_path),
             )
             if result.stdout.strip():

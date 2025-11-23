@@ -1,12 +1,12 @@
 # Code Review Report
 
-**Generated**: 2025-11-21T22:36:05.624123
+**Generated**: 2025-11-22T22:13:41.571874
 
 ---
 
 ## Overall Verdict
 
-### ❌ Code review failed - 2 critical issues found
+### ❌ Code review failed - 4 critical issues found
 
 **Status**: `REJECTED`
 
@@ -18,12 +18,12 @@
 ## Summary Statistics
 
 - **Sub-servers run**: 6
-- **Sub-servers passed**: 4
+- **Sub-servers passed**: 3
 - **Sub-servers failed**: 0
-- **Files analyzed**: 1
-- **Total issues**: 13
-- **Critical issues**: 2
-- **Warnings**: 11
+- **Files analyzed**: 63
+- **Total issues**: 278
+- **Critical issues**: 4
+- **Warnings**: 226
 
 ---
 
@@ -34,31 +34,31 @@
 **Status**: `SUCCESS`
 
 **Key Metrics:**
-- total_files: 5
-- code_files: 1
-- test_files: 0
-- doc_files: 3
-- config_files: 1
+- total_files: 4095
+- code_files: 63
+- test_files: 66
+- doc_files: 60
+- config_files: 995
 
-### ✅ Quality
+### ⚠️ Quality
 
-**Status**: `SUCCESS`
+**Status**: `PARTIAL`
 
 **Key Metrics:**
-- files_analyzed: 1
-- python_files: 1
+- files_analyzed: 63
+- python_files: 63
 - js_files: 0
-- total_functions: 20
-- high_complexity_count: 0
+- total_functions: 572
+- high_complexity_count: 17
 
-**Issues**: 3 (0 critical, 3 warnings)
+**Issues**: 184 (2 critical, 134 warnings)
 
 ### ✅ Security
 
 **Status**: `SUCCESS`
 
 **Key Metrics:**
-- files_scanned: 1
+- files_scanned: 63
 - issues_found: 0
 - high_severity: 0
 - medium_severity: 0
@@ -71,7 +71,7 @@
 **Key Metrics:**
 - project_type: python
 - total_dependencies: 174
-- direct_dependencies: 9
+- direct_dependencies: 10
 - vulnerabilities_count: 0
 - outdated_count: 7
 
@@ -82,30 +82,34 @@
 **Status**: `SUCCESS`
 
 **Key Metrics:**
-- files_analyzed: 1
-- coverage_percent: 99.1
-- missing_docstrings: 0
+- files_analyzed: 63
+- coverage_percent: 99.2
+- missing_docstrings: 48
 - project_docs_found: 3
-- total_issues: 0
+- total_issues: 48
+
+**Issues**: 48 (0 critical, 48 warnings)
 
 ### ⚠️ Perf
 
 **Status**: `PARTIAL`
 
 **Key Metrics:**
-- files_analyzed: 1
-- patterns_found: 0
-- hotspots_found: 2
-- total_issues: 3
+- files_analyzed: 63
+- patterns_found: 8
+- hotspots_found: 4
+- total_issues: 43
 
-**Issues**: 3 (2 critical, 1 warnings)
+**Issues**: 39 (2 critical, 37 warnings)
 
 ---
 
 ## Critical Issues (Must Fix)
 
-- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_execute_python_project takes 5.91s
-- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_summary_includes_mindset takes 5.58s
+- **[quality]** `src/btx_fix_mcp/subservers/review/deps.py:46` Class 'DepsSubServer' is a god object (27 methods, 566 lines)
+- **[quality]** `src/btx_fix_mcp/subservers/review/quality/architecture.py:18` Class 'ArchitectureAnalyzer' is a god object (22 methods, 293 lines)
+- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_execute_python_project takes 6.64s
+- **[perf]**  Slow test: tests/subservers/review/test_deps.py::TestDepsSubServer::test_summary_includes_mindset takes 6.30s
 
 ---
 

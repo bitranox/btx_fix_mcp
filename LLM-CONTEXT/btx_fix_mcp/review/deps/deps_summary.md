@@ -19,7 +19,7 @@
 
 **Project Type**: python
 **Total Dependencies**: 174
-**Direct Dependencies**: 9
+**Direct Dependencies**: 10
 **Total Issues**: 7
 
 ## Security Vulnerabilities

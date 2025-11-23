@@ -1,0 +1,22 @@
+[
+  {
+    "type": "god_object",
+    "severity": "error",
+    "message": "Class 'DepsSubServer' is a god object (27 methods, 586 lines)",
+    "file": "src/btx_fix_mcp/subservers/review/deps.py",
+    "line": 50,
+    "value": "27 methods, 586 lines",
+    "threshold": 0,
+    "name": "DepsSubServer"
+  },
+  {
+    "type": "god_object",
+    "severity": "error",
+    "message": "Class 'ArchitectureAnalyzer' is a god object (22 methods, 279 lines)",
+    "file": "src/btx_fix_mcp/subservers/review/quality/architecture.py",
+    "line": 18,
+    "value": "22 methods, 279 lines",
+    "threshold": 0,
+    "name": "ArchitectureAnalyzer"
+  }
+]

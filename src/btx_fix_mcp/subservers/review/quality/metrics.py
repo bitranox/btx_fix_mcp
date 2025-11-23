@@ -12,6 +12,7 @@ from pathlib import Path
 from typing import Any
 
 from btx_fix_mcp.tools_venv import get_tool_path
+from btx_fix_mcp.config import get_timeout
 
 from .base import BaseAnalyzer
 
@@ -39,45 +40,66 @@ class MetricsAnalyzer(BaseAnalyzer):
         for file_path in files:
             if not Path(file_path).exists():
                 continue
+
             try:
-                result = subprocess.run(
-                    [radon, "hal", "-j", file_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if result.returncode == 0 and result.stdout.strip():
-                    data = json.loads(result.stdout)
-                    for filepath, hal_data in data.items():
-                        if hal_data.get("total"):
-                            total = hal_data["total"][0] if isinstance(hal_data["total"], list) else hal_data["total"]
-                            results.append(
-                                {
-                                    "file": self._get_relative_path(filepath),
-                                    "h1": total.get("h1", 0),
-                                    "h2": total.get("h2", 0),
-                                    "N1": total.get("N1", 0),
-                                    "N2": total.get("N2", 0),
-                                    "vocabulary": total.get("vocabulary", 0),
-                                    "length": total.get("length", 0),
-                                    "volume": total.get("volume", 0),
-                                    "difficulty": total.get("difficulty", 0),
-                                    "effort": total.get("effort", 0),
-                                    "time": total.get("time", 0),
-                                    "bugs": total.get("bugs", 0),
-                                }
-                            )
-            except subprocess.TimeoutExpired:
-                self.logger.warning(f"Timeout analyzing Halstead in {file_path}")
-            except json.JSONDecodeError:
-                self.logger.warning(f"Invalid JSON from radon for {file_path}")
+                self._analyze_file_halstead(file_path, radon, results)
             except FileNotFoundError:
-                self.logger.warning("radon not found")
+                # radon not found - stop processing remaining files
                 break
-            except Exception as e:
-                self.logger.warning(f"Error analyzing Halstead in {file_path}: {e}")
 
         return results
+
+    def _analyze_file_halstead(self, file_path: str, radon: str, results: list[dict[str, Any]]) -> None:
+        """Analyze Halstead metrics for a single file."""
+        try:
+            timeout = get_timeout("tool_quick", 30)
+            result = subprocess.run(
+                [radon, "hal", "-j", file_path],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+            if result.returncode != 0 or not result.stdout.strip():
+                return
+
+            self._parse_halstead_output(result.stdout, results)
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning(f"Timeout analyzing Halstead in {file_path}")
+        except json.JSONDecodeError:
+            self.logger.warning(f"Invalid JSON from radon for {file_path}")
+        except FileNotFoundError:
+            self.logger.warning("radon not found")
+            raise  # Re-raise to stop processing
+        except Exception as e:
+            self.logger.warning(f"Error analyzing Halstead in {file_path}: {e}")
+
+    def _parse_halstead_output(self, stdout: str, results: list[dict[str, Any]]) -> None:
+        """Parse radon Halstead metrics JSON output."""
+        data = json.loads(stdout)
+
+        for filepath, hal_data in data.items():
+            if not hal_data.get("total"):
+                continue
+
+            total = hal_data["total"][0] if isinstance(hal_data["total"], list) else hal_data["total"]
+            results.append(
+                {
+                    "file": self._get_relative_path(filepath),
+                    "h1": total.get("h1", 0),
+                    "h2": total.get("h2", 0),
+                    "N1": total.get("N1", 0),
+                    "N2": total.get("N2", 0),
+                    "vocabulary": total.get("vocabulary", 0),
+                    "length": total.get("length", 0),
+                    "volume": total.get("volume", 0),
+                    "difficulty": total.get("difficulty", 0),
+                    "effort": total.get("effort", 0),
+                    "time": total.get("time", 0),
+                    "bugs": total.get("bugs", 0),
+                }
+            )
 
     def _analyze_raw_metrics(self, files: list[str]) -> list[dict[str, Any]]:
         """Analyze raw metrics (LOC, SLOC, comments) using radon."""
@@ -87,39 +109,58 @@ class MetricsAnalyzer(BaseAnalyzer):
         for file_path in files:
             if not Path(file_path).exists():
                 continue
+
             try:
-                result = subprocess.run(
-                    [radon, "raw", "-j", file_path],
-                    capture_output=True,
-                    text=True,
-                    timeout=30,
-                )
-                if result.returncode == 0 and result.stdout.strip():
-                    data = json.loads(result.stdout)
-                    for filepath, raw_data in data.items():
-                        results.append(
-                            {
-                                "file": self._get_relative_path(filepath),
-                                "loc": raw_data.get("loc", 0),
-                                "lloc": raw_data.get("lloc", 0),
-                                "sloc": raw_data.get("sloc", 0),
-                                "comments": raw_data.get("comments", 0),
-                                "multi": raw_data.get("multi", 0),
-                                "blank": raw_data.get("blank", 0),
-                                "single_comments": raw_data.get("single_comments", 0),
-                            }
-                        )
-            except subprocess.TimeoutExpired:
-                self.logger.warning(f"Timeout analyzing raw metrics in {file_path}")
-            except json.JSONDecodeError:
-                self.logger.warning(f"Invalid JSON from radon for {file_path}")
+                self._analyze_file_raw_metrics(file_path, radon, results)
             except FileNotFoundError:
-                self.logger.warning("radon not found")
+                # radon not found - stop processing remaining files
                 break
-            except Exception as e:
-                self.logger.warning(f"Error analyzing raw metrics in {file_path}: {e}")
 
         return results
+
+    def _analyze_file_raw_metrics(self, file_path: str, radon: str, results: list[dict[str, Any]]) -> None:
+        """Analyze raw metrics for a single file."""
+        try:
+            timeout = get_timeout("tool_quick", 30)
+            result = subprocess.run(
+                [radon, "raw", "-j", file_path],
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+
+            if result.returncode != 0 or not result.stdout.strip():
+                return
+
+            self._parse_raw_metrics_output(result.stdout, results)
+
+        except subprocess.TimeoutExpired:
+            self.logger.warning(f"Timeout analyzing raw metrics in {file_path}")
+        except json.JSONDecodeError:
+            self.logger.warning(f"Invalid JSON from radon for {file_path}")
+        except FileNotFoundError:
+            self.logger.warning("radon not found")
+            raise  # Re-raise to stop processing
+        except Exception as e:
+            self.logger.warning(f"Error analyzing raw metrics in {file_path}: {e}")
+
+    def _parse_raw_metrics_output(self, stdout: str, results: list[dict[str, Any]]) -> None:
+        """Parse radon raw metrics JSON output."""
+        data = json.loads(stdout)
+
+        for filepath, raw_data in data.items():
+            results.append(
+                {
+                    "file": self._get_relative_path(filepath),
+                    "loc": raw_data.get("loc", 0),
+                    "lloc": raw_data.get("lloc", 0),
+                    "sloc": raw_data.get("sloc", 0),
+                    "comments": raw_data.get("comments", 0),
+                    "multi": raw_data.get("multi", 0),
+                    "blank": raw_data.get("blank", 0),
+                    "single_comments": raw_data.get("single_comments", 0),
+                }
+            )
 
     def _analyze_code_churn(self, files: list[str]) -> dict[str, Any]:
         """Analyze code churn using git history.
@@ -168,11 +209,12 @@ class MetricsAnalyzer(BaseAnalyzer):
     def _is_git_repository(self) -> bool:
         """Check if current directory is a git repository."""
         try:
+            timeout = get_timeout("git_log", 10)
             git_check = subprocess.run(
                 ["git", "rev-parse", "--git-dir"],
                 capture_output=True,
                 text=True,
-                timeout=5,
+                timeout=timeout,
                 cwd=str(self.repo_path),
             )
             if git_check.returncode != 0:
@@ -196,6 +238,7 @@ class MetricsAnalyzer(BaseAnalyzer):
 
     def _run_git_log(self, relative_files: list[str]) -> str | None:
         """Run git log command to get file change history."""
+        timeout = get_timeout("tool_analysis", 60)
         result = subprocess.run(
             [
                 "git",
@@ -208,7 +251,7 @@ class MetricsAnalyzer(BaseAnalyzer):
             ],
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=timeout,
             cwd=str(self.repo_path),
         )
 
@@ -216,9 +259,7 @@ class MetricsAnalyzer(BaseAnalyzer):
             return None
         return result.stdout
 
-    def _parse_git_log(
-        self, git_output: str
-    ) -> tuple[dict[str, dict[str, Any]], set[str]]:
+    def _parse_git_log(self, git_output: str) -> tuple[dict[str, dict[str, Any]], set[str]]:
         """Parse git log output to extract file statistics."""
         file_stats: dict[str, dict[str, Any]] = {}
         current_author = None
@@ -239,9 +280,7 @@ class MetricsAnalyzer(BaseAnalyzer):
 
         return file_stats, commits_seen
 
-    def _process_numstat_line(
-        self, line: str, current_author: str | None, file_stats: dict[str, dict[str, Any]]
-    ) -> None:
+    def _process_numstat_line(self, line: str, current_author: str | None, file_stats: dict[str, dict[str, Any]]) -> None:
         """Process a single numstat line from git log."""
         parts = line.split("\t")
         if len(parts) < 3:
@@ -268,9 +307,7 @@ class MetricsAnalyzer(BaseAnalyzer):
         file_stats[filepath]["lines_deleted"] += deleted
         file_stats[filepath]["total_changes"] += added + deleted
 
-    def _compile_churn_results(
-        self, file_stats: dict[str, dict[str, Any]], churn_threshold: int, results: dict[str, Any]
-    ) -> None:
+    def _compile_churn_results(self, file_stats: dict[str, dict[str, Any]], churn_threshold: int, results: dict[str, Any]) -> None:
         """Compile file statistics into churn results."""
         for filepath, stats in file_stats.items():
             file_info = {

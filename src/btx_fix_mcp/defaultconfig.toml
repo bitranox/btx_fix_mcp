@@ -17,16 +17,80 @@
 
 [general]
 # Working directory for analysis output
-# output_dir = "LLM-CONTEXT"
+output_dir = "LLM-CONTEXT"
 
-# Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-# log_level = "INFO"
+# Log level: DEBUG (10), INFO (20), WARNING (30), ERROR (40), CRITICAL (50)
+log_level = "INFO"
 
 # Enable verbose output
-# verbose = false
+verbose = false
 
 # Maximum parallel sub-server processes
-# max_workers = 4
+max_workers = 4
+
+
+# -----------------------------------------------------------------------------
+# Timeout Configuration (in seconds)
+# -----------------------------------------------------------------------------
+[general.timeouts]
+# Git operations
+git_quick_op = 5          # Quick git commands (is_git_repo, get_branch, etc.)
+git_status = 10           # Git status and diff operations
+git_commit = 30           # Git commit (may run pre-commit hooks)
+git_log = 10              # Git log and history
+git_blame = 5             # Git blame operations
+
+# Analysis tools - quick operations (< 1 minute)
+tool_quick = 30           # Fast tools (radon complexity, etc.)
+
+# Analysis tools - standard operations (1-2 minutes)
+tool_analysis = 60        # Standard analysis (ruff, interrogate, bandit)
+
+# Analysis tools - long operations (2-5 minutes)
+tool_long = 120           # Slow analysis (mypy, pylint, pytest)
+
+# Special operations
+profile_tests = 300       # Test profiling with pytest (5 minutes)
+vuln_scan = 120          # Dependency vulnerability scanning
+
+
+# -----------------------------------------------------------------------------
+# Display Limits for Reports
+# -----------------------------------------------------------------------------
+[output.display]
+# Controls how many items appear in markdown summary reports
+# Set to 0 for unlimited (show all items)
+# Actual limit only applies if there are more items than the limit
+
+# Scope sub-server
+max_sample_files = 10     # Sample files shown in scope report
+
+# Security sub-server
+max_high_security = 10    # High severity security issues
+max_medium_security = 10  # Medium severity security issues
+
+# Deps sub-server
+max_vulnerabilities = 10  # Vulnerability issues
+max_outdated_packages = 10  # Outdated dependencies
+max_license_issues = 5    # License violations
+
+# Docs sub-server
+max_missing_docstrings = 15  # Missing docstring examples
+
+# Performance sub-server
+max_hotspots = 10         # Performance hotspots
+max_pattern_issues = 10   # Performance anti-patterns
+
+# Final report
+max_critical_display = 20  # Critical issues in final summary
+max_metrics_display = 5   # Metrics shown per sub-server
+
+
+# -----------------------------------------------------------------------------
+# Output Formatting (merged with output section below)
+# -----------------------------------------------------------------------------
+# json_indent - JSON output indentation (spaces) = 2
+# chunk_size - Chunk size for splitting large issue files = 50
 
 
 # =============================================================================
@@ -38,10 +102,10 @@
 output_dir = "LLM-CONTEXT/btx_fix_mcp/review"
 
 # Sub-servers to run (in order)
-# subservers = ["scope", "quality", "security", "deps", "docs", "perf"]
+subservers = ["scope", "quality", "security", "deps", "docs", "perf"]
 
 # Stop on first failure
-# stop_on_failure = false
+stop_on_failure = false
 
 
 # -----------------------------------------------------------------------------
@@ -49,30 +113,56 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/review"
 # -----------------------------------------------------------------------------
 [review.scope]
 # Scope detection mode: "git" (uncommitted changes) or "all" (full repo)
-# mode = "git"
+mode = "git"
 
 # Patterns to exclude from analysis
-# These patterns are normalized for pathlib.match():
-#   - "vendor/" becomes "*/vendor/*" (matches vendor dir anywhere)
-#   - "*.min.js" stays as-is (glob patterns unchanged)
-exclude_patterns = ["vendor/",
-                    "node_modules/",
-                    ".venv/",
-                    "__pycache__/",
-                    "dist/",
-                    "build/",
-                    ".git/",
-                    "*.pyc",
-                    "*.pyo",
-                    "*.lock",
-                    "*.min.js",
-                    "*.min.css",
-                    "LLM-CONTEXT/",
-                    "scripts/",
+#
+# Pattern Syntax (uses pathlib.match()):
+#   *        - Matches one path component (e.g., "*.py" matches "file.py")
+#   **       - Matches zero or more path components (e.g., "**/test/*" matches at any depth)
+#   ?        - Matches one character
+#
+# Common Patterns:
+#   "*.pyc"           - All .pyc files anywhere
+#   "**/vendor/*"     - Files in vendor/ directory at any depth
+#   "*/scripts/*"     - Files in scripts/ with exactly 1 parent directory
+#   "**/test_*.py"    - Test files at any depth
+#
+# Examples:
+#   Pattern             | Matches                          | Doesn't Match
+#   --------------------|----------------------------------|----------------------------------
+#   "scripts/*"         | scripts/file.py                  | repo/scripts/file.py
+#   "*/scripts/*"       | repo/scripts/file.py             | scripts/file.py, a/b/scripts/file.py
+#   "**/scripts/*"      | All files in any scripts/ dir    | (catches everything)
+#
+exclude_patterns = [
+    # Dependency directories
+    "**/vendor/*",
+    "**/node_modules/*",
+    "**/.venv/*",
+    "**/__pycache__/*",
+
+    # Build artifacts
+    "**/dist/*",
+    "**/build/*",
+
+    # Version control
+    "**/.git/*",
+
+    # Compiled/generated files
+    "*.pyc",
+    "*.pyo",
+    "*.lock",
+    "*.min.js",
+    "*.min.css",
+
+    # Project-specific
+    "**/LLM-CONTEXT/*",
+    "**/scripts/*",
 ]
 
 # Patterns to include (default: all files)
-# include_patterns = ["**/*"]
+include_patterns = ["**/*"]
 
 
 # -----------------------------------------------------------------------------
@@ -171,19 +261,19 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.security]
 # Minimum severity to report: "low", "medium", "high"
-# severity_threshold = "low"
+severity_threshold = "low"
 
 # Minimum confidence to report: "low", "medium", "high"
-# confidence_threshold = "low"
+confidence_threshold = "low"
 
 # Bandit configuration file path (optional)
-# bandit_config = ""
+bandit_config = ""
 
 # Skip specific Bandit test IDs (e.g., ["B101", "B102"])
-# skip_tests = []
+skip_tests = []
 
 # Additional paths to exclude from security scan
-# exclude_paths = []
+exclude_paths = []
 
 
 # -----------------------------------------------------------------------------
@@ -191,23 +281,23 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.quality.pylint]
 # Enable pylint integration
-# enabled = true
+enabled = true
 
 # Pylint configuration file path (optional, auto-detected if not set)
-# config_file = ""
+config_file = ""
 
 # Minimum pylint score to pass (0-10)
-# min_score = 7.0
+min_score = 7.0
 
 # Pylint message categories to include
 # Enable: convention (C), refactor (R), warning (W), error (E), fatal (F)
-# categories = ["W", "E", "F"]
+categories = ["W", "E", "F"]
 
 # Specific pylint checks to disable
-# disable = []
+disable = []
 
 # Specific pylint checks to enable
-# enable = []
+enable = []
 
 
 # -----------------------------------------------------------------------------
@@ -215,22 +305,22 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.quality.flake8]
 # Enable flake8 integration
-# enabled = true
+enabled = true
 
 # Flake8 configuration file path (optional, auto-detected if not set)
-# config_file = ""
+config_file = ""
 
 # Maximum line length
-# max_line_length = 88
+max_line_length = 88
 
 # Error codes to ignore
-# ignore = ["E501", "W503"]
+ignore = ["E501", "W503"]
 
 # Error codes to select (empty = all)
-# select = []
+select = []
 
 # Maximum complexity threshold
-# max_complexity = 10
+max_complexity = 10
 
 
 # -----------------------------------------------------------------------------
@@ -238,16 +328,16 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.quality.radon]
 # Enable radon complexity analysis
-# enabled = true
+enabled = true
 
 # Minimum rank to show: A, B, C, D, E, F
-# show_complexity = "A"
+show_complexity = "A"
 
 # Include closures in complexity calculation
-# include_closures = true
+include_closures = true
 
 # Output format: "json", "text"
-# output_format = "json"
+output_format = "json"
 
 
 # -----------------------------------------------------------------------------
@@ -255,31 +345,31 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.deps]
 # Enable vulnerability scanning
-# scan_vulnerabilities = true
+scan_vulnerabilities = true
 
 # Enable license compliance checking
-# check_licenses = true
+check_licenses = true
 
 # Allowed licenses (SPDX identifiers)
-# allowed_licenses = [
-#     "MIT",
-#     "Apache-2.0",
-#     "BSD-2-Clause",
-#     "BSD-3-Clause",
-#     "ISC",
-#     "MPL-2.0",
-#     "LGPL-2.1",
-#     "LGPL-3.0",
-# ]
+allowed_licenses = [
+    "MIT",
+    "Apache-2.0",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "ISC",
+    "MPL-2.0",
+    "LGPL-2.1",
+    "LGPL-3.0",
+]
 
 # Disallowed licenses (SPDX identifiers)
-# disallowed_licenses = ["GPL-3.0", "AGPL-3.0"]
+disallowed_licenses = ["GPL-3.0", "AGPL-3.0"]
 
 # Check for outdated packages
-# check_outdated = true
+check_outdated = true
 
 # Maximum allowed age for dependencies (days, 0 = no limit)
-# max_age_days = 365
+max_age_days = 365
 
 
 # -----------------------------------------------------------------------------
@@ -287,22 +377,22 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.docs]
 # Check for missing docstrings
-# check_docstrings = true
+check_docstrings = true
 
 # Docstring style: "google", "numpy", "sphinx"
-# docstring_style = "google"
+docstring_style = "google"
 
 # Minimum docstring coverage percentage
-# min_coverage = 80
+min_coverage = 80
 
 # Check README exists
-# require_readme = true
+require_readme = true
 
 # Check CHANGELOG exists
-# require_changelog = false
+require_changelog = false
 
 # Required sections in README
-# required_readme_sections = ["Installation", "Usage"]
+required_readme_sections = ["Installation", "Usage"]
 
 
 # -----------------------------------------------------------------------------
@@ -310,22 +400,22 @@ enable_beartype = true
 # -----------------------------------------------------------------------------
 [review.perf]
 # Enable runtime performance estimation
-# estimate_runtime = true
+estimate_runtime = true
 
 # Enable memory usage estimation
-# estimate_memory = true
+estimate_memory = true
 
 # Flag functions with estimated high runtime (milliseconds)
-# runtime_threshold_ms = 100
+runtime_threshold_ms = 100
 
 # Flag modules with estimated high memory (MB)
-# memory_threshold_mb = 50
+memory_threshold_mb = 50
 
 # Enable algorithm complexity detection (O(n^2), O(n!), etc.)
-# detect_complexity = true
+detect_complexity = true
 
 # Flag nested loops deeper than threshold
-# nested_loop_threshold = 2
+nested_loop_threshold = 2
 
 
 # =============================================================================
@@ -337,13 +427,13 @@ enable_beartype = true
 output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 
 # Enable evidence-based fixing (measure -> fix -> verify)
-# evidence_based = true
+evidence_based = true
 
 # Number of verification attempts before accepting fix
-# verification_attempts = 3
+verification_attempts = 3
 
 # Auto-revert on failed verification
-# auto_revert = true
+auto_revert = true
 
 
 # -----------------------------------------------------------------------------
@@ -351,13 +441,13 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [fix.scope]
 # Scope mode for fix operations: "single", "related", "module"
-# mode = "single"
+mode = "single"
 
 # Include related test files
-# include_tests = true
+include_tests = true
 
 # Maximum files to include in fix scope
-# max_files = 10
+max_files = 10
 
 
 # -----------------------------------------------------------------------------
@@ -365,22 +455,22 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [fix.test]
 # Test framework: "pytest", "unittest", "nose"
-# framework = "pytest"
+framework = "pytest"
 
 # Test command (if not using framework auto-detection)
-# command = ""
+command = ""
 
 # Test timeout in seconds
-# timeout = 300
+timeout = 300
 
 # Run tests in parallel
-# parallel = true
+parallel = true
 
 # Stop on first test failure
-# fail_fast = false
+fail_fast = false
 
 # Coverage threshold for pass (percentage, 0 = disabled)
-# min_coverage = 0
+min_coverage = 0
 
 
 # -----------------------------------------------------------------------------
@@ -388,13 +478,13 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [fix.lint]
 # Linters to run: "ruff", "pylint", "flake8", "mypy"
-# linters = ["ruff", "mypy"]
+linters = ["ruff", "mypy"]
 
 # Auto-fix safe linting issues
-# auto_fix = true
+auto_fix = true
 
 # Fail on any linting error
-# strict = false
+strict = false
 
 
 # =============================================================================
@@ -406,19 +496,19 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.bandit]
 # Bandit severity levels: 1 (LOW), 2 (MEDIUM), 3 (HIGH)
-# min_severity = 1
+min_severity = 1
 
 # Bandit confidence levels: 1 (LOW), 2 (MEDIUM), 3 (HIGH)
-# min_confidence = 1
+min_confidence = 1
 
 # Output format: "json", "txt", "html", "csv"
-# format = "json"
+format = "json"
 
 # Recursive scan
-# recursive = true
+recursive = true
 
 # Number of parallel processes
-# processes = 4
+processes = 4
 
 
 # -----------------------------------------------------------------------------
@@ -426,13 +516,13 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.radon]
 # Show complexity for all ranks (A through F)
-# show_all = true
+show_all = true
 
 # Include average complexity in output
-# show_average = true
+show_average = true
 
 # Sort by: "score", "filename", "line"
-# sort_by = "score"
+sort_by = "score"
 
 
 # -----------------------------------------------------------------------------
@@ -440,19 +530,19 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.pylint]
 # Jobs for parallel execution (0 = auto)
-# jobs = 0
+jobs = 0
 
 # Output format: "text", "json", "colorized"
-# output_format = "json"
+output_format = "json"
 
 # Reports to generate
-# reports = false
+reports = false
 
 # Maximum line length
-# max_line_length = 88
+max_line_length = 88
 
 # Good variable names (regex)
-# good_names = ["i", "j", "k", "ex", "Run", "_", "id", "pk"]
+good_names = ["i", "j", "k", "ex", "Run", "_", "id", "pk"]
 
 
 # -----------------------------------------------------------------------------
@@ -460,16 +550,16 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.flake8]
 # Maximum line length
-# max_line_length = 88
+max_line_length = 88
 
 # Maximum doc line length
-# max_doc_length = 88
+max_doc_length = 88
 
 # Indent size
-# indent_size = 4
+indent_size = 4
 
 # Output format
-# format = "default"
+format = "default"
 
 
 # -----------------------------------------------------------------------------
@@ -477,22 +567,22 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.ruff]
 # Line length
-# line_length = 88
+line_length = 88
 
 # Target Python version
-# target_version = "py313"
+target_version = "py313"
 
 # Rules to enable (use "ALL" for all rules)
-# select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM"]
 
 # Rules to ignore
-# ignore = ["E501"]
+ignore = ["E501"]
 
 # Auto-fix
-# fix = true
+fix = true
 
 # Unsafe fixes allowed
-# unsafe_fixes = false
+unsafe_fixes = false
 
 
 # -----------------------------------------------------------------------------
@@ -500,19 +590,19 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.mypy]
 # Python version
-# python_version = "3.13"
+python_version = "3.13"
 
 # Strict mode
-# strict = false
+strict = false
 
 # Ignore missing imports
-# ignore_missing_imports = true
+ignore_missing_imports = true
 
 # Show error codes
-# show_error_codes = true
+show_error_codes = true
 
 # Pretty output
-# pretty = true
+pretty = true
 
 
 # -----------------------------------------------------------------------------
@@ -520,16 +610,16 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.black]
 # Line length
-# line_length = 88
+line_length = 88
 
 # Target Python versions
-# target_version = ["py313"]
+target_version = ["py313"]
 
 # String normalization
-# skip_string_normalization = false
+skip_string_normalization = false
 
 # Magic trailing comma
-# skip_magic_trailing_comma = false
+skip_magic_trailing_comma = false
 
 
 # -----------------------------------------------------------------------------
@@ -537,28 +627,28 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 # -----------------------------------------------------------------------------
 [tools.pytest]
 # Test paths
-# testpaths = ["tests"]
+testpaths = ["tests"]
 
 # Python files pattern
-# python_files = ["test_*.py", "*_test.py"]
+python_files = ["test_*.py", "*_test.py"]
 
 # Python classes pattern
-# python_classes = ["Test*"]
+python_classes = ["Test*"]
 
 # Python functions pattern
-# python_functions = ["test_*"]
+python_functions = ["test_*"]
 
 # Minimum coverage percentage
-# cov_fail_under = 80
+cov_fail_under = 80
 
 # Coverage report format
-# cov_report = ["term-missing", "html"]
+cov_report = ["term-missing", "html"]
 
 # Markers to run
-# markers = []
+markers = []
 
 # Plugins to disable
-# disabled_plugins = []
+disabled_plugins = []
 
 
 # =============================================================================
@@ -567,19 +657,19 @@ output_dir = "LLM-CONTEXT/btx_fix_mcp/fix"
 
 [git]
 # Commit message prefix for automated commits
-# commit_prefix = "[btx-fix]"
+commit_prefix = "[btx-fix]"
 
 # Auto-commit fixes
-# auto_commit = false
+auto_commit = false
 
 # Sign commits with GPG
-# sign_commits = false
+sign_commits = false
 
 # Create branch for fixes
-# create_branch = false
+create_branch = false
 
 # Branch name template
-# branch_template = "fix/{issue_id}"
+branch_template = "fix/{issue_id}"
 
 
 # =============================================================================
@@ -738,16 +828,22 @@ verdict_reject = "❌ VULNERABLE - Critical security issues found"
 
 [output]
 # Output format: "markdown", "json", "html"
-# format = "markdown"
+format = "markdown"
 
 # Colorized terminal output
-# color = true
+color = true
 
 # Progress indicators
-# show_progress = true
+show_progress = true
 
 # Summary style: "brief", "detailed", "verbose"
-# summary_style = "detailed"
+summary_style = "detailed"
 
-# Maximum issues to display in summary
-# max_issues_display = 50
+# Maximum issues to display in summary (deprecated - use output.display.max_critical_display)
+max_issues_display = 50
+
+# JSON output indentation (spaces)
+json_indent = 2
+
+# Chunk size for splitting large issue files
+chunk_size = 50

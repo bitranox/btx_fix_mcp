@@ -10,6 +10,7 @@ import subprocess
 from typing import Any
 
 from btx_fix_mcp.tools_venv import get_tool_path
+from btx_fix_mcp.config import get_timeout
 
 from .base import BaseAnalyzer
 
@@ -36,18 +37,19 @@ class StaticAnalyzer(BaseAnalyzer):
 
         ruff = str(get_tool_path("ruff"))
         try:
+            timeout = get_timeout("tool_analysis", 60)
             result = subprocess.run(
                 [ruff, "check", "--output-format=json"] + files,
                 capture_output=True,
                 text=True,
-                timeout=60,
+                timeout=timeout,
             )
             results["ruff"] = result.stdout
             if result.stdout.strip():
                 try:
                     results["ruff_json"] = json.loads(result.stdout)
                 except json.JSONDecodeError:
-                    pass
+                    self.logger.warning("Invalid JSON output from Ruff")
         except subprocess.TimeoutExpired:
             self.logger.warning("Ruff analysis timed out")
         except FileNotFoundError:
@@ -63,13 +65,23 @@ class StaticAnalyzer(BaseAnalyzer):
         if not files:
             return results
 
+        # Get minimum duplicate lines threshold from config
+        min_duplicate_lines = self.config.get("min_duplicate_lines", 6)
+
         pylint = str(get_tool_path("pylint"))
         try:
+            timeout = get_timeout("tool_long", 120)
             result = subprocess.run(
-                [pylint, "--disable=all", "--enable=duplicate-code"] + files,
+                [
+                    pylint,
+                    "--disable=all",
+                    "--enable=duplicate-code",
+                    f"--min-similarity-lines={min_duplicate_lines}",
+                ]
+                + files,
                 capture_output=True,
                 text=True,
-                timeout=120,
+                timeout=timeout,
             )
             results["raw_output"] = result.stdout + result.stderr
             for line in result.stdout.split("\n"):

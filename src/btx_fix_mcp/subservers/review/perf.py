@@ -12,7 +12,11 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from btx_fix_mcp.config import get_config, get_subserver_config
+from btx_fix_mcp.config import get_config, get_display_limit, get_subserver_config, get_timeout
+from btx_fix_mcp.subservers.common.chunked_writer import (
+    cleanup_chunked_issues,
+    write_chunked_issues,
+)
 from btx_fix_mcp.subservers.common.issues import (
     BaseIssue,
     HotspotIssue,
@@ -264,11 +268,12 @@ class PerfSubServer(BaseSubServer):
 
         try:
             # Run pytest with profiling
+            timeout = get_timeout("profile_tests", 300, start_dir=str(self.repo_path))
             result = subprocess.run(
                 ["python", "-m", "pytest", "tests/", "-v", "--tb=no", "-q", "--durations=10"],
                 capture_output=True,
                 text=True,
-                timeout=300,
+                timeout=timeout,
                 cwd=str(self.repo_path),
             )
 
@@ -364,6 +369,7 @@ class PerfSubServer(BaseSubServer):
     def _save_results(self, results: dict[str, Any], all_issues: list[BaseIssue]) -> dict[str, Path]:
         """Save all results to files."""
         artifacts = {}
+        report_dir = self.output_dir.parent / "report"
 
         pattern_issues = results.get("pattern_issues", [])
         if pattern_issues:
@@ -383,10 +389,28 @@ class PerfSubServer(BaseSubServer):
             artifacts["test_timing"] = path
 
         if all_issues:
-            path = self.output_dir / "issues.json"
+            # Convert to dicts
             issues_dicts = [i.to_dict() for i in all_issues]
-            path.write_text(json.dumps(issues_dicts, indent=2))
-            artifacts["issues"] = path
+
+            # Get unique issue types
+            issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
+
+            # Cleanup old chunked files
+            cleanup_chunked_issues(
+                output_dir=report_dir,
+                issue_types=issue_types,
+                prefix="issues",
+            )
+
+            # Write chunked issues
+            written_files = write_chunked_issues(
+                issues=issues_dicts,
+                output_dir=report_dir,
+                prefix="issues",
+            )
+
+            if written_files:
+                artifacts["issues"] = written_files[0]
 
         return artifacts
 
@@ -397,7 +421,7 @@ class PerfSubServer(BaseSubServer):
             patterns_found=len(results.get("pattern_issues", [])),
             hotspots_found=len(results.get("hotspots", [])),
             total_issues=len(all_issues),
-        ).to_dict()
+        ).model_dump()
 
     def _generate_summary(self, results: dict[str, Any], all_issues: list[BaseIssue], files: list[str]) -> str:
         """Generate markdown summary with mindset evaluation."""
@@ -443,22 +467,40 @@ class PerfSubServer(BaseSubServer):
         # Hotspots
         hotspots = results.get("hotspots", [])
         if hotspots:
-            lines.extend(["## Performance Hotspots", ""])
-            for hs in hotspots[:10]:
+            limit = get_display_limit("max_hotspots", 10, start_dir=str(self.repo_path))
+            display_count = len(hotspots) if limit is None else min(limit, len(hotspots))
+
+            header = "## Performance Hotspots" if limit is None else f"## Performance Hotspots (showing {display_count} of {len(hotspots)})"
+            lines.extend([header, ""])
+
+            for hs in hotspots[:limit]:
                 lines.append(f"- **{hs.get('name', 'unknown')}**: {hs.get('duration', 0):.2f}s")
+
+            if limit is not None and len(hotspots) > limit:
+                lines.append("")
+                lines.append(f"*Note: {len(hotspots) - limit} more hotspots not shown. Set `output.display.max_hotspots = 0` in config for unlimited display.*")
             lines.append("")
 
         # Pattern issues
         pattern_issues = results.get("pattern_issues", [])
         if pattern_issues:
-            lines.extend(["## Anti-Pattern Detections", ""])
-            for issue in pattern_issues[:10]:
+            limit = get_display_limit("max_pattern_issues", 10, start_dir=str(self.repo_path))
+            display_count = len(pattern_issues) if limit is None else min(limit, len(pattern_issues))
+
+            header = "## Anti-Pattern Detections" if limit is None else f"## Anti-Pattern Detections (showing {display_count} of {len(pattern_issues)})"
+            lines.extend([header, ""])
+
+            for issue in pattern_issues[:limit]:
                 file_path = issue.file if hasattr(issue, "file") else issue.get("file", "")
                 line_num = issue.line if hasattr(issue, "line") else issue.get("line", 0)
                 message = issue.message if hasattr(issue, "message") else issue.get("message", "")
                 lines.append(f"- `{file_path}:{line_num}` - {message}")
-            if len(pattern_issues) > 10:
-                lines.append(f"- ... and {len(pattern_issues) - 10} more")
+
+            if limit is not None and len(pattern_issues) > limit:
+                lines.append("")
+                lines.append(
+                    f"*Note: {len(pattern_issues) - limit} more pattern issues not shown. Set `output.display.max_pattern_issues = 0` in config for unlimited display.*"
+                )
             lines.append("")
 
         # Approval status
