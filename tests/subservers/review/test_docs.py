@@ -223,3 +223,225 @@ class TestDocsSubServerMCPMode:
 
         assert server.mcp_mode is True
         assert server.logger is not None
+
+
+class TestDocstringStyleValidation:
+    """Tests for docstring style validation."""
+
+    def test_google_style_docstring_accepted(self, tmp_path):
+        """Test that Google style docstrings are accepted when configured."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        src_dir = project_dir / "src"
+        src_dir.mkdir()
+
+        # Google style docstring
+        (src_dir / "google.py").write_text('''
+def function_with_google_style(arg1, arg2):
+    """Function with Google style docstring.
+
+    Args:
+        arg1: First argument
+        arg2: Second argument
+
+    Returns:
+        Something useful
+    """
+    pass
+''')
+
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("src/google.py")
+
+        server = DocsSubServer(
+            input_dir=scope_dir,
+            output_dir=tmp_path / "output",
+            repo_path=project_dir,
+            docstring_style="google",
+        )
+
+        files = [str(project_dir / "src" / "google.py")]
+        issues = server._find_missing_docstrings(files)
+
+        # Should not find style issues for Google style
+        style_issues = [i for i in issues if i.type == "docstring_style_mismatch"]
+        assert len(style_issues) == 0
+
+    def test_numpy_style_detected_when_google_expected(self, tmp_path):
+        """Test that numpy style is detected when Google is expected."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        src_dir = project_dir / "src"
+        src_dir.mkdir()
+
+        # Numpy style docstring
+        (src_dir / "numpy.py").write_text('''
+def function_with_numpy_style(arg1, arg2):
+    """Function with NumPy style docstring.
+
+    Parameters
+    ----------
+    arg1 : str
+        First argument
+    arg2 : int
+        Second argument
+
+    Returns
+    -------
+    bool
+        Something useful
+    """
+    pass
+''')
+
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("src/numpy.py")
+
+        server = DocsSubServer(
+            input_dir=scope_dir,
+            output_dir=tmp_path / "output",
+            repo_path=project_dir,
+            docstring_style="google",  # Expect Google but got NumPy
+        )
+
+        files = [str(project_dir / "src" / "numpy.py")]
+        issues = server._find_missing_docstrings(files)
+
+        # Should find style mismatch
+        style_issues = [i for i in issues if i.type == "docstring_style_mismatch"]
+        assert len(style_issues) == 1
+        assert "numpy" in style_issues[0].message.lower()
+        assert "google" in style_issues[0].message.lower()
+
+    def test_sphinx_style_detected_when_google_expected(self, tmp_path):
+        """Test that Sphinx style is detected when Google is expected."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        src_dir = project_dir / "src"
+        src_dir.mkdir()
+
+        # Sphinx style docstring
+        (src_dir / "sphinx.py").write_text('''
+def function_with_sphinx_style(arg1, arg2):
+    """Function with Sphinx style docstring.
+
+    :param arg1: First argument
+    :param arg2: Second argument
+    :return: Something useful
+    :rtype: bool
+    """
+    pass
+''')
+
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("src/sphinx.py")
+
+        server = DocsSubServer(
+            input_dir=scope_dir,
+            output_dir=tmp_path / "output",
+            repo_path=project_dir,
+            docstring_style="google",  # Expect Google but got Sphinx
+        )
+
+        files = [str(project_dir / "src" / "sphinx.py")]
+        issues = server._find_missing_docstrings(files)
+
+        # Should find style mismatch
+        style_issues = [i for i in issues if i.type == "docstring_style_mismatch"]
+        assert len(style_issues) == 1
+        assert "sphinx" in style_issues[0].message.lower()
+
+    def test_class_docstring_style_validation(self, tmp_path):
+        """Test style validation for class docstrings."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        src_dir = project_dir / "src"
+        src_dir.mkdir()
+
+        # Class with NumPy style
+        (src_dir / "class_numpy.py").write_text('''
+class MyClass:
+    """Class with NumPy style.
+
+    Parameters
+    ----------
+    value : int
+        Some value
+    """
+    def __init__(self, value):
+        pass
+''')
+
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("src/class_numpy.py")
+
+        server = DocsSubServer(
+            input_dir=scope_dir,
+            output_dir=tmp_path / "output",
+            repo_path=project_dir,
+            docstring_style="google",
+        )
+
+        files = [str(project_dir / "src" / "class_numpy.py")]
+        issues = server._find_missing_docstrings(files)
+
+        # Should find style mismatch for class
+        style_issues = [i for i in issues if i.type == "docstring_style_mismatch"]
+        assert len(style_issues) == 1
+        assert style_issues[0].doc_type == "class"
+
+    def test_simple_docstring_no_validation(self, tmp_path):
+        """Test that simple docstrings without params don't trigger warnings."""
+        project_dir = tmp_path / "project"
+        project_dir.mkdir()
+        src_dir = project_dir / "src"
+        src_dir.mkdir()
+
+        # Simple docstring without parameters section
+        (src_dir / "simple.py").write_text('''
+def simple_function():
+    """This is a simple function with no parameters."""
+    pass
+''')
+
+        scope_dir = tmp_path / "scope"
+        scope_dir.mkdir()
+        (scope_dir / "files_code.txt").write_text("src/simple.py")
+
+        server = DocsSubServer(
+            input_dir=scope_dir,
+            output_dir=tmp_path / "output",
+            repo_path=project_dir,
+            docstring_style="google",
+        )
+
+        files = [str(project_dir / "src" / "simple.py")]
+        issues = server._find_missing_docstrings(files)
+
+        # Should not find style issues for simple docstrings
+        style_issues = [i for i in issues if i.type == "docstring_style_mismatch"]
+        assert len(style_issues) == 0
+
+    def test_config_docstring_style_parameter(self, tmp_path):
+        """Test that docstring_style parameter is properly loaded."""
+        server = DocsSubServer(
+            input_dir=tmp_path / "input",
+            output_dir=tmp_path / "output",
+            repo_path=tmp_path,
+            docstring_style="numpy",
+        )
+
+        assert server.docstring_style == "numpy"
+
+        server2 = DocsSubServer(
+            input_dir=tmp_path / "input",
+            output_dir=tmp_path / "output",
+            repo_path=tmp_path,
+            docstring_style="sphinx",
+        )
+
+        assert server2.docstring_style == "sphinx"

@@ -302,6 +302,11 @@ class DocsSubServer(BaseSubServer):
                                     message=f"Function '{node.name}' is missing a docstring",
                                 )
                             )
+                        elif docstring:
+                            # Validate docstring style if configured
+                            style_issue = self._validate_docstring_style(docstring, node.name, file_path, node.lineno, "function")
+                            if style_issue:
+                                issues.append(style_issue)
 
                     elif isinstance(node, ast.ClassDef):
                         docstring = ast.get_docstring(node)
@@ -317,6 +322,11 @@ class DocsSubServer(BaseSubServer):
                                     message=f"Class '{node.name}' is missing a docstring",
                                 )
                             )
+                        elif docstring:
+                            # Validate docstring style if configured
+                            style_issue = self._validate_docstring_style(docstring, node.name, file_path, node.lineno, "class")
+                            if style_issue:
+                                issues.append(style_issue)
 
             except SyntaxError:
                 self.logger.warning(f"Syntax error in {file_path}")
@@ -324,6 +334,80 @@ class DocsSubServer(BaseSubServer):
                 self.logger.warning(f"Error analyzing {file_path}: {e}")
 
         return issues
+
+    def _validate_docstring_style(
+        self,
+        docstring: str,
+        name: str,
+        file_path: str,
+        line: int,
+        doc_type: str,
+    ) -> DocstringIssue | None:
+        """Validate docstring conforms to configured style.
+
+        Args:
+            docstring: The docstring text
+            name: Function/class name
+            file_path: File path
+            line: Line number
+            doc_type: Type of element (function/class)
+
+        Returns:
+            DocstringIssue if style violation found, None otherwise
+        """
+        if not docstring or not self.docstring_style:
+            return None
+
+        # Define style indicators
+        style_patterns = {
+            "google": {
+                "args": ["Args:", "Arguments:"],
+                "returns": ["Returns:", "Return:"],
+                "raises": ["Raises:", "Raise:"],
+                "yields": ["Yields:", "Yield:"],
+            },
+            "numpy": {
+                "args": ["Parameters", "----------"],
+                "returns": ["Returns", "-------"],
+                "raises": ["Raises", "------"],
+                "yields": ["Yields", "------"],
+            },
+            "sphinx": {
+                "args": [":param", ":type"],
+                "returns": [":return:", ":rtype:"],
+                "raises": [":raises:", ":raise:"],
+                "yields": [":yields:"],
+            },
+        }
+
+        expected_style = self.docstring_style.lower()
+        if expected_style not in style_patterns:
+            return None
+
+        # Check if docstring has function parameters (likely needs Args/Parameters section)
+        has_params_indicator = any(
+            pattern in docstring for pattern in style_patterns[expected_style]["args"]
+        )
+
+        # If expected style is used, no issue
+        if has_params_indicator:
+            return None
+
+        # Check if a different style is being used
+        other_styles = [s for s in style_patterns.keys() if s != expected_style]
+        for other_style in other_styles:
+            if any(pattern in docstring for patterns in style_patterns[other_style].values() for pattern in patterns):
+                return DocstringIssue(
+                    type="docstring_style_mismatch",
+                    severity="info",
+                    file=file_path,
+                    line=line,
+                    name=name,
+                    doc_type=doc_type,
+                    message=f"{doc_type.capitalize()} '{name}' uses {other_style} style but project expects {expected_style}",
+                )
+
+        return None
 
     def _check_project_docs(self) -> dict[str, Any]:
         """Check project documentation files."""
