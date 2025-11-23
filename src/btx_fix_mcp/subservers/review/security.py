@@ -75,6 +75,60 @@ class SecuritySubServer(BaseSubServer):
 
     SEVERITY_LEVELS = {"low": 1, "medium": 2, "high": 3}
 
+    def _init_directories(self, input_dir: Path | None, output_dir: Path | None, name: str, repo_path: Path) -> tuple[Path, Path]:
+        """Initialize input and output directories."""
+        base_config = get_config(start_dir=str(repo_path))
+        output_base = base_config.get("review", {}).get("output_dir", "LLM-CONTEXT/btx_fix_mcp/review")
+
+        if input_dir is None:
+            input_dir = Path.cwd() / output_base / "scope"
+        if output_dir is None:
+            output_dir = Path.cwd() / output_base / name
+
+        return input_dir, output_dir
+
+    def _init_logger(self, name: str, mcp_mode: bool):
+        """Initialize logger based on mode."""
+        if mcp_mode:
+            return get_mcp_logger(f"btx_fix_mcp.{name}")
+        else:
+            return setup_logger(name, log_file=None, level=20)
+
+    def _apply_threshold_overrides(
+        self,
+        severity_threshold: str,
+        confidence_threshold: str,
+        config: dict | None,
+    ) -> tuple[str, str]:
+        """Apply threshold parameter overrides."""
+        severity = severity_threshold if severity_threshold != "low" or config is None else config.get("severity_threshold", "low")
+        confidence = confidence_threshold if confidence_threshold != "low" or config is None else config.get("confidence_threshold", "low")
+        return severity, confidence
+
+    def _apply_bandit_overrides(
+        self,
+        bandit_config: str | None,
+        skip_tests: list[str] | None,
+        exclude_paths: list[str] | None,
+        full_config: dict,
+    ) -> tuple[str, list[str], list[str]]:
+        """Apply bandit configuration overrides."""
+        bandit_cfg = bandit_config or full_config.get("bandit_config", "")
+        skip = skip_tests if skip_tests is not None else full_config.get("skip_tests", [])
+        exclude = exclude_paths if exclude_paths is not None else full_config.get("exclude_paths", [])
+        return bandit_cfg, skip, exclude
+
+    def _apply_mindset_overrides(
+        self,
+        critical_threshold: int | None,
+        warning_threshold: int | None,
+        full_config: dict,
+    ) -> tuple[int, int]:
+        """Apply mindset threshold overrides."""
+        critical = critical_threshold if critical_threshold is not None else full_config.get("critical_threshold", 1)
+        warning = warning_threshold if warning_threshold is not None else full_config.get("warning_threshold", 5)
+        return critical, warning
+
     def __init__(
         self,
         name: str = "security",
@@ -109,26 +163,12 @@ class SecuritySubServer(BaseSubServer):
             critical_threshold: Number of high severity issues to trigger CRITICAL status (overrides config)
             warning_threshold: Number of medium severity issues to trigger WARNING status (overrides config)
         """
-        # Get output base from config for standalone use
-        base_config = get_config(start_dir=str(repo_path or Path.cwd()))
-        output_base = base_config.get("review", {}).get("output_dir", "LLM-CONTEXT/btx_fix_mcp/review")
-
-        if input_dir is None:
-            input_dir = Path.cwd() / output_base / "scope"
-        if output_dir is None:
-            output_dir = Path.cwd() / output_base / name
+        self.repo_path = repo_path or Path.cwd()
+        input_dir, output_dir = self._init_directories(input_dir, output_dir, name, self.repo_path)
 
         super().__init__(name=name, input_dir=input_dir, output_dir=output_dir)
-        self.repo_path = repo_path or Path.cwd()
         self.mcp_mode = mcp_mode
-
-        # Initialize logger based on mode
-        if mcp_mode:
-            # MCP mode: stderr only (MCP protocol uses stdout)
-            self.logger = get_mcp_logger(f"btx_fix_mcp.{name}")
-        else:
-            # Standalone mode: stdout only (no file logging)
-            self.logger = setup_logger(name, log_file=None, level=20)
+        self.logger = self._init_logger(name, mcp_mode)
 
         # Load config
         config = self._load_config(config_file)
@@ -140,18 +180,10 @@ class SecuritySubServer(BaseSubServer):
         # Load reviewer mindset
         self.mindset = get_mindset(SECURITY_MINDSET, full_config)
 
-        # Apply config with parameter priority
-        self.severity_threshold = severity_threshold if severity_threshold != "low" or config is None else config.get("severity_threshold", "low")
-        self.confidence_threshold = confidence_threshold if confidence_threshold != "low" or config is None else config.get("confidence_threshold", "low")
-
-        # Load new config settings with parameter overrides
-        self.bandit_config = bandit_config or full_config.get("bandit_config", "")
-        self.skip_tests = skip_tests if skip_tests is not None else full_config.get("skip_tests", [])
-        self.exclude_paths = exclude_paths if exclude_paths is not None else full_config.get("exclude_paths", [])
-
-        # Load mindset thresholds with parameter overrides
-        self.critical_threshold = critical_threshold if critical_threshold is not None else full_config.get("critical_threshold", 1)
-        self.warning_threshold = warning_threshold if warning_threshold is not None else full_config.get("warning_threshold", 5)
+        # Apply overrides
+        self.severity_threshold, self.confidence_threshold = self._apply_threshold_overrides(severity_threshold, confidence_threshold, config)
+        self.bandit_config, self.skip_tests, self.exclude_paths = self._apply_bandit_overrides(bandit_config, skip_tests, exclude_paths, full_config)
+        self.critical_threshold, self.warning_threshold = self._apply_mindset_overrides(critical_threshold, warning_threshold, full_config)
 
     def _load_config(self, config_file: Path | None) -> dict | None:
         """Load configuration from file."""
@@ -296,70 +328,73 @@ class SecuritySubServer(BaseSubServer):
         # Convert to absolute paths
         return [str(self.repo_path / f) for f in python_files]
 
+    def _filter_existing_files(self, files: list[str]) -> list[str]:
+        """Filter to only existing files."""
+        return [f for f in files if Path(f).exists()]
+
+    def _apply_exclude_patterns(self, files: list[str]) -> list[str]:
+        """Apply exclude path patterns to file list."""
+        if not self.exclude_paths:
+            return files
+
+        filtered_files = []
+        for f in files:
+            file_path = Path(f)
+            excluded = any(file_path.match(pattern) for pattern in self.exclude_paths)
+            if not excluded:
+                filtered_files.append(f)
+        return filtered_files
+
+    def _build_bandit_command(self, files: list[str]) -> list[str]:
+        """Build bandit command with config and skip options."""
+        cmd = ["bandit", "-f", "json", "-r"]
+
+        # Add config file if specified
+        if self.bandit_config:
+            config_path = Path(self.bandit_config)
+            if config_path.exists():
+                cmd.extend(["-c", str(config_path)])
+            else:
+                self.logger.warning(f"Bandit config file not found: {self.bandit_config}")
+
+        # Add skip tests if specified
+        if self.skip_tests:
+            for test_id in self.skip_tests:
+                cmd.extend(["-s", test_id])
+
+        # Add files to scan
+        cmd.extend(files)
+        return cmd
+
+    def _add_relative_paths(self, issues: list[dict]) -> None:
+        """Add relative file paths to bandit issues."""
+        for issue in issues:
+            if "filename" in issue:
+                try:
+                    issue["relative_file"] = str(Path(issue["filename"]).relative_to(self.repo_path))
+                except ValueError:
+                    issue["relative_file"] = issue["filename"]
+
     def _run_bandit(self, files: list[str]) -> list[dict[str, Any]]:
         """Run Bandit security scanner on files."""
-        results = []
-
-        # Filter to existing files only
-        existing_files = [f for f in files if Path(f).exists()]
+        existing_files = self._filter_existing_files(files)
         if not existing_files:
-            return results
+            return []
 
-        # Apply exclude_paths filter
-        if self.exclude_paths:
-            filtered_files = []
-            for f in existing_files:
-                file_path = Path(f)
-                # Check if file matches any exclude pattern
-                excluded = any(file_path.match(pattern) for pattern in self.exclude_paths)
-                if not excluded:
-                    filtered_files.append(f)
-            existing_files = filtered_files
-
-        if not existing_files:
-            return results
+        filtered_files = self._apply_exclude_patterns(existing_files)
+        if not filtered_files:
+            return []
 
         try:
-            # Build bandit command
-            cmd = ["bandit", "-f", "json", "-r"]
-
-            # Add config file if specified
-            if self.bandit_config:
-                config_path = Path(self.bandit_config)
-                if config_path.exists():
-                    cmd.extend(["-c", str(config_path)])
-                else:
-                    self.logger.warning(f"Bandit config file not found: {self.bandit_config}")
-
-            # Add skip tests if specified
-            if self.skip_tests:
-                for test_id in self.skip_tests:
-                    cmd.extend(["-s", test_id])
-
-            # Add files to scan
-            cmd.extend(existing_files)
-
-            # Run bandit on all files at once for efficiency
+            cmd = self._build_bandit_command(filtered_files)
             timeout = get_timeout("tool_analysis", 60, start_dir=str(self.repo_path))
-            result = subprocess.run(
-                cmd,
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-            )
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout)
 
-            # Bandit returns non-zero if it finds issues
             if result.stdout.strip():
                 data = json.loads(result.stdout)
                 results = data.get("results", [])
-
-                # Add relative file paths
-                for issue in results:
-                    if "filename" in issue:
-                        try:
-                            issue["relative_file"] = str(Path(issue["filename"]).relative_to(self.repo_path))
-                        except ValueError:
-                            issue["relative_file"] = issue["filename"]
+                self._add_relative_paths(results)
+                return results
 
         except subprocess.TimeoutExpired:
             self.logger.warning("Bandit scan timed out")
@@ -370,7 +405,7 @@ class SecuritySubServer(BaseSubServer):
         except Exception as e:
             self.logger.warning(f"Error running Bandit: {e}")
 
-        return results
+        return []
 
     def _filter_issues(self, issues: list[dict]) -> list[dict]:
         """Filter issues by severity and confidence thresholds."""
