@@ -74,6 +74,8 @@ class TestHandleFunctions:
         mock_server.run_security.assert_called_once_with(
             severity_threshold="low",
             confidence_threshold="low",
+            critical_threshold=None,
+            warning_threshold=None,
         )
 
     def test_handle_security_custom(self, mock_server):
@@ -83,11 +85,15 @@ class TestHandleFunctions:
             {
                 "severity_threshold": "high",
                 "confidence_threshold": "medium",
+                "critical_threshold": 3,
+                "warning_threshold": 10,
             },
         )
         mock_server.run_security.assert_called_once_with(
             severity_threshold="high",
             confidence_threshold="medium",
+            critical_threshold=3,
+            warning_threshold=10,
         )
 
     def test_handle_deps_default(self, mock_server):
@@ -118,22 +124,46 @@ class TestHandleFunctions:
     def test_handle_docs_default(self, mock_server):
         """Test _handle_docs with default arguments."""
         _handle_docs(mock_server, {})
-        mock_server.run_docs.assert_called_once_with(min_coverage=None)
+        mock_server.run_docs.assert_called_once_with(
+            min_coverage=None,
+            docstring_style=None,
+        )
 
     def test_handle_docs_custom(self, mock_server):
-        """Test _handle_docs with custom coverage."""
-        _handle_docs(mock_server, {"min_coverage": 90})
-        mock_server.run_docs.assert_called_once_with(min_coverage=90)
+        """Test _handle_docs with custom coverage and style."""
+        _handle_docs(
+            mock_server,
+            {
+                "min_coverage": 90,
+                "docstring_style": "numpy",
+            },
+        )
+        mock_server.run_docs.assert_called_once_with(
+            min_coverage=90,
+            docstring_style="numpy",
+        )
 
     def test_handle_perf_default(self, mock_server):
         """Test _handle_perf with default arguments."""
         _handle_perf(mock_server, {})
-        mock_server.run_perf.assert_called_once_with(run_profiling=True)
+        mock_server.run_perf.assert_called_once_with(
+            run_profiling=True,
+            nested_loop_threshold=None,
+        )
 
     def test_handle_perf_custom(self, mock_server):
-        """Test _handle_perf with custom profiling flag."""
-        _handle_perf(mock_server, {"run_profiling": False})
-        mock_server.run_perf.assert_called_once_with(run_profiling=False)
+        """Test _handle_perf with custom profiling and threshold."""
+        _handle_perf(
+            mock_server,
+            {
+                "run_profiling": False,
+                "nested_loop_threshold": 3,
+            },
+        )
+        mock_server.run_perf.assert_called_once_with(
+            run_profiling=False,
+            nested_loop_threshold=3,
+        )
 
     def test_handle_report(self, mock_server):
         """Test _handle_report."""

@@ -153,6 +153,8 @@ class ReviewMCPServer:
         output_dir: Path | None = None,
         severity_threshold: str = "low",
         confidence_threshold: str = "low",
+        critical_threshold: int | None = None,
+        warning_threshold: int | None = None,
     ) -> dict[str, Any]:
         """Run security analysis on code files.
 
@@ -161,6 +163,8 @@ class ReviewMCPServer:
             output_dir: Output directory (default: LLM-CONTEXT/btx_fix_mcp/review/security)
             severity_threshold: Minimum severity ("low", "medium", "high")
             confidence_threshold: Minimum confidence ("low", "medium", "high")
+            critical_threshold: Number of high severity issues to trigger PARTIAL status
+            warning_threshold: Number of medium severity issues to trigger PARTIAL status
 
         Returns:
             Dictionary with status, summary, metrics, and artifact paths
@@ -174,6 +178,8 @@ class ReviewMCPServer:
             repo_path=self.repo_path,
             severity_threshold=severity_threshold,
             confidence_threshold=confidence_threshold,
+            critical_threshold=critical_threshold,
+            warning_threshold=warning_threshold,
             mcp_mode=True,  # Use stderr logging
         )
 
@@ -245,6 +251,7 @@ class ReviewMCPServer:
         input_dir: Path | None = None,
         output_dir: Path | None = None,
         min_coverage: int | None = None,
+        docstring_style: str | None = None,
     ) -> dict[str, Any]:
         """Run documentation analysis.
 
@@ -252,6 +259,7 @@ class ReviewMCPServer:
             input_dir: Input directory with files list (default: scope output)
             output_dir: Output directory (default: LLM-CONTEXT/btx_fix_mcp/review/docs)
             min_coverage: Minimum docstring coverage percentage
+            docstring_style: Expected docstring style format (google, numpy, sphinx)
 
         Returns:
             Dictionary with status, summary, metrics, and artifact paths
@@ -264,6 +272,7 @@ class ReviewMCPServer:
             output_dir=output_path,
             repo_path=self.repo_path,
             min_coverage=min_coverage,
+            docstring_style=docstring_style,
             mcp_mode=True,
         )
 
@@ -289,6 +298,7 @@ class ReviewMCPServer:
         input_dir: Path | None = None,
         output_dir: Path | None = None,
         run_profiling: bool = True,
+        nested_loop_threshold: int | None = None,
     ) -> dict[str, Any]:
         """Run performance analysis.
 
@@ -296,6 +306,7 @@ class ReviewMCPServer:
             input_dir: Input directory with files list (default: scope output)
             output_dir: Output directory (default: LLM-CONTEXT/btx_fix_mcp/review/perf)
             run_profiling: Whether to run test profiling
+            nested_loop_threshold: Nesting depth to trigger warning (2=O(n²), 3=O(n³))
 
         Returns:
             Dictionary with status, summary, metrics, and artifact paths
@@ -308,6 +319,7 @@ class ReviewMCPServer:
             output_dir=output_path,
             repo_path=self.repo_path,
             run_profiling=run_profiling,
+            nested_loop_threshold=nested_loop_threshold,
             mcp_mode=True,
         )
 

@@ -36,6 +36,8 @@ def _handle_security(server: "ReviewMCPServer", arguments: dict[str, Any]) -> di
     return server.run_security(
         severity_threshold=arguments.get("severity_threshold", "low"),
         confidence_threshold=arguments.get("confidence_threshold", "low"),
+        critical_threshold=arguments.get("critical_threshold"),
+        warning_threshold=arguments.get("warning_threshold"),
     )
 
 
@@ -50,12 +52,18 @@ def _handle_deps(server: "ReviewMCPServer", arguments: dict[str, Any]) -> dict[s
 
 def _handle_docs(server: "ReviewMCPServer", arguments: dict[str, Any]) -> dict[str, Any]:
     """Handle review_docs tool call."""
-    return server.run_docs(min_coverage=arguments.get("min_coverage"))
+    return server.run_docs(
+        min_coverage=arguments.get("min_coverage"),
+        docstring_style=arguments.get("docstring_style"),
+    )
 
 
 def _handle_perf(server: "ReviewMCPServer", arguments: dict[str, Any]) -> dict[str, Any]:
     """Handle review_perf tool call."""
-    return server.run_perf(run_profiling=arguments.get("run_profiling", True))
+    return server.run_perf(
+        run_profiling=arguments.get("run_profiling", True),
+        nested_loop_threshold=arguments.get("nested_loop_threshold"),
+    )
 
 
 def _handle_report(server: "ReviewMCPServer", arguments: dict[str, Any]) -> dict[str, Any]:

@@ -105,6 +105,14 @@ def _security_tool_definition(mindset: Any) -> dict[str, Any]:
                     "description": "Minimum confidence to report",
                     "default": "low",
                 },
+                "critical_threshold": {
+                    "type": "integer",
+                    "description": "Number of high severity issues to trigger PARTIAL status (default: 1)",
+                },
+                "warning_threshold": {
+                    "type": "integer",
+                    "description": "Number of medium severity issues to trigger PARTIAL status (default: 5)",
+                },
             },
         },
     }
@@ -154,6 +162,11 @@ def _docs_tool_definition(mindset: Any) -> dict[str, Any]:
                     "type": "integer",
                     "description": "Minimum docstring coverage percentage (default: 80)",
                 },
+                "docstring_style": {
+                    "type": "string",
+                    "enum": ["google", "numpy", "sphinx"],
+                    "description": "Expected docstring style format (default: google)",
+                },
             },
         },
     }
@@ -173,6 +186,10 @@ def _perf_tool_definition(mindset: Any) -> dict[str, Any]:
                     "type": "boolean",
                     "description": "Whether to run test profiling (default: true)",
                     "default": True,
+                },
+                "nested_loop_threshold": {
+                    "type": "integer",
+                    "description": "Nesting depth to trigger warning (2=O(n²), 3=O(n³), default: 2)",
                 },
             },
         },
