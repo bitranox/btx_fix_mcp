@@ -28,7 +28,10 @@ class TestCacheDir:
 
     def test_get_cache_dir_default(self):
         """Test default cache directory is under home."""
-        with patch.dict("os.environ", {}, clear=True):
+        # Don't clear env completely - Windows needs USERPROFILE/HOMEDRIVE for Path.home()
+        # Just remove XDG_CACHE_HOME to test default behavior
+        env_without_xdg = {k: v for k, v in __import__("os").environ.items() if k != "XDG_CACHE_HOME"}
+        with patch.dict("os.environ", env_without_xdg, clear=True):
             cache_dir = get_cache_dir()
             assert cache_dir.name == "btx-fix-mcp"
             assert ".cache" in str(cache_dir)

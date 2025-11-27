@@ -140,20 +140,26 @@ class TypeAnalyzer(BaseAnalyzer):
 
     def _parse_vulture_output(self, stdout: str, results: dict[str, Any]) -> None:
         """Parse vulture output for dead code."""
+        import re
+
+        # Pattern: file_path:line_number: message
+        # Handle Windows paths like C:\path\file.py:123: message
+        pattern = re.compile(r"^(.+?):(\d+):\s*(.+)$")
+
         for line in stdout.split("\n"):
             if not line.strip() or "unused" not in line.lower():
                 continue
 
-            # Parse: filename.py:123: unused variable 'x' (60% confidence)
-            parts = line.split(":")
-            if len(parts) < 3:
+            match = pattern.match(line)
+            if not match:
                 continue
 
+            file_path, line_num, message = match.groups()
             results["dead_code"].append(
                 {
-                    "file": self._get_relative_path(parts[0]),
-                    "line": int(parts[1]) if parts[1].isdigit() else 0,
-                    "message": ":".join(parts[2:]).strip(),
+                    "file": self._get_relative_path(file_path),
+                    "line": int(line_num),
+                    "message": message.strip(),
                 }
             )
 
