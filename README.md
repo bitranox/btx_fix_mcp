@@ -46,24 +46,24 @@ cd btx_fix_mcp && make dev
 
 ```bash
 # Review current git changes
-python -m btx_fix_mcp review all
+btx_fix_mcp review all
 
 # Review entire repository
-python -m btx_fix_mcp review all --mode full
+btx_fix_mcp review all --mode full
 
 # Run specific analysis
-python -m btx_fix_mcp review quality
-python -m btx_fix_mcp review security
+btx_fix_mcp review quality
+btx_fix_mcp review security
 
 # Cache optimization with profiling (recommended)
-python -m btx_fix_mcp review profile -- python -m your_app    # Profile your app
-python -m btx_fix_mcp review profile -- pytest tests/         # Or profile tests
-python -m btx_fix_mcp review cache                            # Then analyze
+btx_fix_mcp review profile -- python -m your_app    # Profile your app
+btx_fix_mcp review profile -- pytest tests/         # Or profile tests
+btx_fix_mcp review cache                            # Then analyze
 
 # Clean up analysis data
-python -m btx_fix_mcp review clean                            # Delete all
-python -m btx_fix_mcp review clean -s profile                 # Delete profile only
-python -m btx_fix_mcp review clean --dry-run                  # Preview deletion
+btx_fix_mcp review clean                            # Delete all
+btx_fix_mcp review clean -s profile                 # Delete profile only
+btx_fix_mcp review clean --dry-run                  # Preview deletion
 ```
 
 ### MCP Server Usage (Simple)
