@@ -470,10 +470,10 @@ items = [
 critical_threshold = 10   # >10% critical issues = REJECT
 warning_threshold = 25    # >25% warnings = NEEDS_WORK
 # Verdicts
-verdict_pass = "✅ APPROVED - Code meets quality standards"
-verdict_warning = "⚠️ APPROVED WITH COMMENTS - Minor issues found"
-verdict_needs_work = "🔧 NEEDS WORK - Significant issues require attention"
-verdict_reject = "❌ REJECTED - Critical issues must be fixed"
+verdict_pass = "[PASS] APPROVED - Code meets quality standards"
+verdict_warning = "[WARN] APPROVED WITH COMMENTS - Minor issues found"
+verdict_needs_work = "[WORK] NEEDS WORK - Significant issues require attention"
+verdict_reject = "[FAIL] REJECTED - Critical issues must be fixed"
 
 
 [review.mindsets.security]
@@ -498,10 +498,10 @@ items = [
 [review.mindsets.security.judgment]
 critical_threshold = 1    # Any HIGH severity = REJECT
 warning_threshold = 5     # >5 MEDIUM = NEEDS_WORK
-verdict_pass = "✅ SECURE - No significant vulnerabilities detected"
-verdict_warning = "⚠️ ACCEPTABLE - Low-risk issues found"
-verdict_needs_work = "🔧 VULNERABLE - Security issues require attention"
-verdict_reject = "❌ INSECURE - Critical vulnerabilities must be fixed immediately"
+verdict_pass = "[PASS] SECURE - No significant vulnerabilities detected"
+verdict_warning = "[WARN] ACCEPTABLE - Low-risk issues found"
+verdict_needs_work = "[WORK] VULNERABLE - Security issues require attention"
+verdict_reject = "[FAIL] INSECURE - Critical vulnerabilities must be fixed immediately"
 
 
 [review.mindsets.docs]
@@ -526,10 +526,10 @@ items = [
 [review.mindsets.docs.judgment]
 critical_threshold = 20   # >20% undocumented public APIs = REJECT
 warning_threshold = 40    # >40% incomplete docs = NEEDS_WORK
-verdict_pass = "✅ WELL DOCUMENTED - Documentation is complete and accurate"
-verdict_warning = "⚠️ ACCEPTABLE - Minor documentation gaps"
-verdict_needs_work = "🔧 INCOMPLETE - Significant documentation needed"
-verdict_reject = "❌ UNDOCUMENTED - Critical documentation missing"
+verdict_pass = "[PASS] WELL DOCUMENTED - Documentation is complete and accurate"
+verdict_warning = "[WARN] ACCEPTABLE - Minor documentation gaps"
+verdict_needs_work = "[WORK] INCOMPLETE - Significant documentation needed"
+verdict_reject = "[FAIL] UNDOCUMENTED - Critical documentation missing"
 
 
 [review.mindsets.perf]
@@ -554,10 +554,10 @@ items = [
 [review.mindsets.perf.judgment]
 critical_threshold = 5    # >5% severe bottlenecks = REJECT
 warning_threshold = 15    # >15% potential issues = NEEDS_WORK
-verdict_pass = "✅ PERFORMANT - No significant performance issues"
-verdict_warning = "⚠️ ACCEPTABLE - Minor optimization opportunities"
-verdict_needs_work = "🔧 SLOW - Performance issues require attention"
-verdict_reject = "❌ UNACCEPTABLE - Critical performance problems"
+verdict_pass = "[PASS] PERFORMANT - No significant performance issues"
+verdict_warning = "[WARN] ACCEPTABLE - Minor optimization opportunities"
+verdict_needs_work = "[WORK] SLOW - Performance issues require attention"
+verdict_reject = "[FAIL] UNACCEPTABLE - Critical performance problems"
 
 
 [review.mindsets.deps]
@@ -581,10 +581,10 @@ items = [
 [review.mindsets.deps.judgment]
 critical_threshold = 1    # >0 critical vulnerabilities = REJECT
 warning_threshold = 20    # >20% outdated = NEEDS_WORK
-verdict_pass = "✅ SECURE - Dependencies are secure and up-to-date"
-verdict_warning = "⚠️ UPDATE RECOMMENDED - Minor updates available"
-verdict_needs_work = "🔧 ACTION NEEDED - Security patches required"
-verdict_reject = "❌ VULNERABLE - Critical security issues found"
+verdict_pass = "[PASS] SECURE - Dependencies are secure and up-to-date"
+verdict_warning = "[WARN] UPDATE RECOMMENDED - Minor updates available"
+verdict_needs_work = "[WORK] ACTION NEEDED - Security patches required"
+verdict_reject = "[FAIL] VULNERABLE - Critical security issues found"
 
 
 [review.mindsets.cache]
@@ -608,10 +608,10 @@ items = [
 [review.mindsets.cache.judgment]
 critical_threshold = 0    # No critical issues concept for cache analysis
 warning_threshold = 0     # No warnings concept for cache analysis
-verdict_pass = "✅ RECOMMENDATIONS AVAILABLE - Evidence-based caching opportunities found"
-verdict_warning = "⚠️ LIMITED OPPORTUNITIES - Some candidates found but marginal benefits"
-verdict_needs_work = "🔧 NO RECOMMENDATIONS - No functions met both hit rate and speedup thresholds"
-verdict_reject = "❌ NO ANALYSIS - Missing profiling data or pure functions"
+verdict_pass = "[PASS] RECOMMENDATIONS AVAILABLE - Evidence-based caching opportunities found"
+verdict_warning = "[WARN] LIMITED OPPORTUNITIES - Some candidates found but marginal benefits"
+verdict_needs_work = "[WORK] NO RECOMMENDATIONS - No functions met both hit rate and speedup thresholds"
+verdict_reject = "[FAIL] NO ANALYSIS - Missing profiling data or pure functions"
 
 
 # =============================================================================

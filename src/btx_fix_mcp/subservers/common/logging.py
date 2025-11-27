@@ -231,14 +231,14 @@ def log_result(
     Example:
         >>> logger = setup_logger("test")
         >>> log_result(logger, True, "All tests passed")
-        2025-11-21 10:00:00 - test - INFO - ✓ All tests passed
+        2025-11-21 10:00:00 - test - INFO - [OK] All tests passed
         >>> log_result(logger, False, "2 tests failed")
-        2025-11-21 10:00:00 - test - ERROR - ✗ 2 tests failed
+        2025-11-21 10:00:00 - test - ERROR - [FAIL] 2 tests failed
     """
     if level is None:
         level = logging.INFO if success else logging.ERROR
 
-    symbol = "✓" if success else "✗"
+    symbol = "[OK]" if success else "[FAIL]"
     logger.log(level, f"{symbol} {message}")
 
 

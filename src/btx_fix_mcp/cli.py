@@ -353,15 +353,15 @@ def review_profile(ctx: click.Context, command: tuple[str, ...]) -> None:
     # Check if profile was created
     if output_path.exists():
         if exit_code == 0:
-            console.print("\n[green]✓[/green] Profiling complete")
+            console.print("\n[green][OK][/green] Profiling complete")
         else:
-            console.print(f"\n[yellow]⚠[/yellow] Command exited with code {exit_code}, but profiling data saved")
+            console.print(f"\n[yellow][WARN][/yellow] Command exited with code {exit_code}, but profiling data saved")
 
-        console.print(f"[green]✓[/green] Profile saved to: {output_path}")
+        console.print(f"[green][OK][/green] Profile saved to: {output_path}")
         console.print("\n[bold]Next step:[/bold]")
         console.print("  python -m btx_fix_mcp review cache")
     else:
-        console.print("\n[red]✗[/red] Profiling failed - no profile data generated")
+        console.print("\n[red][FAIL][/red] Profiling failed - no profile data generated")
         console.print("[dim]Make sure the command is a Python script or module[/dim]")
 
 
@@ -459,7 +459,7 @@ def review_all(ctx: click.Context, mode: str, complexity: int | None, severity: 
     if result.get("errors"):
         console.print("\n[red]Errors:[/]")
         for error in result["errors"]:
-            console.print(f"  • {error}")
+            console.print(f"  - {error}")
 
     # Print individual results
     for name in ["scope", "quality", "security", "deps", "docs", "perf", "report"]:
@@ -546,7 +546,7 @@ def review_clean(ctx: click.Context, subserver: str, dry_run: bool) -> None:
                 console.print(f"[yellow]Would delete:[/yellow] {target} ({size_str})")
             else:
                 target.unlink()
-                console.print(f"[green]✓[/green] Deleted {target} ({size_str})")
+                console.print(f"[green][OK][/green] Deleted {target} ({size_str})")
                 deleted_count += 1
         else:
             # Directory
@@ -559,7 +559,7 @@ def review_clean(ctx: click.Context, subserver: str, dry_run: bool) -> None:
                 console.print(f"[yellow]Would delete:[/yellow] {target}/ ({file_count} files, {size_str})")
             else:
                 shutil.rmtree(target)
-                console.print(f"[green]✓[/green] Deleted {target}/ ({file_count} files, {size_str})")
+                console.print(f"[green][OK][/green] Deleted {target}/ ({file_count} files, {size_str})")
                 deleted_count += 1
 
     # Summary
@@ -608,7 +608,7 @@ def _print_review_result(result: dict) -> None:
     if errors:
         console.print("\n[red]Errors:[/]")
         for error in errors:
-            console.print(f"  • {error}")
+            console.print(f"  - {error}")
 
 
 def main(

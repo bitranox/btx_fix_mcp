@@ -21,10 +21,10 @@ class JudgmentCriteria:
 
     critical_threshold: float = 10.0  # % of critical issues to reject
     warning_threshold: float = 25.0  # % of warnings for needs_work
-    verdict_pass: str = "✅ APPROVED"
-    verdict_warning: str = "⚠️ APPROVED WITH COMMENTS"
-    verdict_needs_work: str = "🔧 NEEDS WORK"
-    verdict_reject: str = "❌ REJECTED"
+    verdict_pass: str = "[PASS] APPROVED"
+    verdict_warning: str = "[WARN] APPROVED WITH COMMENTS"
+    verdict_needs_work: str = "[WORK] NEEDS WORK"
+    verdict_reject: str = "[FAIL] REJECTED"
 
 
 @dataclass
@@ -49,7 +49,7 @@ class ReviewerMindset:
         for key, value in self.approach.items():
             # Convert key from snake_case to Title Case
             label = key.replace("_", " ").title()
-            lines.append(f"- ✓ **{label}:** {value}")
+            lines.append(f"- * **{label}:** {value}")
         return "\n".join(lines)
 
     def format_questions(self) -> str:
@@ -116,10 +116,10 @@ def get_mindset(name: str, config: dict | None = None) -> ReviewerMindset:
     judgment = JudgmentCriteria(
         critical_threshold=judgment_config.get("critical_threshold", 10.0),
         warning_threshold=judgment_config.get("warning_threshold", 25.0),
-        verdict_pass=judgment_config.get("verdict_pass", "✅ APPROVED"),
-        verdict_warning=judgment_config.get("verdict_warning", "⚠️ APPROVED WITH COMMENTS"),
-        verdict_needs_work=judgment_config.get("verdict_needs_work", "🔧 NEEDS WORK"),
-        verdict_reject=judgment_config.get("verdict_reject", "❌ REJECTED"),
+        verdict_pass=judgment_config.get("verdict_pass", "[PASS] APPROVED"),
+        verdict_warning=judgment_config.get("verdict_warning", "[WARN] APPROVED WITH COMMENTS"),
+        verdict_needs_work=judgment_config.get("verdict_needs_work", "[WORK] NEEDS WORK"),
+        verdict_reject=judgment_config.get("verdict_reject", "[FAIL] REJECTED"),
     )
 
     return ReviewerMindset(

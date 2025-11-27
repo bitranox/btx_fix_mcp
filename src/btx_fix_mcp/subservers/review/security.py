@@ -627,7 +627,7 @@ class SecuritySubServer(BaseSubServer):
         if medium_issues:
             lines.append("2. **Review medium severity issues** - Address before production deployment")
         if not issues:
-            lines.append("✅ No security issues detected!")
+            lines.append("[PASS] No security issues detected!")
 
         return lines
 

@@ -290,7 +290,7 @@ class IntegrationProtocol:
             ...     ["scope", "quality", "security"]
             ... )
             >>> for name, result in results.items():
-            ...     print(f"{name}: {'✓' if result['valid'] else '✗'}")
+            ...     print(f"{name}: {'[OK]' if result['valid'] else '[FAIL]'}")
         """
         results = {}
 

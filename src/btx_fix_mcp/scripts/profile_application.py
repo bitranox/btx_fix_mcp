@@ -116,7 +116,7 @@ def profile_workload(
     try:
         workload_func()
     except Exception as e:
-        print(f"\n⚠️  Workload raised exception: {e}", file=sys.stderr)
+        print(f"\n[WARN]  Workload raised exception: {e}", file=sys.stderr)
         print("Profiling data will still be saved.", file=sys.stderr)
     finally:
         profiler.disable()
@@ -126,7 +126,7 @@ def profile_workload(
 
     # Save profiling data
     profiler.dump_stats(output_path)
-    print(f"\n✓ Profiling data saved to: {output_path}")
+    print(f"\n[OK] Profiling data saved to: {output_path}")
 
     # Create stats object for analysis
     stats = pstats.Stats(profiler)
@@ -171,12 +171,12 @@ def run_cache_analysis():
         print("\n" + result["summary"])
 
         if result["status"] == "SUCCESS":
-            print("\n✓ Cache analysis completed successfully")
+            print("\n[OK] Cache analysis completed successfully")
         else:
-            print(f"\n⚠️  Cache analysis status: {result['status']}")
+            print(f"\n[WARN]  Cache analysis status: {result['status']}")
 
     except Exception as e:
-        print(f"\n✗ Cache analysis failed: {e}", file=sys.stderr)
+        print(f"\n[FAIL] Cache analysis failed: {e}", file=sys.stderr)
         import traceback
 
         traceback.print_exc()
@@ -229,7 +229,7 @@ def main():
         try:
             workload_func = load_workload_function(args.workload)
         except (ImportError, AttributeError, ValueError, TypeError) as e:
-            print(f"✗ Error loading workload: {e}", file=sys.stderr)
+            print(f"[FAIL] Error loading workload: {e}", file=sys.stderr)
             return 1
     else:
         workload_func = default_workload
@@ -238,7 +238,7 @@ def main():
     try:
         stats = profile_workload(workload_func, args.output)
     except Exception as e:
-        print(f"✗ Profiling failed: {e}", file=sys.stderr)
+        print(f"[FAIL] Profiling failed: {e}", file=sys.stderr)
         import traceback
 
         traceback.print_exc()

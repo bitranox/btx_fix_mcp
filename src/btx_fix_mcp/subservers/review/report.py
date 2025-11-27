@@ -288,19 +288,19 @@ class ReportSubServer(BaseSubServer):
         """Determine overall verdict."""
         verdict = Verdict(
             status="APPROVED",
-            message="✅ Code review passed - no critical issues found",
+            message="[PASS] Code review passed - no critical issues found",
         )
 
         # Check for failures
         if metrics.subservers_failed:
             verdict.status = "REVIEW_INCOMPLETE"
-            verdict.message = f"⚠️ Review incomplete - {len(metrics.subservers_failed)} sub-servers failed"
+            verdict.message = f"[WARN] Review incomplete - {len(metrics.subservers_failed)} sub-servers failed"
             verdict.recommendations.append("Fix sub-server failures and re-run analysis")
 
         # Check for critical issues
         if metrics.critical_issues > 0:
             verdict.status = "REJECTED"
-            verdict.message = f"❌ Code review failed - {metrics.critical_issues} critical issues found"
+            verdict.message = f"[FAIL] Code review failed - {metrics.critical_issues} critical issues found"
             verdict.recommendations.append("Address all critical issues before merging")
 
         # Check individual sub-server verdicts
@@ -308,20 +308,20 @@ class ReportSubServer(BaseSubServer):
         if security_result.get("metrics", {}).get("high_severity", 0) > 0:
             if verdict.status == "APPROVED":
                 verdict.status = "NEEDS_WORK"
-                verdict.message = "🔧 Code review needs work - security issues found"
+                verdict.message = "[WORK] Code review needs work - security issues found"
             verdict.recommendations.append("Fix security vulnerabilities")
 
         deps_result = results.get("deps", {})
         if deps_result.get("metrics", {}).get("vulnerabilities_count", 0) > 0:
             if verdict.status == "APPROVED":
                 verdict.status = "NEEDS_WORK"
-                verdict.message = "🔧 Code review needs work - dependency vulnerabilities found"
+                verdict.message = "[WORK] Code review needs work - dependency vulnerabilities found"
             verdict.recommendations.append("Update vulnerable dependencies")
 
         # Check for many warnings
         if metrics.warning_issues > 20 and verdict.status == "APPROVED":
             verdict.status = "APPROVED_WITH_COMMENTS"
-            verdict.message = f"⚠️ Approved with comments - {metrics.warning_issues} warnings to address"
+            verdict.message = f"[WARN] Approved with comments - {metrics.warning_issues} warnings to address"
 
         return verdict
 
@@ -395,11 +395,11 @@ class ReportSubServer(BaseSubServer):
         """Format a single sub-server's results."""
         status = result["status"]
         status_icon = {
-            "SUCCESS": "✅",
-            "PARTIAL": "⚠️",
-            "FAILED": "❌",
-            "NOT_RUN": "⏭️",
-        }.get(status, "❓")
+            "SUCCESS": "[PASS]",
+            "PARTIAL": "[WARN]",
+            "FAILED": "[FAIL]",
+            "NOT_RUN": "[SKIP]",
+        }.get(status, "[?]")
 
         lines = [
             f"### {status_icon} {name.title()}",

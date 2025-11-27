@@ -600,7 +600,7 @@ class DepsSubServer(BaseSubServer):
                     f"*Note: {len(vulns) - limit} more vulnerabilities not shown. Set `output.display.max_vulnerabilities = 0` in config for unlimited display.*"
                 )
         else:
-            lines.append("✅ No known vulnerabilities found")
+            lines.append("[PASS] No known vulnerabilities found")
 
         lines.append("")
         return lines
@@ -614,13 +614,13 @@ class DepsSubServer(BaseSubServer):
             limit = get_display_limit("max_outdated_packages", 10, start_dir=str(self.repo_path))
             display_count = len(outdated) if limit is None else min(limit, len(outdated))
 
-            header = f"⚠️ **{len(outdated)} packages are outdated**"
+            header = f"[WARN] **{len(outdated)} packages are outdated**"
             if limit is not None and len(outdated) > limit:
                 header += f" (showing {display_count})"
             lines.append(header + "\n")
 
             for pkg in outdated[:limit]:
-                lines.append(f"- **{pkg.get('name', '')}**: {pkg.get('version', '')} → {pkg.get('latest_version', '')}")
+                lines.append(f"- **{pkg.get('name', '')}**: {pkg.get('version', '')} -> {pkg.get('latest_version', '')}")
 
             if limit is not None and len(outdated) > limit:
                 lines.append("")
@@ -628,7 +628,7 @@ class DepsSubServer(BaseSubServer):
                     f"*Note: {len(outdated) - limit} more outdated packages not shown. Set `output.display.max_outdated_packages = 0` in config for unlimited display.*"
                 )
         else:
-            lines.append("✅ All packages are up to date")
+            lines.append("[PASS] All packages are up to date")
 
         lines.append("")
         return lines
@@ -642,7 +642,7 @@ class DepsSubServer(BaseSubServer):
             limit = get_display_limit("max_license_issues", 5, start_dir=str(self.repo_path))
             display_count = len(license_issues) if limit is None else min(limit, len(license_issues))
 
-            header = f"⚠️ **{len(license_issues)} license issues found**"
+            header = f"[WARN] **{len(license_issues)} license issues found**"
             if limit is not None and len(license_issues) > limit:
                 header += f" (showing {display_count})"
             lines.append(header + "\n")
@@ -656,7 +656,7 @@ class DepsSubServer(BaseSubServer):
                     f"*Note: {len(license_issues) - limit} more license issues not shown. Set `output.display.max_license_issues = 0` in config for unlimited display.*"
                 )
         else:
-            lines.append("✅ All licenses are compliant")
+            lines.append("[PASS] All licenses are compliant")
 
         lines.append("")
         return lines

@@ -23,8 +23,8 @@ class TestJudgmentCriteria:
 
         assert criteria.critical_threshold == 10.0
         assert criteria.warning_threshold == 25.0
-        assert criteria.verdict_pass == "✅ APPROVED"
-        assert criteria.verdict_reject == "❌ REJECTED"
+        assert criteria.verdict_pass == "[PASS] APPROVED"
+        assert criteria.verdict_reject == "[FAIL] REJECTED"
 
     def test_custom_values(self):
         """Test custom judgment criteria values."""
@@ -244,7 +244,7 @@ class TestFormatVerdictReport:
         """Create a verdict for testing."""
         return AnalysisVerdict(
             verdict="WARNING",
-            verdict_text="⚠️ APPROVED WITH COMMENTS",
+            verdict_text="[WARN] APPROVED WITH COMMENTS",
             critical_count=0,
             warning_count=5,
             total_items=100,

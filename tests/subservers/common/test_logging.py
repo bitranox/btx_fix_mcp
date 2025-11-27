@@ -211,7 +211,7 @@ class TestLogResult:
         with caplog.at_level(logging.INFO):
             log_result(logger, True, "All tests passed")
 
-        assert "✓" in caplog.text
+        assert "[OK]" in caplog.text
         assert "All tests passed" in caplog.text
 
     def test_log_result_failure(self, caplog):
@@ -221,7 +221,7 @@ class TestLogResult:
         with caplog.at_level(logging.ERROR):
             log_result(logger, False, "2 tests failed")
 
-        assert "✗" in caplog.text
+        assert "[FAIL]" in caplog.text
         assert "2 tests failed" in caplog.text
 
     def test_log_result_custom_level(self, caplog):
@@ -231,7 +231,7 @@ class TestLogResult:
         with caplog.at_level(logging.WARNING):
             log_result(logger, True, "Warning message", level=logging.WARNING)
 
-        assert "✓" in caplog.text
+        assert "[OK]" in caplog.text
         assert "Warning message" in caplog.text
 
 
@@ -359,7 +359,7 @@ class TestLoggerIntegration:
         assert "Summary:" in content
         assert "file1.py" in content
         assert "Duration: 1.5 seconds" in content
-        assert "✓ Workflow completed" in content
+        assert "[OK] Workflow completed" in content
 
 
 # =============================================================================

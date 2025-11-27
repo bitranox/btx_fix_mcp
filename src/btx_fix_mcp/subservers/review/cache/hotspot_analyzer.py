@@ -175,7 +175,7 @@ class HotspotAnalyzer:
     def _infer_module_path(self, file_path: Path) -> str:
         """Infer Python module path from file path.
 
-        Example: src/btx_fix_mcp/config.py → btx_fix_mcp.config
+        Example: src/btx_fix_mcp/config.py -> btx_fix_mcp.config
         """
         parts = file_path.parts
 

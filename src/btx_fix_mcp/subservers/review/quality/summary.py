@@ -167,7 +167,7 @@ def _build_test_section(tests: dict[str, Any], metrics: QualityMetrics) -> list[
         "",
         "## Runtime Type Checking (Beartype)",
         "",
-        f"- Status: **{'✅ Passed' if metrics.beartype_passed else '❌ Failed'}**",
+        f"- Status: **{'[PASS] Passed' if metrics.beartype_passed else '[FAIL] Failed'}**",
         "",
     ]
 
@@ -216,7 +216,7 @@ def _build_recommendations_section(
             rec_num += 1
 
     if metrics.total_issues == 0:
-        lines.append("✅ No quality issues detected!")
+        lines.append("[PASS] No quality issues detected!")
 
     return lines
 

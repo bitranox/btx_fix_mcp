@@ -748,10 +748,10 @@ class DocsSubServer(BaseSubServer):
             "",
             "## Project Documentation",
             "",
-            f"- README: {'✅' if project_docs.get('readme') else '❌'}",
-            f"- CHANGELOG: {'✅' if project_docs.get('changelog') else '⚠️'}",
-            f"- CONTRIBUTING: {'✅' if project_docs.get('contributing') else '⚠️'}",
-            f"- LICENSE: {'✅' if project_docs.get('license') else '❌'}",
+            f"- README: {'[PASS]' if project_docs.get('readme') else '[FAIL]'}",
+            f"- CHANGELOG: {'[PASS]' if project_docs.get('changelog') else '[WARN]'}",
+            f"- CONTRIBUTING: {'[PASS]' if project_docs.get('contributing') else '[WARN]'}",
+            f"- LICENSE: {'[PASS]' if project_docs.get('license') else '[FAIL]'}",
             "",
         ]
 

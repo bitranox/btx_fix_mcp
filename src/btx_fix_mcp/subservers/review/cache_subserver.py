@@ -477,7 +477,7 @@ class CacheSubServer(BaseSubServer):
         if profile_warnings:
             summary += "\n\n## Profile Warnings\n"
             for warning in profile_warnings:
-                summary += f"\n> ⚠️ {warning}"
+                summary += f"\n> [WARN] {warning}"
 
         # Save base analysis file
         artifacts = self._save_base_analysis(pure_count=pure_count)
@@ -592,7 +592,7 @@ class CacheSubServer(BaseSubServer):
 
         # Add profile warnings at top if present
         if profile_warnings:
-            lines.append("## ⚠️ Profile Data Warnings")
+            lines.append("## [WARN] Profile Data Warnings")
             lines.append("")
             for warning in profile_warnings:
                 lines.append(f"> {warning}")
@@ -609,7 +609,7 @@ class CacheSubServer(BaseSubServer):
         if used_production_data:
             lines.extend(
                 [
-                    "✅ **Using Production Cache Data**",
+                    "[PASS] **Using Production Cache Data**",
                     "",
                     "Recommendations based on real cache statistics from your application.",
                     "",
@@ -618,7 +618,7 @@ class CacheSubServer(BaseSubServer):
         else:
             lines.extend(
                 [
-                    "⚠️  **Using Static Code Analysis**",
+                    "[WARN]  **Using Static Code Analysis**",
                     "",
                     "No production profiling data available. Recommendations based on static code analysis.",
                     "",
