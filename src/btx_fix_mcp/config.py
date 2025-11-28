@@ -6,7 +6,14 @@ Provide a centralized configuration loader that reads settings from:
 1. Package defaults (defaultconfig.toml)
 2. User config (~/.config/btx_fix_mcp/config.toml on Linux)
 3. Project config (.btx-review.yaml or .btx-fix.yaml)
-4. Environment variables (BTX_FIX_MCP_*)
+4. Environment variables (BTX_FIX_MCP___<SECTION>__<KEY>=<VALUE>)
+
+Environment Variable Format
+---------------------------
+- Triple underscore (___) separates prefix from section
+- Double underscore (__) separates section from key
+- Example: BTX_FIX_MCP___GENERAL__LOG_LEVEL=DEBUG
+- Example: BTX_FIX_MCP___REVIEW__QUALITY__COMPLEXITY_THRESHOLD=15
 
 Contents
 --------

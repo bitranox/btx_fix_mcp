@@ -273,9 +273,12 @@ Use review_security with severity_threshold="high", confidence_threshold="medium
 Use review_cache with cache_size=256, hit_rate_threshold=30.0
 ```
 
-Or set via environment:
+Or set via environment (format: `BTX_FIX_MCP___<SECTION>__<KEY>=<VALUE>`):
 ```bash
-export BTX_FIX_MCP_REVIEW_QUALITY_COMPLEXITY_THRESHOLD=15
+# Triple underscore after prefix, double underscore between sections
+export BTX_FIX_MCP___REVIEW__QUALITY__COMPLEXITY_THRESHOLD=15
+export BTX_FIX_MCP___REVIEW__SECURITY__SEVERITY_THRESHOLD=high
+export BTX_FIX_MCP___GENERAL__LOG_LEVEL=DEBUG
 ```
 
 ---

@@ -395,10 +395,32 @@ LLM-CONTEXT/btx_fix_mcp/review/
 
 ## Environment Variables
 
+Environment variables use the format: `BTX_FIX_MCP___<SECTION>__<KEY>=<VALUE>`
+
+- Triple underscore (`___`) separates the prefix from the section
+- Double underscore (`__`) separates section from key
+- Nested sections use double underscore (e.g., `GENERAL__TIMEOUTS__GIT_STATUS`)
+
 | Variable | Default | Permitted Values | Description |
 |----------|---------|------------------|-------------|
-| `BTX_FIX_MCP_LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` | Log verbosity level |
-| `BTX_FIX_MCP_OUTPUT_DIR` | `LLM-CONTEXT/btx_fix_mcp` | Any valid directory path | Override output directory |
+| `BTX_FIX_MCP___GENERAL__LOG_LEVEL` | `INFO` | `DEBUG`, `INFO`, `WARNING`, `ERROR` | Log verbosity level |
+| `BTX_FIX_MCP___GENERAL__VERBOSE` | `false` | `true`, `false` | Enable verbose output |
+| `BTX_FIX_MCP___GENERAL__MAX_WORKERS` | `4` | Any positive integer | Maximum parallel workers |
+| `BTX_FIX_MCP___REVIEW__OUTPUT_DIR` | `LLM-CONTEXT/btx_fix_mcp/review` | Any valid directory path | Override review output directory |
+| `BTX_FIX_MCP___REVIEW__QUALITY__COMPLEXITY_THRESHOLD` | `10` | Any positive integer | Default complexity threshold |
+| `BTX_FIX_MCP___REVIEW__SECURITY__SEVERITY_THRESHOLD` | `low` | `low`, `medium`, `high` | Default security severity |
+
+**Examples:**
+```bash
+# Set log level to DEBUG
+export BTX_FIX_MCP___GENERAL__LOG_LEVEL=DEBUG
+
+# Set custom complexity threshold
+export BTX_FIX_MCP___REVIEW__QUALITY__COMPLEXITY_THRESHOLD=15
+
+# Set security severity threshold
+export BTX_FIX_MCP___REVIEW__SECURITY__SEVERITY_THRESHOLD=high
+```
 
 ---
 
