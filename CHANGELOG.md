@@ -10,6 +10,7 @@ the [Keep a Changelog](https://keepachangelog.com/) format.
 
 ### Fixed
 - Removed unused `shutil` import from `source_patcher.py`
+- Removed emoji from scope.py git fallback notice (Windows `charmap` codec compatibility)
 
 ## [1.1.0] - 2025-11-28
 
