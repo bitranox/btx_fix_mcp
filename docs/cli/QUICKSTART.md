@@ -114,20 +114,21 @@ python -m btx_fix_mcp review clean --dry-run
 
 ## Quick Reference
 
-| Command | Description |
-|---------|-------------|
-| `review all` | Run all analyses (git mode, default) |
-| `review all --mode git` | Analyze git changes only (default) |
-| `review all --mode full` | Analyze entire repo |
-| `review scope` | Discover files to review |
-| `review quality` | Code quality analysis |
-| `review security` | Security vulnerability scan |
-| `review deps` | Dependency analysis |
-| `review docs` | Documentation coverage |
-| `review perf` | Performance analysis |
-| `review cache` | Cache optimization |
-| `review profile -- CMD` | Profile a command |
-| `review clean` | Clean analysis data |
+| Command | Options | Defaults |
+|---------|---------|----------|
+| `review all` | `--mode`, `--complexity`, `--severity` | mode=`git`, complexity=`10`, severity=`low` |
+| `review scope` | `--mode` | mode=`git` |
+| `review quality` | `--complexity`, `--maintainability` | complexity=`10`, maintainability=`20` |
+| `review security` | `--severity`, `--confidence` | severity=`low`, confidence=`low` |
+| `review deps` | `--no-vulnerabilities`, `--no-licenses`, `--no-outdated` | all checks enabled |
+| `review docs` | `--min-coverage`, `--style` | min-coverage=`80`, style=`google` |
+| `review perf` | `--no-profiling`, `--nested-loop-threshold` | profiling enabled, threshold=`2` |
+| `review cache` | `--cache-size`, `--hit-rate-threshold`, `--speedup-threshold` | size=`128`, hit-rate=`20.0`, speedup=`5.0` |
+| `review profile -- CMD` | (none) | CMD is **required** |
+| `review clean` | `-s/--subserver`, `--dry-run` | subserver=`all`, dry-run=`false` |
+| `review report` | (none) | - |
+
+> **All options are optional** unless marked as required. See [CLI Reference](REFERENCE.md) for detailed documentation.
 
 ## Next Steps
 
