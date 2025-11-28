@@ -7,10 +7,14 @@ the [Keep a Changelog](https://keepachangelog.com/) format.
 
 ### Changed
 - CLI QUICKSTART.md: Added quick reference table with all options and their default values
+- CLI REFERENCE.md: Added "Permitted Values" column to all parameter tables
+- CLI REFERENCE.md: Added detailed subserver values table for `review clean` command
+- MCP TOOLS.md: Added complete parameter documentation with Type/Required/Default/Permitted columns
 
 ### Fixed
 - Removed unused `shutil` import from `source_patcher.py`
 - Removed emoji from scope.py git fallback notice (Windows `charmap` codec compatibility)
+- Fixed environment variable format documentation (BTX_FIX_MCP___SECTION__KEY, not BTX_FIX_MCP_KEY)
 
 ## [1.1.0] - 2025-11-28
 
