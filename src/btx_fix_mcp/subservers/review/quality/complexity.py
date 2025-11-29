@@ -11,33 +11,39 @@ import ast
 import json
 import subprocess
 from pathlib import Path
-from typing import Any
 
-from btx_fix_mcp.tools_venv import get_tool_path
 from btx_fix_mcp.config import get_timeout, get_tool_config
+from btx_fix_mcp.tools_venv import get_tool_path
 
+from .analyzer_results import (
+    CognitiveComplexityItem,
+    ComplexityResults,
+    CyclomaticComplexityItem,
+    FunctionIssueItem,
+    MaintainabilityItem,
+)
 from .base import BaseAnalyzer
 
 
-class ComplexityAnalyzer(BaseAnalyzer):
+class ComplexityAnalyzer(BaseAnalyzer[ComplexityResults]):
     """Analyzes code complexity metrics."""
 
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> ComplexityResults:
         """Analyze complexity metrics for all files.
 
         Returns:
-            Dictionary with keys: complexity, maintainability, cognitive, function_issues
+            ComplexityResults dataclass with complexity, maintainability, cognitive, function_issues
         """
-        return {
-            "complexity": self._analyze_cyclomatic(files),
-            "maintainability": self._analyze_maintainability(files),
-            "cognitive": self._analyze_cognitive(files),
-            "function_issues": self._analyze_functions(files),
-        }
+        return ComplexityResults(
+            complexity=self._analyze_cyclomatic(files),
+            maintainability=self._analyze_maintainability(files),
+            cognitive=self._analyze_cognitive(files),
+            function_issues=self._analyze_functions(files),
+        )
 
-    def _analyze_cyclomatic(self, files: list[str]) -> list[dict[str, Any]]:
+    def _analyze_cyclomatic(self, files: list[str]) -> list[CyclomaticComplexityItem]:
         """Analyze cyclomatic complexity using radon."""
-        results = []
+        results: list[CyclomaticComplexityItem] = []
         radon = str(get_tool_path("radon"))
 
         for file_path in files:
@@ -48,10 +54,10 @@ class ComplexityAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _analyze_file_cyclomatic(self, file_path: str, radon: str, results: list[dict[str, Any]]) -> None:
+    def _analyze_file_cyclomatic(self, file_path: str, radon: str, results: list[CyclomaticComplexityItem]) -> None:
         """Analyze cyclomatic complexity for a single file."""
         try:
-            radon_cc_timeout = get_timeout("tool_quick", 30)
+            radon_cc_timeout = get_timeout("tool_quick", 60)
 
             # Get radon config settings
             radon_config = get_tool_config("radon")
@@ -74,6 +80,7 @@ class ComplexityAnalyzer(BaseAnalyzer):
 
             result = subprocess.run(
                 cmd,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=radon_cc_timeout,
@@ -91,27 +98,27 @@ class ComplexityAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error analyzing {file_path}: {e}")
 
-    def _parse_radon_cc_output(self, stdout: str, results: list[dict[str, Any]]) -> None:
+    def _parse_radon_cc_output(self, stdout: str, results: list[CyclomaticComplexityItem]) -> None:
         """Parse radon cyclomatic complexity JSON output."""
         data = json.loads(stdout)
 
         for filepath, functions in data.items():
             for func in functions:
                 results.append(
-                    {
-                        "file": self._get_relative_path(filepath),
-                        "name": func.get("name", ""),
-                        "type": func.get("type", ""),
-                        "complexity": func.get("complexity", 0),
-                        "rank": func.get("rank", ""),
+                    CyclomaticComplexityItem(
+                        file=self._get_relative_path(filepath),
+                        name=func.get("name", ""),
+                        type=func.get("type", ""),
+                        complexity=func.get("complexity", 0),
+                        rank=func.get("rank", ""),
                         # Note: radon returns "lineno", we standardize to "line"
-                        "line": func.get("lineno", 0),
-                    }
+                        line=func.get("lineno", 0),
+                    )
                 )
 
-    def _analyze_maintainability(self, files: list[str]) -> list[dict[str, Any]]:
+    def _analyze_maintainability(self, files: list[str]) -> list[MaintainabilityItem]:
         """Analyze maintainability index using radon."""
-        results = []
+        results: list[MaintainabilityItem] = []
         radon = str(get_tool_path("radon"))
 
         for file_path in files:
@@ -122,12 +129,13 @@ class ComplexityAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _analyze_file_maintainability(self, file_path: str, radon: str, results: list[dict[str, Any]]) -> None:
+    def _analyze_file_maintainability(self, file_path: str, radon: str, results: list[MaintainabilityItem]) -> None:
         """Analyze maintainability index for a single file."""
         try:
-            radon_mi_timeout = get_timeout("tool_quick", 30)
+            radon_mi_timeout = get_timeout("tool_quick", 60)
             result = subprocess.run(
                 [radon, "mi", "-j", file_path],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=radon_mi_timeout,
@@ -141,22 +149,22 @@ class ComplexityAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error analyzing maintainability in {file_path}: {e}")
 
-    def _parse_radon_mi_output(self, stdout: str, results: list[dict[str, Any]]) -> None:
+    def _parse_radon_mi_output(self, stdout: str, results: list[MaintainabilityItem]) -> None:
         """Parse radon maintainability index JSON output."""
         data = json.loads(stdout)
 
         for filepath, mi_data in data.items():
             results.append(
-                {
-                    "file": self._get_relative_path(filepath),
-                    "mi": mi_data.get("mi", 0),
-                    "rank": mi_data.get("rank", ""),
-                }
+                MaintainabilityItem(
+                    file=self._get_relative_path(filepath),
+                    mi=mi_data.get("mi", 0),
+                    rank=mi_data.get("rank", ""),
+                )
             )
 
-    def _analyze_cognitive(self, files: list[str]) -> list[dict[str, Any]]:
+    def _analyze_cognitive(self, files: list[str]) -> list[CognitiveComplexityItem]:
         """Analyze cognitive complexity using custom AST analysis."""
-        results = []
+        results: list[CognitiveComplexityItem] = []
         threshold = self.config.get("cognitive_complexity_threshold", 15)
 
         for file_path in files:
@@ -167,7 +175,7 @@ class ComplexityAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _analyze_file_cognitive(self, file_path: str, threshold: int, results: list[dict[str, Any]]) -> None:
+    def _analyze_file_cognitive(self, file_path: str, threshold: int, results: list[CognitiveComplexityItem]) -> None:
         """Analyze cognitive complexity for a single file."""
         try:
             content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
@@ -179,7 +187,9 @@ class ComplexityAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error analyzing cognitive complexity in {file_path}: {e}")
 
-    def _record_cognitive_complexity(self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, threshold: int, results: list[dict[str, Any]]) -> None:
+    def _record_cognitive_complexity(
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, threshold: int, results: list[CognitiveComplexityItem]
+    ) -> None:
         """Record cognitive complexity for a function if non-zero."""
         complexity = self._calculate_cognitive_complexity(node)
 
@@ -187,13 +197,13 @@ class ComplexityAnalyzer(BaseAnalyzer):
             return
 
         results.append(
-            {
-                "file": self._get_relative_path(file_path),
-                "name": node.name,
-                "line": node.lineno,
-                "complexity": complexity,
-                "exceeds_threshold": complexity > threshold,
-            }
+            CognitiveComplexityItem(
+                file=self._get_relative_path(file_path),
+                name=node.name,
+                line=node.lineno,
+                complexity=complexity,
+                exceeds_threshold=complexity > threshold,
+            )
         )
 
     def _calculate_cognitive_complexity(self, node: ast.AST, nesting: int = 0) -> int:
@@ -221,9 +231,9 @@ class ComplexityAnalyzer(BaseAnalyzer):
 
         return self._calculate_cognitive_complexity(child, nesting)
 
-    def _analyze_functions(self, files: list[str]) -> list[dict[str, Any]]:
+    def _analyze_functions(self, files: list[str]) -> list[FunctionIssueItem]:
         """Analyze function length and nesting depth."""
-        results = []
+        results: list[FunctionIssueItem] = []
         max_length = self.config.get("max_function_length", 50)
         max_nesting = self.config.get("max_nesting_depth", 3)
 
@@ -235,7 +245,7 @@ class ComplexityAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _analyze_file_functions(self, file_path: str, max_length: int, max_nesting: int, results: list[dict[str, Any]]) -> None:
+    def _analyze_file_functions(self, file_path: str, max_length: int, max_nesting: int, results: list[FunctionIssueItem]) -> None:
         """Analyze functions in a single file for length and nesting."""
         try:
             content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
@@ -248,13 +258,13 @@ class ComplexityAnalyzer(BaseAnalyzer):
             self.logger.warning(f"Error analyzing functions in {file_path}: {e}")
 
     def _check_function_issues(
-        self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, max_length: int, max_nesting: int, results: list[dict[str, Any]]
+        self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, max_length: int, max_nesting: int, results: list[FunctionIssueItem]
     ) -> None:
         """Check a function for length and nesting issues."""
         self._check_function_length(node, file_path, max_length, results)
         self._check_function_nesting(node, file_path, max_nesting, results)
 
-    def _check_function_length(self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, max_length: int, results: list[dict[str, Any]]) -> None:
+    def _check_function_length(self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, max_length: int, results: list[FunctionIssueItem]) -> None:
         """Check if function exceeds maximum length."""
         if not hasattr(node, "end_lineno"):
             return
@@ -264,33 +274,33 @@ class ComplexityAnalyzer(BaseAnalyzer):
             return
 
         results.append(
-            {
-                "file": self._get_relative_path(file_path),
-                "function": node.name,
-                "line": node.lineno,
-                "issue_type": "TOO_LONG",
-                "value": length,
-                "threshold": max_length,
-                "message": f"Function '{node.name}' is {length} lines (max: {max_length})",
-            }
+            FunctionIssueItem(
+                file=self._get_relative_path(file_path),
+                function=node.name,
+                line=node.lineno,
+                issue_type="TOO_LONG",
+                value=length,
+                threshold=max_length,
+                message=f"Function '{node.name}' is {length} lines (max: {max_length})",
+            )
         )
 
-    def _check_function_nesting(self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, max_nesting: int, results: list[dict[str, Any]]) -> None:
+    def _check_function_nesting(self, node: ast.FunctionDef | ast.AsyncFunctionDef, file_path: str, max_nesting: int, results: list[FunctionIssueItem]) -> None:
         """Check if function exceeds maximum nesting depth."""
         depth = self._calculate_nesting_depth(node)
         if depth <= max_nesting:
             return
 
         results.append(
-            {
-                "file": self._get_relative_path(file_path),
-                "function": node.name,
-                "line": node.lineno,
-                "issue_type": "TOO_NESTED",
-                "value": depth,
-                "threshold": max_nesting,
-                "message": f"Function '{node.name}' has nesting depth {depth} (max: {max_nesting})",
-            }
+            FunctionIssueItem(
+                file=self._get_relative_path(file_path),
+                function=node.name,
+                line=node.lineno,
+                issue_type="TOO_NESTED",
+                value=depth,
+                threshold=max_nesting,
+                message=f"Function '{node.name}' has nesting depth {depth} (max: {max_nesting})",
+            )
         )
 
     def _calculate_nesting_depth(self, node: ast.AST, current_depth: int = 0) -> int:

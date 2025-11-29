@@ -208,8 +208,7 @@ class HotspotAnalyzer:
             return ""
 
         # Remove .py extension from last part
-        if module_parts[-1].endswith(".py"):
-            module_parts[-1] = module_parts[-1][:-3]
+        module_parts[-1] = module_parts[-1].removesuffix(".py")
 
         # Remove __init__ if present
         if module_parts and module_parts[-1] == "__init__":

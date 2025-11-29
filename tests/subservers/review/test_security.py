@@ -2,7 +2,7 @@
 
 import pytest
 
-from btx_fix_mcp.subservers.review.security import SecuritySubServer
+from btx_fix_mcp.subservers.review.security import BanditIssue, SecuritySubServer
 
 
 class TestSecuritySubServer:
@@ -415,9 +415,9 @@ class TestSecurityBanditHelpers:
     def test_filter_issues_by_severity(self, server):
         """Test filtering issues by severity threshold."""
         issues = [
-            {"issue_severity": "HIGH", "issue_confidence": "HIGH"},
-            {"issue_severity": "MEDIUM", "issue_confidence": "HIGH"},
-            {"issue_severity": "LOW", "issue_confidence": "HIGH"},
+            BanditIssue(issue_severity="HIGH", issue_confidence="HIGH"),
+            BanditIssue(issue_severity="MEDIUM", issue_confidence="HIGH"),
+            BanditIssue(issue_severity="LOW", issue_confidence="HIGH"),
         ]
 
         server.severity_threshold = "medium"
@@ -429,9 +429,9 @@ class TestSecurityBanditHelpers:
     def test_filter_issues_by_confidence(self, server):
         """Test filtering issues by confidence threshold."""
         issues = [
-            {"issue_severity": "HIGH", "issue_confidence": "HIGH"},
-            {"issue_severity": "HIGH", "issue_confidence": "MEDIUM"},
-            {"issue_severity": "HIGH", "issue_confidence": "LOW"},
+            BanditIssue(issue_severity="HIGH", issue_confidence="HIGH"),
+            BanditIssue(issue_severity="HIGH", issue_confidence="MEDIUM"),
+            BanditIssue(issue_severity="HIGH", issue_confidence="LOW"),
         ]
 
         server.confidence_threshold = "high"
@@ -443,10 +443,10 @@ class TestSecurityBanditHelpers:
     def test_categorize_issues(self, server):
         """Test categorizing issues by severity."""
         issues = [
-            {"issue_severity": "HIGH"},
-            {"issue_severity": "MEDIUM"},
-            {"issue_severity": "MEDIUM"},
-            {"issue_severity": "LOW"},
+            BanditIssue(issue_severity="HIGH"),
+            BanditIssue(issue_severity="MEDIUM"),
+            BanditIssue(issue_severity="MEDIUM"),
+            BanditIssue(issue_severity="LOW"),
         ]
 
         categorized = server._categorize_issues(issues)
@@ -458,8 +458,8 @@ class TestSecurityBanditHelpers:
     def test_categorize_issues_unknown_severity(self, server):
         """Test categorizing issues with unknown severity."""
         issues = [
-            {"issue_severity": "UNKNOWN"},
-            {},
+            BanditIssue(issue_severity="UNKNOWN"),
+            BanditIssue(),  # Uses default "LOW"
         ]
 
         categorized = server._categorize_issues(issues)

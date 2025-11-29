@@ -5,6 +5,15 @@ from logging import Logger
 from pathlib import Path
 from typing import Any
 
+from .analyzer_results import (
+    ArchitectureResults,
+    ComplexityResults,
+    MetricsResults,
+    QualityAnalysisResults,
+    StaticResults,
+    SuiteResults,
+    TypeResults,
+)
 from .architecture import ArchitectureAnalyzer
 from .complexity import ComplexityAnalyzer
 from .config import QualityConfig, get_analyzer_config
@@ -136,7 +145,7 @@ class AnalyzerOrchestrator:
 
         return tasks
 
-    def execute_tasks(self, tasks: list[tuple[str, Any, list[str], list[str]]]) -> dict[str, Any]:
+    def execute_tasks(self, tasks: list[tuple[str, Any, list[str], list[str]]]) -> QualityAnalysisResults:
         """Execute analyzer tasks in parallel using ThreadPoolExecutor.
 
         Each analyzer runs in its own thread. Failures in individual analyzers
@@ -146,12 +155,12 @@ class AnalyzerOrchestrator:
             tasks: List of analyzer tasks to run
 
         Returns:
-            Dictionary with results from all analyzers
+            QualityAnalysisResults dataclass with all analyzer results
         """
         if not tasks:
-            return {}
+            return QualityAnalysisResults()
 
-        results: dict[str, Any] = {}
+        results = QualityAnalysisResults()
 
         # Run all analyzers in parallel
         with ThreadPoolExecutor(max_workers=len(tasks)) as executor:
@@ -160,37 +169,54 @@ class AnalyzerOrchestrator:
 
         return results
 
-    def _run_analyzer(self, task: tuple[str, Any, list[str], list[str]]) -> tuple[str, dict[str, Any]]:
+    def _run_analyzer(self, task: tuple[str, Any, list[str], list[str]]) -> tuple[str, Any]:
         """Run a single analyzer and return its results."""
         name, analyzer_func, files, _ = task
         try:
             return (name, analyzer_func(files))
         except Exception as e:
             self.logger.warning(f"Analyzer {name} failed: {e}")
-            return (name, {})
+            return (name, None)
 
-    def _collect_results(self, futures: dict, results: dict[str, Any]) -> None:
+    def _collect_results(self, futures: dict, results: QualityAnalysisResults) -> None:
         """Collect results from completed analyzer futures."""
         for future in as_completed(futures):
             task = futures[future]
-            name, result_keys = task[0], task[3]
+            name = task[0]
 
             try:
                 analyzer_name, analyzer_results = future.result()
-                self._map_analyzer_results(result_keys, analyzer_results, results)
+                if analyzer_results is not None:
+                    self._map_analyzer_results(analyzer_name, analyzer_results, results)
             except Exception as e:
                 self.logger.error(f"Failed to get results from {name}: {e}")
 
-    def _map_analyzer_results(self, result_keys: list[str], analyzer_results: dict[str, Any], results: dict[str, Any]) -> None:
-        """Map analyzer results to expected result keys."""
-        for key in result_keys:
-            if key in analyzer_results:
-                results[key] = analyzer_results[key]
-            elif key == "tests" and analyzer_results:
-                # Test analyzer returns dict directly
-                results[key] = analyzer_results
+    def _map_analyzer_results(self, analyzer_name: str, analyzer_results: Any, results: QualityAnalysisResults) -> None:
+        """Map analyzer results to QualityAnalysisResults fields."""
+        if isinstance(analyzer_results, ComplexityResults):
+            results.complexity = analyzer_results.complexity
+            results.maintainability = analyzer_results.maintainability
+            results.cognitive = analyzer_results.cognitive
+            results.function_issues = analyzer_results.function_issues
+        elif isinstance(analyzer_results, StaticResults):
+            results.static = analyzer_results.static
+            results.duplication = analyzer_results.duplication
+        elif isinstance(analyzer_results, SuiteResults):
+            results.tests = analyzer_results
+        elif isinstance(analyzer_results, ArchitectureResults):
+            results.architecture = analyzer_results.architecture
+            results.import_cycles = analyzer_results.import_cycles
+            results.runtime_checks = analyzer_results.runtime_checks
+        elif isinstance(analyzer_results, MetricsResults):
+            results.halstead = analyzer_results.halstead
+            results.raw_metrics = analyzer_results.raw_metrics
+            results.code_churn = analyzer_results.code_churn
+        elif isinstance(analyzer_results, TypeResults):
+            results.type_coverage = analyzer_results.type_coverage
+            results.dead_code = analyzer_results.dead_code
+            results.docstring_coverage = analyzer_results.docstring_coverage
 
-    def run_all(self, python_files: list[str], js_files: list[str]) -> dict[str, Any]:
+    def run_all(self, python_files: list[str], js_files: list[str]) -> QualityAnalysisResults:
         """Run all enabled analyzers (convenience method).
 
         Args:
@@ -198,7 +224,7 @@ class AnalyzerOrchestrator:
             js_files: List of JS/TS file paths
 
         Returns:
-            Dictionary with results from all analyzers
+            QualityAnalysisResults dataclass with all analyzer results
         """
         tasks = self.build_analyzer_tasks(python_files, js_files)
         return self.execute_tasks(tasks)

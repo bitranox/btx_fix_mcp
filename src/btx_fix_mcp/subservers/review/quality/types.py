@@ -7,32 +7,32 @@ Analyzes code using:
 """
 
 import subprocess
-from typing import Any
 
+from btx_fix_mcp.config import get_timeout, get_tool_config
 from btx_fix_mcp.subservers.common.issues import (
     DocstringCoverageMetrics,
     TypeCoverageMetrics,
 )
-from btx_fix_mcp.config import get_timeout, get_tool_config
 from btx_fix_mcp.tools_venv import get_tool_path
 
+from .analyzer_results import DeadCodeItem, DeadCodeResults, TypeResults
 from .base import BaseAnalyzer
 
 
-class TypeAnalyzer(BaseAnalyzer):
+class TypeAnalyzer(BaseAnalyzer[TypeResults]):
     """Type coverage and related analysis."""
 
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> TypeResults:
         """Run type analysis on files.
 
         Returns:
-            Dictionary with keys: type_coverage, dead_code, docstring_coverage
+            TypeResults dataclass with type_coverage, dead_code, docstring_coverage
         """
-        return {
-            "type_coverage": self._analyze_type_coverage(files).model_dump(),
-            "dead_code": self._detect_dead_code(files),
-            "docstring_coverage": self._analyze_docstring_coverage(files).model_dump(),
-        }
+        return TypeResults(
+            type_coverage=self._analyze_type_coverage(files),
+            dead_code=self._detect_dead_code(files),
+            docstring_coverage=self._analyze_docstring_coverage(files),
+        )
 
     def _analyze_type_coverage(self, files: list[str]) -> TypeCoverageMetrics:
         """Analyze type coverage using mypy."""
@@ -57,7 +57,7 @@ class TypeAnalyzer(BaseAnalyzer):
 
     def _run_mypy(self, mypy: str, files: list[str]) -> subprocess.CompletedProcess:
         """Run mypy on files."""
-        mypy_timeout = get_timeout("tool_long", 120)
+        mypy_timeout = get_timeout("tool_long", 240)
 
         # Get mypy config settings
         mypy_config = get_tool_config("mypy")
@@ -81,6 +81,7 @@ class TypeAnalyzer(BaseAnalyzer):
 
         return subprocess.run(
             cmd + files,
+            check=False,
             capture_output=True,
             text=True,
             timeout=mypy_timeout,
@@ -106,9 +107,9 @@ class TypeAnalyzer(BaseAnalyzer):
         if total > 0:
             metrics.coverage_percent = round((metrics.typed_functions / total) * 100, 1)
 
-    def _detect_dead_code(self, files: list[str]) -> dict[str, Any]:
+    def _detect_dead_code(self, files: list[str]) -> DeadCodeResults:
         """Detect dead code using vulture."""
-        results = {"dead_code": [], "raw_output": ""}
+        results = DeadCodeResults()
         if not files:
             return results
 
@@ -117,7 +118,7 @@ class TypeAnalyzer(BaseAnalyzer):
 
         try:
             result = self._run_vulture(vulture, confidence, files)
-            results["raw_output"] = result.stdout
+            results.raw_output = result.stdout
             self._parse_vulture_output(result.stdout, results)
         except subprocess.TimeoutExpired:
             self.logger.warning("vulture timed out")
@@ -130,15 +131,16 @@ class TypeAnalyzer(BaseAnalyzer):
 
     def _run_vulture(self, vulture: str, confidence: int, files: list[str]) -> subprocess.CompletedProcess:
         """Run vulture on files."""
-        vulture_timeout = get_timeout("tool_analysis", 60)
+        vulture_timeout = get_timeout("tool_analysis", 120)
         return subprocess.run(
             [vulture, f"--min-confidence={confidence}"] + files,
+            check=False,
             capture_output=True,
             text=True,
             timeout=vulture_timeout,
         )
 
-    def _parse_vulture_output(self, stdout: str, results: dict[str, Any]) -> None:
+    def _parse_vulture_output(self, stdout: str, results: DeadCodeResults) -> None:
         """Parse vulture output for dead code."""
         import re
 
@@ -155,12 +157,12 @@ class TypeAnalyzer(BaseAnalyzer):
                 continue
 
             file_path, line_num, message = match.groups()
-            results["dead_code"].append(
-                {
-                    "file": self._get_relative_path(file_path),
-                    "line": int(line_num),
-                    "message": message.strip(),
-                }
+            results.dead_code.append(
+                DeadCodeItem(
+                    file=self._get_relative_path(file_path),
+                    line=int(line_num),
+                    message=message.strip(),
+                )
             )
 
     def _analyze_docstring_coverage(self, files: list[str]) -> DocstringCoverageMetrics:
@@ -185,9 +187,10 @@ class TypeAnalyzer(BaseAnalyzer):
 
     def _run_interrogate(self, interrogate: str, files: list[str]) -> subprocess.CompletedProcess:
         """Run interrogate on files."""
-        interrogate_timeout = get_timeout("tool_analysis", 60)
+        interrogate_timeout = get_timeout("tool_analysis", 120)
         return subprocess.run(
             [interrogate, "-v", "--fail-under=0"] + files,
+            check=False,
             capture_output=True,
             text=True,
             timeout=interrogate_timeout,

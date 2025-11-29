@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from btx_fix_mcp.subservers.review.quality.analyzer_results import MetricsResults
 from btx_fix_mcp.subservers.review.quality.metrics import MetricsAnalyzer
 
 
@@ -40,28 +41,28 @@ def example():
 ''')
         return str(code)
 
-    def test_analyze_returns_all_keys(self, analyzer, python_file):
-        """Test analyze returns halstead, raw_metrics, and code_churn."""
+    def test_analyze_returns_metrics_results(self, analyzer, python_file):
+        """Test analyze returns MetricsResults dataclass."""
         result = analyzer.analyze([python_file])
 
-        assert "halstead" in result
-        assert "raw_metrics" in result
-        assert "code_churn" in result
+        assert isinstance(result, MetricsResults)
+        assert isinstance(result.halstead, list)
+        assert isinstance(result.raw_metrics, list)
 
     def test_analyze_empty_files(self, analyzer):
         """Test analyze with empty file list."""
         result = analyzer.analyze([])
 
-        assert result["halstead"] == []
-        assert result["raw_metrics"] == []
-        assert result["code_churn"]["files"] == []
+        assert result.halstead == []
+        assert result.raw_metrics == []
+        assert result.code_churn.files == []
 
     def test_analyze_nonexistent_files(self, analyzer):
         """Test analyze with nonexistent files."""
         result = analyzer.analyze(["/nonexistent/file.py"])
 
-        assert result["halstead"] == []
-        assert result["raw_metrics"] == []
+        assert result.halstead == []
+        assert result.raw_metrics == []
 
 
 class TestHalsteadAnalysis:
@@ -96,16 +97,16 @@ def another(x, y):
         return str(code)
 
     def test_halstead_metrics_structure(self, analyzer, python_file):
-        """Test Halstead metrics returns expected structure."""
+        """Test Halstead metrics returns HalsteadItem dataclasses."""
         result = analyzer._analyze_halstead([python_file])
 
         # If radon is installed and works, verify structure
         if result:
             assert isinstance(result, list)
             for item in result:
-                assert "file" in item
-                # Check for Halstead metric keys
-                assert "vocabulary" in item or "h1" in item
+                # HalsteadItem dataclass has fixed fields
+                assert item.file
+                assert isinstance(item.vocabulary, int)
 
     def test_halstead_timeout_handling(self, analyzer, python_file):
         """Test timeout is handled gracefully."""
@@ -167,16 +168,16 @@ def bar():
         return str(code)
 
     def test_raw_metrics_structure(self, analyzer, python_file):
-        """Test raw metrics returns expected structure."""
+        """Test raw metrics returns RawMetricsItem dataclasses."""
         result = analyzer._analyze_raw_metrics([python_file])
 
         # If radon is installed and works, verify structure
         if result:
             assert isinstance(result, list)
             for item in result:
-                assert "file" in item
-                # Check for raw metric keys
-                assert "loc" in item or "sloc" in item
+                # RawMetricsItem dataclass has fixed fields
+                assert item.file
+                assert isinstance(item.loc, int)
 
     def test_raw_metrics_timeout_handling(self, analyzer, python_file):
         """Test timeout is handled gracefully."""
@@ -255,17 +256,18 @@ class TestCodeChurnAnalysis:
         code_file = git_repo / "churn.py"
         result = analyzer._analyze_code_churn([str(code_file)])
 
-        assert "files" in result
-        assert "high_churn_files" in result
-        assert "total_commits_analyzed" in result
-        assert "analysis_period_days" in result
+        # CodeChurnResults dataclass with fixed fields
+        assert isinstance(result.files, list)
+        assert isinstance(result.high_churn_files, list)
+        assert isinstance(result.total_commits_analyzed, int)
+        assert isinstance(result.analysis_period_days, int)
 
     def test_churn_empty_files(self, analyzer):
         """Test churn with empty file list."""
         result = analyzer._analyze_code_churn([])
 
-        assert result["files"] == []
-        assert result["total_commits_analyzed"] == 0
+        assert result.files == []
+        assert result.total_commits_analyzed == 0
 
     def test_churn_not_git_repo(self, tmp_path, logger):
         """Test churn analysis in non-git directory."""
@@ -280,7 +282,7 @@ class TestCodeChurnAnalysis:
         result = analyzer._analyze_code_churn([str(code)])
 
         # Should return empty results, not error
-        assert result["files"] == []
+        assert result.files == []
 
     def test_churn_handles_git_timeout(self, analyzer, git_repo):
         """Test churn handles git timeout gracefully."""
@@ -294,7 +296,7 @@ class TestCodeChurnAnalysis:
             code_file = git_repo / "churn.py"
             result = analyzer._analyze_code_churn([str(code_file)])
 
-            assert result["files"] == []
+            assert result.files == []
 
     def test_churn_handles_git_not_found(self, tmp_path, logger):
         """Test churn handles missing git gracefully."""
@@ -309,7 +311,7 @@ class TestCodeChurnAnalysis:
 
             result = analyzer._analyze_code_churn(["/tmp/test.py"])
 
-            assert result["files"] == []
+            assert result.files == []
 
 
 class TestMetricsIntegration:
@@ -340,8 +342,7 @@ def multiply(x, y):
 
         result = analyzer.analyze([str(code)])
 
-        # Should complete without errors
-        assert isinstance(result, dict)
-        assert "halstead" in result
-        assert "raw_metrics" in result
-        assert "code_churn" in result
+        # Should complete without errors and return MetricsResults
+        assert isinstance(result, MetricsResults)
+        assert isinstance(result.halstead, list)
+        assert isinstance(result.raw_metrics, list)

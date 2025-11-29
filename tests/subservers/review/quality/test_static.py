@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from btx_fix_mcp.subservers.review.quality.analyzer_results import RuffDiagnostic, StaticResults
 from btx_fix_mcp.subservers.review.quality.static import StaticAnalyzer
 
 
@@ -32,13 +33,12 @@ class TestStaticAnalyzerBasic:
         """Test analyze with empty file list."""
         result = analyzer.analyze([])
 
-        assert "static" in result
-        assert "duplication" in result
-        assert result["static"]["ruff"] == ""
-        assert result["duplication"]["duplicates"] == []
+        assert isinstance(result, StaticResults)
+        assert result.static.ruff == ""
+        assert result.duplication.duplicates == []
 
-    def test_analyze_returns_all_keys(self, analyzer, tmp_path):
-        """Test analyze returns expected keys."""
+    def test_analyze_returns_static_results(self, analyzer, tmp_path):
+        """Test analyze returns StaticResults dataclass."""
         code = tmp_path / "simple.py"
         code.write_text("x = 1")
 
@@ -46,8 +46,8 @@ class TestStaticAnalyzerBasic:
             mock_run.return_value = MagicMock(stdout="", stderr="", returncode=0)
             result = analyzer.analyze([str(code)])
 
-        assert "static" in result
-        assert "duplication" in result
+        assert isinstance(result, StaticResults)
+        assert isinstance(result.static.ruff_json, list)
 
 
 class TestRunRuff:
@@ -73,7 +73,10 @@ class TestRunRuff:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._run_ruff([str(code)])
 
-        assert result["ruff_json"] == [{"code": "E501", "message": "Line too long"}]
+        assert len(result.ruff_json) == 1
+        assert isinstance(result.ruff_json[0], RuffDiagnostic)
+        assert result.ruff_json[0].code == "E501"
+        assert result.ruff_json[0].message == "Line too long"
 
     def test_run_ruff_empty_output(self, analyzer, tmp_path):
         """Test Ruff with empty output."""
@@ -86,8 +89,8 @@ class TestRunRuff:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._run_ruff([str(code)])
 
-        assert result["ruff"] == ""
-        assert result["ruff_json"] == []
+        assert result.ruff == ""
+        assert result.ruff_json == []
 
     def test_run_ruff_invalid_json(self, analyzer, tmp_path):
         """Test Ruff with invalid JSON output."""
@@ -100,8 +103,8 @@ class TestRunRuff:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._run_ruff([str(code)])
 
-        assert result["ruff"] == "not valid json"
-        assert result["ruff_json"] == []
+        assert result.ruff == "not valid json"
+        assert result.ruff_json == []
 
     def test_run_ruff_timeout(self, analyzer, tmp_path):
         """Test Ruff timeout handling."""
@@ -111,8 +114,8 @@ class TestRunRuff:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("ruff", 60)):
             result = analyzer._run_ruff([str(code)])
 
-        assert result["ruff"] == ""
-        assert result["ruff_json"] == []
+        assert result.ruff == ""
+        assert result.ruff_json == []
 
     def test_run_ruff_not_found(self, analyzer, tmp_path):
         """Test Ruff not found handling."""
@@ -122,8 +125,8 @@ class TestRunRuff:
         with patch("subprocess.run", side_effect=FileNotFoundError()):
             result = analyzer._run_ruff([str(code)])
 
-        assert result["ruff"] == ""
-        assert result["ruff_json"] == []
+        assert result.ruff == ""
+        assert result.ruff_json == []
 
     def test_run_ruff_other_error(self, analyzer, tmp_path):
         """Test Ruff other error handling."""
@@ -133,8 +136,8 @@ class TestRunRuff:
         with patch("subprocess.run", side_effect=Exception("unexpected error")):
             result = analyzer._run_ruff([str(code)])
 
-        assert result["ruff"] == ""
-        assert result["ruff_json"] == []
+        assert result.ruff == ""
+        assert result.ruff_json == []
 
 
 class TestDetectDuplication:
@@ -161,7 +164,7 @@ class TestDetectDuplication:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._detect_duplication([str(code)])
 
-        assert len(result["duplicates"]) >= 1
+        assert len(result.duplicates) >= 1
 
     def test_detect_duplication_no_duplicates(self, analyzer, tmp_path):
         """Test no duplicates found."""
@@ -175,7 +178,7 @@ class TestDetectDuplication:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._detect_duplication([str(code)])
 
-        assert result["duplicates"] == []
+        assert result.duplicates == []
 
     def test_detect_duplication_timeout(self, analyzer, tmp_path):
         """Test duplication detection timeout."""
@@ -185,7 +188,7 @@ class TestDetectDuplication:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("pylint", 120)):
             result = analyzer._detect_duplication([str(code)])
 
-        assert result["duplicates"] == []
+        assert result.duplicates == []
 
     def test_detect_duplication_not_found(self, analyzer, tmp_path):
         """Test pylint not found."""
@@ -195,7 +198,7 @@ class TestDetectDuplication:
         with patch("subprocess.run", side_effect=FileNotFoundError()):
             result = analyzer._detect_duplication([str(code)])
 
-        assert result["duplicates"] == []
+        assert result.duplicates == []
 
     def test_detect_duplication_other_error(self, analyzer, tmp_path):
         """Test other error handling."""
@@ -205,7 +208,7 @@ class TestDetectDuplication:
         with patch("subprocess.run", side_effect=Exception("unexpected error")):
             result = analyzer._detect_duplication([str(code)])
 
-        assert result["duplicates"] == []
+        assert result.duplicates == []
 
     def test_detect_duplicate_code_line(self, analyzer, tmp_path):
         """Test detecting lines with duplicate-code."""
@@ -219,5 +222,5 @@ class TestDetectDuplication:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._detect_duplication([str(code)])
 
-        assert len(result["duplicates"]) == 1
-        assert "duplicate-code" in result["duplicates"][0]
+        assert len(result.duplicates) == 1
+        assert "duplicate-code" in result.duplicates[0]

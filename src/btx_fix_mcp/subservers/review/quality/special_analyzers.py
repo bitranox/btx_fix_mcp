@@ -36,9 +36,10 @@ class JavaScriptAnalyzer:
             return results
 
         try:
-            eslint_timeout = get_timeout("tool_analysis", 60)
+            eslint_timeout = get_timeout("tool_analysis", 120)
             result = subprocess.run(
                 ["eslint", "--format=json"] + files,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=eslint_timeout,
@@ -100,9 +101,10 @@ class BeartypeAnalyzer:
 
         try:
             # Check if beartype is available
-            beartype_check_timeout = get_timeout("git_log", 10)
+            beartype_check_timeout = get_timeout("git_log", 20)
             beartype_check = subprocess.run(
                 ["python", "-c", "import beartype; print('available')"],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=beartype_check_timeout,
@@ -122,13 +124,12 @@ class BeartypeAnalyzer:
 
             # Build pytest command
             pytest_cmd = ["python", "-m", "pytest", test_path, "-x", "--tb=short", "-q"]
-            if pytest_config.get("fail_fast", False):
-                pass  # Already have -x
 
-            # Run actual test suite
-            pytest_beartype_timeout = get_timeout("git_log", 10)
+            # Run full test suite with beartype
+            pytest_beartype_timeout = get_timeout("beartype_check", 120)
             test_result = subprocess.run(
                 pytest_cmd,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=pytest_beartype_timeout,

@@ -3,22 +3,26 @@
 Extracts summary generation logic to reduce __init__ complexity.
 """
 
-from typing import Any
-
-from btx_fix_mcp.subservers.common.issues import QualityMetrics
+from btx_fix_mcp.subservers.common.issues import (
+    DocstringCoverageMetrics,
+    QualityMetrics,
+    TypeCoverageMetrics,
+)
 from btx_fix_mcp.subservers.common.mindsets import (
     AnalysisVerdict,
     ReviewerMindset,
     evaluate_results,
 )
 
-from .config import QualityConfig
+from .analyzer_results import QualityAnalysisResults, SuiteResults
+from .config import QualityConfig, QualityThresholds
+from .issues import Issue
 
 
 def generate_comprehensive_summary(
     metrics: QualityMetrics,
-    results: dict[str, Any],
-    all_issues: list[dict[str, Any]],
+    results: QualityAnalysisResults,
+    all_issues: list[Issue],
     mindset: ReviewerMindset,
     config: QualityConfig,
 ) -> str:
@@ -26,28 +30,24 @@ def generate_comprehensive_summary(
 
     Args:
         metrics: Quality metrics dataclass
-        results: Analysis results dictionary
-        all_issues: List of all issues found
+        results: Typed analysis results
+        all_issues: List of Issue dataclass instances
         mindset: Reviewer mindset for evaluation
         config: Quality configuration
 
     Returns:
         Markdown formatted summary string
     """
-    tests = results.get("tests", {})
-    type_cov = results.get("type_coverage", {})
-    doc_cov = results.get("docstring_coverage", {})
-    raw = results.get("raw_metrics", [])
     t = config.thresholds
 
-    # Calculate raw totals
-    total_loc = sum(r.get("loc", 0) for r in raw)
-    total_sloc = sum(r.get("sloc", 0) for r in raw)
-    total_comments = sum(r.get("comments", 0) for r in raw)
+    # Calculate raw totals from typed raw_metrics
+    total_loc = sum(r.loc for r in results.raw_metrics)
+    total_sloc = sum(r.sloc for r in results.raw_metrics)
+    total_comments = sum(r.comments for r in results.raw_metrics)
 
     # Evaluate results with mindset
-    critical_issues = [i for i in all_issues if i.get("severity") == "error"]
-    warning_issues = [i for i in all_issues if i.get("severity") == "warning"]
+    critical_issues = [i for i in all_issues if i.severity == "error"]
+    warning_issues = [i for i in all_issues if i.severity == "warning"]
     total_items = metrics.files_analyzed or 1
 
     verdict = evaluate_results(mindset, critical_issues, warning_issues, total_items)
@@ -56,10 +56,10 @@ def generate_comprehensive_summary(
     lines.extend(_build_overview_section(metrics))
     lines.extend(_build_code_metrics_section(total_loc, total_sloc, total_comments))
     lines.extend(_build_quality_issues_section(metrics, t))
-    lines.extend(_build_coverage_section(type_cov, doc_cov, t))
-    lines.extend(_build_test_section(tests, metrics))
+    lines.extend(_build_coverage_section(results.type_coverage, results.docstring_coverage, t))
+    lines.extend(_build_test_section(results.tests, metrics))
     lines.extend(_build_critical_issues_section(critical_issues))
-    lines.extend(_build_recommendations_section(metrics, type_cov, doc_cov, t))
+    lines.extend(_build_recommendations_section(metrics, results.type_coverage, results.docstring_coverage, t))
     lines.extend(_build_approval_section(verdict))
 
     return "\n".join(lines)
@@ -114,7 +114,7 @@ def _build_code_metrics_section(total_loc: int, total_sloc: int, total_comments:
     ]
 
 
-def _build_quality_issues_section(metrics: QualityMetrics, t: Any) -> list[str]:
+def _build_quality_issues_section(metrics: QualityMetrics, t: QualityThresholds) -> list[str]:
     """Build quality issues summary section."""
     return [
         "## Quality Issues Summary",
@@ -133,37 +133,34 @@ def _build_quality_issues_section(metrics: QualityMetrics, t: Any) -> list[str]:
 
 
 def _build_coverage_section(
-    type_cov: dict[str, Any],
-    doc_cov: dict[str, Any],
-    t: Any,
+    type_cov: TypeCoverageMetrics,
+    doc_cov: DocstringCoverageMetrics,
+    t: QualityThresholds,
 ) -> list[str]:
     """Build coverage metrics section."""
     return [
         "## Coverage Metrics",
         "",
-        f"- Type coverage: **{type_cov.get('coverage_percent', 0)}%** (minimum: {t.min_type_coverage}%)",
-        f"- Docstring coverage: **{doc_cov.get('coverage_percent', 0)}%** (minimum: {t.min_docstring_coverage}%)",
+        f"- Type coverage: **{type_cov.coverage_percent}%** (minimum: {t.min_type_coverage}%)",
+        f"- Docstring coverage: **{doc_cov.coverage_percent}%** (minimum: {t.min_docstring_coverage}%)",
         "",
     ]
 
 
-def _build_test_section(tests: dict[str, Any], metrics: QualityMetrics) -> list[str]:
+def _build_test_section(tests: SuiteResults, metrics: QualityMetrics) -> list[str]:
     """Build test suite analysis section."""
-    total_tests = tests.get("total_tests", 0)
-    total_assertions = tests.get("total_assertions", 0)
-    assertions_per_test = round(total_assertions / total_tests, 1) if total_tests > 0 else 0
-    categories = tests.get("categories", {})
+    assertions_per_test = round(tests.total_assertions / tests.total_tests, 1) if tests.total_tests > 0 else 0
 
     return [
         "## Test Suite Analysis",
         "",
-        f"- Total tests: **{total_tests}**",
-        f"- Total assertions: **{total_assertions}**",
+        f"- Total tests: **{tests.total_tests}**",
+        f"- Total assertions: **{tests.total_assertions}**",
         f"- Assertions per test: **{assertions_per_test}**",
-        f"- Unit tests: {categories.get('unit', 0)}",
-        f"- Integration tests: {categories.get('integration', 0)}",
-        f"- E2E tests: {categories.get('e2e', 0)}",
-        f"- Test issues: **{len(tests.get('issues', []))}**",
+        f"- Unit tests: {tests.categories.unit}",
+        f"- Integration tests: {tests.categories.integration}",
+        f"- E2E tests: {tests.categories.e2e}",
+        f"- Test issues: **{len(tests.issues)}**",
         "",
         "## Runtime Type Checking (Beartype)",
         "",
@@ -172,15 +169,15 @@ def _build_test_section(tests: dict[str, Any], metrics: QualityMetrics) -> list[
     ]
 
 
-def _build_critical_issues_section(critical_issues: list[dict[str, Any]]) -> list[str]:
+def _build_critical_issues_section(critical_issues: list[Issue]) -> list[str]:
     """Build critical issues section."""
     if not critical_issues:
         return []
 
     lines = ["## Critical Issues (Must Fix)", ""]
     for issue in critical_issues[:15]:
-        file_info = f"`{issue.get('file', 'unknown')}`" if issue.get("file") else ""
-        lines.append(f"- [HIGH] {file_info}: {issue['message']}")
+        file_info = f"`{issue.file}`" if issue.file else ""
+        lines.append(f"- [HIGH] {file_info}: {issue.message}")
     if len(critical_issues) > 15:
         lines.append(f"- ... and {len(critical_issues) - 15} more critical issues")
     lines.append("")
@@ -189,9 +186,9 @@ def _build_critical_issues_section(critical_issues: list[dict[str, Any]]) -> lis
 
 def _build_recommendations_section(
     metrics: QualityMetrics,
-    type_cov: dict[str, Any],
-    doc_cov: dict[str, Any],
-    t: Any,
+    type_cov: TypeCoverageMetrics,
+    doc_cov: DocstringCoverageMetrics,
+    t: QualityThresholds,
 ) -> list[str]:
     """Build refactoring recommendations section."""
     lines = ["## Refactoring Recommendations", ""]
@@ -204,8 +201,8 @@ def _build_recommendations_section(
         (metrics.duplicate_blocks > 0, f"**Extract Duplicated Code**: {metrics.duplicate_blocks} duplicate blocks found"),
         (metrics.god_objects > 0, f"**Refactor God Objects**: {metrics.god_objects} classes need decomposition"),
         (metrics.import_cycles > 0, f"**Break Import Cycles**: {metrics.import_cycles} cycles detected"),
-        (type_cov.get("coverage_percent", 100) < t.min_type_coverage, f"**Add Type Annotations**: Coverage is {type_cov.get('coverage_percent', 0)}%"),
-        (doc_cov.get("coverage_percent", 100) < t.min_docstring_coverage, f"**Add Docstrings**: Coverage is {doc_cov.get('coverage_percent', 0)}%"),
+        (type_cov.coverage_percent < t.min_type_coverage, f"**Add Type Annotations**: Coverage is {type_cov.coverage_percent}%"),
+        (doc_cov.coverage_percent < t.min_docstring_coverage, f"**Add Docstrings**: Coverage is {doc_cov.coverage_percent}%"),
         (metrics.dead_code_items > 0, f"**Remove Dead Code**: {metrics.dead_code_items} unused items found"),
         (metrics.high_churn_files > 0, f"**Review High Churn Files**: {metrics.high_churn_files} files with frequent changes"),
     ]

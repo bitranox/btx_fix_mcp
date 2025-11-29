@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from btx_fix_mcp.config import get_config, get_display_limit, get_subserver_config, get_timeout
+from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.chunked_writer import (
     cleanup_chunked_issues,
     write_chunked_issues,
@@ -20,10 +21,9 @@ from btx_fix_mcp.subservers.common.chunked_writer import (
 from btx_fix_mcp.subservers.common.issues import (
     BaseIssue,
     HotspotIssue,
-    PerformanceIssue,
     PerfMetrics,
+    PerformanceIssue,
 )
-from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.logging import (
     LogContext,
     get_mcp_logger,
@@ -275,7 +275,7 @@ class PerfSubServer(BaseSubServer):
     def _run_pytest_with_profiling(self) -> subprocess.CompletedProcess | None:
         """Run pytest with profiling flags and cProfile."""
         try:
-            pytest_profile_timeout = get_timeout("profile_tests", 300, start_dir=str(self.repo_path))
+            pytest_profile_timeout = get_timeout("profile_tests", 600, start_dir=str(self.repo_path))
 
             # Create profile output path
             prof_file = self.output_dir / "test_profile.prof"
@@ -297,6 +297,7 @@ class PerfSubServer(BaseSubServer):
                     "-q",
                     "--durations=10",
                 ],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=pytest_profile_timeout,
@@ -400,6 +401,7 @@ class PerfSubServer(BaseSubServer):
             file=file_path,
             line=line_num,
             message=f"Nested iteration depth {nesting_depth} detected - potential {complexity} complexity (threshold: {self.nested_loop_threshold})",
+            value=nesting_depth,
         )
 
     def _analyze_file_for_nested_loops(self, file_path: str, content: str, issues: list[PerformanceIssue]) -> None:
@@ -471,10 +473,11 @@ class PerfSubServer(BaseSubServer):
         artifacts = {}
         report_dir = self.output_dir.parent / "report"
 
-        pattern_issues = results.get("pattern_issues", [])
+        pattern_issues: list[PerformanceIssue] = results.get("pattern_issues", [])
         if pattern_issues:
             path = self.output_dir / "pattern_issues.json"
-            pattern_dicts = [i.to_dict() if hasattr(i, "to_dict") else i for i in pattern_issues]
+            # Convert dataclasses to dicts at serialization boundary
+            pattern_dicts = [issue.to_dict() for issue in pattern_issues]
             path.write_text(json.dumps(pattern_dicts, indent=2))
             artifacts["pattern_issues"] = path
 
@@ -489,11 +492,11 @@ class PerfSubServer(BaseSubServer):
             artifacts["test_timing"] = path
 
         if all_issues:
-            # Convert to dicts
-            issues_dicts = [i.to_dict() for i in all_issues]
+            # Get unique issue types before conversion (typed access)
+            issue_types = list({issue.type for issue in all_issues})
 
-            # Get unique issue types
-            issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
+            # Convert to dicts at serialization boundary
+            issues_dicts = [i.to_dict() for i in all_issues]
 
             # Cleanup old chunked files
             cleanup_chunked_issues(
@@ -542,7 +545,7 @@ class PerfSubServer(BaseSubServer):
         lines.append("")
         return lines
 
-    def _format_pattern_issues_section(self, pattern_issues: list) -> list[str]:
+    def _format_pattern_issues_section(self, pattern_issues: list[PerformanceIssue]) -> list[str]:
         """Format anti-pattern detections section."""
         if not pattern_issues:
             return []
@@ -553,10 +556,7 @@ class PerfSubServer(BaseSubServer):
 
         lines = [header, ""]
         for issue in pattern_issues[:limit]:
-            file_path = issue.file if hasattr(issue, "file") else issue.get("file", "")
-            line_num = issue.line if hasattr(issue, "line") else issue.get("line", 0)
-            message = issue.message if hasattr(issue, "message") else issue.get("message", "")
-            lines.append(f"- `{file_path}:{line_num}` - {message}")
+            lines.append(f"- `{issue.file}:{issue.line}` - {issue.message}")
 
         if limit is not None and len(pattern_issues) > limit:
             lines.append("")
@@ -612,8 +612,8 @@ class PerfSubServer(BaseSubServer):
         """Generate markdown summary with mindset evaluation."""
         metrics = self._compile_metrics(files, results, all_issues)
 
-        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
-        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        critical_issues = [i for i in all_issues if i.severity == "critical"]
+        warning_issues = [i for i in all_issues if i.severity == "warning"]
         verdict = evaluate_results(self.mindset, critical_issues, warning_issues, max(len(files), 1))
 
         lines = []

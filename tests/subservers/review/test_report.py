@@ -132,8 +132,7 @@ class TestReportSubServer:
         results = server._gather_results()
         metrics = server._compile_overall_metrics(results)
 
-        assert hasattr(metrics, "timestamp")
-        assert hasattr(metrics, "subservers_run")
+        assert metrics.timestamp is not None
         assert len(metrics.subservers_run) >= 3
 
     def test_determine_verdict_approved(self, review_output, tmp_path):

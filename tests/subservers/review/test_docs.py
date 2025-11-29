@@ -129,8 +129,8 @@ class DocumentedClass:
 
         result = server._check_project_docs()
 
-        assert result["readme"] is True
-        assert result["license"] is True
+        assert result.readme is True
+        assert result.license is True
 
     def test_check_project_docs_missing(self, tmp_path):
         """Test project docs check without README."""
@@ -145,8 +145,8 @@ class DocumentedClass:
 
         result = server._check_project_docs()
 
-        assert result["readme"] is False
-        assert len(result["issues"]) >= 1
+        assert result.readme is False
+        assert len(result.issues) >= 1
 
     def test_find_missing_docstrings(self, project_with_docs, tmp_path):
         """Test finding missing docstrings."""

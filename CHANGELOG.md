@@ -3,7 +3,51 @@
 All notable changes to this project will be documented in this file following
 the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [2.0.0] - 2025-11-29
+
+### Changed
+- Doubled all timeout values in `defaultconfig.toml` for reliability on slower systems
+- Quality JSON outputs now sorted for prioritization:
+  - `complexity.json`: descending by complexity (most complex first)
+  - `cognitive.json`: descending by complexity (most complex first)
+  - `maintainability.json`: ascending by MI (hardest to maintain first)
+  - `halstead.json`: descending by effort (most difficult first)
+  - `function_issues.json`: descending by value (worst first)
+
+### Fixed
+- RuffDiagnostic JSON serialization error - Pydantic models now properly converted via `model_dump()`
+- Beartype check timeout increased to 120s with dedicated `beartype_check` config setting
+- Deps scanner false positives - outdated packages now filtered to only project dependencies from `pyproject.toml`
+- Scope exclusions now work for nested paths (e.g., `.mypy_cache/` files)
+  - Added fallback directory-name matching when `Path.match()` glob patterns fail
+  - Updated patterns from `**/.dir/*` to `**/.dir/**/*` format for recursive matching
+
+### Added
+- New exclusion patterns for IDE/CI directories:
+  - `.claude/`, `.devcontainer/`, `.idea/`, `.vscode/`
+  - `.github/`, `.qlty/`
+  - `*.example`, `codecov.yml`, `.snyk`
+- New timeout settings: `git_diff`, `beartype_check`
+
+## [1.2.0] - 2025-11-28
+
+### Changed
+- Cache batch_screener now derives exclude patterns from `[review.scope].exclude_patterns` config instead of hardcoded list
+
+### Fixed
+- Nested iteration issues now sorted by nesting depth (descending) in JSON output - added `value` field to `PerformanceIssue`
+- Report verdict now clearly distinguishes failed vs skipped subservers with specific reasons for each
+- Removed unnecessary f-string prefix in `cli.py` (`config-path` command)
+
 ## [1.1.1] - 2025-11-28
+
+### Added
+- CLI `config-deploy` command: Deploy default configuration to app/host/user directories using lib_layered_config
+- CLI `config-show` command: Display current effective configuration (merged from all sources)
+- CLI `config-path` command: Show all configuration file locations and their status
+- New `config_deploy.py` module wrapping lib_layered_config's deploy_config API
+- Clear skip reasons in reports when subservers are not run (e.g., "Not in configured subservers", "Git not available")
+- Code churn analysis now reports detailed skip reasons (e.g., "Not a git repository", "Git executable not found")
 
 ### Changed
 - CLI QUICKSTART.md: Added quick reference table with all options and their default values
@@ -15,6 +59,10 @@ the [Keep a Changelog](https://keepachangelog.com/) format.
 - Removed unused `shutil` import from `source_patcher.py`
 - Removed emoji from scope.py git fallback notice (Windows `charmap` codec compatibility)
 - Fixed environment variable format documentation (BTX_FIX_MCP___SECTION__KEY, not BTX_FIX_MCP_KEY)
+- Added missing `venv/` to default exclude patterns (was only excluding `.venv/`)
+- Added common cache/build directories to exclude: `.tox/`, `.nox/`, `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`, `*.egg-info/`
+- Cache batch_screener now excludes virtual environments and cache directories when scanning for function calls
+- Synchronized fallback exclude patterns in `files.py` with `defaultconfig.toml`
 
 ## [1.1.0] - 2025-11-28
 

@@ -12,8 +12,8 @@ Uses temporary source modification instead of monkey-patching:
 - Source modifications persist across process boundary
 """
 
-# Import from parent level (cache_subserver.py is at review level)
-from btx_fix_mcp.subservers.review.cache_subserver import CacheSubServer
+# Note: CacheSubServer is at parent level (cache_subserver.py) to avoid circular imports
+# Import from btx_fix_mcp.subservers.review.cache_subserver directly
 from btx_fix_mcp.subservers.review.cache.cache_models import (
     BatchScreeningResult,
     CacheCandidate,
@@ -27,14 +27,13 @@ from btx_fix_mcp.subservers.review.cache.cache_models import (
 from btx_fix_mcp.subservers.review.cache.source_patcher import SourcePatcher
 
 __all__ = [
-    "CacheSubServer",
-    "PureFunctionCandidate",
-    "Hotspot",
-    "CacheCandidate",
     "BatchScreeningResult",
-    "IndividualValidationResult",
+    "CacheCandidate",
     "CacheRecommendation",
     "ExistingCacheCandidate",
     "ExistingCacheEvaluation",
+    "Hotspot",
+    "IndividualValidationResult",
+    "PureFunctionCandidate",
     "SourcePatcher",
 ]

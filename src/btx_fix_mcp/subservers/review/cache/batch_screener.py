@@ -14,7 +14,7 @@ import os
 from pathlib import Path
 from typing import Any
 
-from btx_fix_mcp.config import get_tool_config
+from btx_fix_mcp.config import get_subserver_config, get_tool_config
 from btx_fix_mcp.subservers.review.cache.cache_models import (
     BatchScreeningResult,
     CacheCandidate,
@@ -150,6 +150,54 @@ class BatchScreener:
 
         return ("KEEP", "Insufficient data to determine", None)
 
+    def _get_exclude_patterns(self) -> list[str]:
+        """Get exclude patterns from config.
+
+        Extracts directory names from glob patterns like '**/.venv/*' -> '.venv'.
+        """
+        scope_config = get_subserver_config("scope")
+        glob_patterns = scope_config.get("exclude_patterns", [])
+
+        # Extract directory names from glob patterns
+        # e.g., "**/.venv/*" -> ".venv", "**/node_modules/*" -> "node_modules"
+        excludes = []
+        for pattern in glob_patterns:
+            # Remove glob wildcards and extract path components
+            parts = pattern.replace("**", "").replace("*", "").strip("/").split("/")
+            for part in parts:
+                if (part and not part.startswith(".")) or (part.startswith(".") and len(part) > 1):
+                    excludes.append(part)
+
+        # Fallback if config is empty
+        if not excludes:
+            excludes = [
+                ".venv",
+                "venv",
+                ".env",
+                "env",
+                ".virtualenv",
+                "virtualenv",
+                "node_modules",
+                "__pycache__",
+                ".tox",
+                ".nox",
+                ".pytest_cache",
+                ".mypy_cache",
+                ".ruff_cache",
+                "dist",
+                "build",
+                ".git",
+                ".egg-info",
+            ]
+
+        return excludes
+
+    def _should_exclude_path(self, path: Path) -> bool:
+        """Check if path should be excluded from scanning."""
+        path_str = str(path)
+        exclude_patterns = self._get_exclude_patterns()
+        return any(excl in path_str for excl in exclude_patterns)
+
     def _count_function_calls(self, function_name: str, repo_path: Path) -> int:
         """Count how many times a function is called in production code.
 
@@ -165,7 +213,10 @@ class BatchScreener:
         call_count = 0
 
         for py_file in repo_path.rglob("*.py"):
+            # Skip test files and excluded directories
             if "test" in str(py_file).lower():
+                continue
+            if self._should_exclude_path(py_file):
                 continue
 
             try:

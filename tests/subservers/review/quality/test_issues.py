@@ -2,6 +2,24 @@
 
 import pytest
 
+from btx_fix_mcp.subservers.common.issues import DocstringCoverageMetrics, TypeCoverageMetrics
+from btx_fix_mcp.subservers.review.quality.analyzer_results import (
+    ArchitectureMetrics,
+    CognitiveComplexityItem,
+    CyclomaticComplexityItem,
+    DuplicationResults,
+    FunctionIssueItem,
+    GodObjectInfo,
+    HighCouplingInfo,
+    MaintainabilityItem,
+    QualityAnalysisResults,
+    RuffDiagnostic,
+    RuffLocation,
+    RuffResults,
+    RuntimeCheckInfo,
+    SuiteIssueItem,
+    SuiteResults,
+)
 from btx_fix_mcp.subservers.review.quality.config import QualityConfig
 from btx_fix_mcp.subservers.review.quality.issues import (
     Issue,
@@ -73,23 +91,23 @@ class TestAddComplexityIssues:
     def test_add_high_complexity_warning(self):
         """Test adding high complexity warning."""
         issues = []
-        results = {"complexity": [{"file": "test.py", "name": "func", "complexity": 15, "line": 10}]}
+        results = QualityAnalysisResults(complexity=[CyclomaticComplexityItem(file="test.py", name="func", type="function", complexity=15, rank="C", line=10)])
         _add_complexity_issues(issues, results, threshold=10, error_threshold=20)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "warning"
+        assert issues[0].severity == "warning"
 
     def test_add_high_complexity_error(self):
         """Test adding high complexity error for very high complexity."""
         issues = []
-        results = {"complexity": [{"file": "test.py", "name": "func", "complexity": 25, "line": 10}]}
+        results = QualityAnalysisResults(complexity=[CyclomaticComplexityItem(file="test.py", name="func", type="function", complexity=25, rank="E", line=10)])
         _add_complexity_issues(issues, results, threshold=10, error_threshold=20)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "error"
+        assert issues[0].severity == "error"
 
     def test_no_issue_below_threshold(self):
         """Test no issue when below threshold."""
         issues = []
-        results = {"complexity": [{"file": "test.py", "name": "func", "complexity": 5, "line": 10}]}
+        results = QualityAnalysisResults(complexity=[CyclomaticComplexityItem(file="test.py", name="func", type="function", complexity=5, rank="A", line=10)])
         _add_complexity_issues(issues, results, threshold=10, error_threshold=20)
         assert len(issues) == 0
 
@@ -97,10 +115,10 @@ class TestAddComplexityIssues:
         """Test that error threshold is configurable."""
         issues = []
         # Complexity of 12 with error_threshold of 10 should be error
-        results = {"complexity": [{"file": "test.py", "name": "func", "complexity": 12, "line": 10}]}
+        results = QualityAnalysisResults(complexity=[CyclomaticComplexityItem(file="test.py", name="func", type="function", complexity=12, rank="C", line=10)])
         _add_complexity_issues(issues, results, threshold=5, error_threshold=10)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "error"
+        assert issues[0].severity == "error"
 
 
 class TestAddMaintainabilityIssues:
@@ -109,23 +127,23 @@ class TestAddMaintainabilityIssues:
     def test_add_low_maintainability_warning(self):
         """Test adding low maintainability warning."""
         issues = []
-        results = {"maintainability": [{"file": "test.py", "mi": 15}]}
+        results = QualityAnalysisResults(maintainability=[MaintainabilityItem(file="test.py", mi=15.0, rank="B")])
         _add_maintainability_issues(issues, results, threshold=20, error_threshold=10)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "warning"
+        assert issues[0].severity == "warning"
 
     def test_add_low_maintainability_error(self):
         """Test adding low maintainability error for very low MI."""
         issues = []
-        results = {"maintainability": [{"file": "test.py", "mi": 5}]}
+        results = QualityAnalysisResults(maintainability=[MaintainabilityItem(file="test.py", mi=5.0, rank="C")])
         _add_maintainability_issues(issues, results, threshold=20, error_threshold=10)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "error"
+        assert issues[0].severity == "error"
 
     def test_no_issue_above_threshold(self):
         """Test no issue when above threshold."""
         issues = []
-        results = {"maintainability": [{"file": "test.py", "mi": 25}]}
+        results = QualityAnalysisResults(maintainability=[MaintainabilityItem(file="test.py", mi=25.0, rank="A")])
         _add_maintainability_issues(issues, results, threshold=20, error_threshold=10)
         assert len(issues) == 0
 
@@ -133,10 +151,10 @@ class TestAddMaintainabilityIssues:
         """Test that error threshold is configurable."""
         issues = []
         # MI of 15 with error_threshold of 20 should be error
-        results = {"maintainability": [{"file": "test.py", "mi": 15}]}
+        results = QualityAnalysisResults(maintainability=[MaintainabilityItem(file="test.py", mi=15.0, rank="B")])
         _add_maintainability_issues(issues, results, threshold=25, error_threshold=20)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "error"
+        assert issues[0].severity == "error"
 
 
 class TestAddFunctionIssues:
@@ -145,42 +163,42 @@ class TestAddFunctionIssues:
     def test_add_function_issue_warning(self):
         """Test adding function issue as warning."""
         issues = []
-        results = {
-            "function_issues": [
-                {
-                    "issue_type": "LONG_FUNCTION",
-                    "file": "test.py",
-                    "line": 10,
-                    "function": "test_func",
-                    "value": 60,
-                    "threshold": 50,
-                    "message": "Function too long",
-                }
+        results = QualityAnalysisResults(
+            function_issues=[
+                FunctionIssueItem(
+                    file="test.py",
+                    function="test_func",
+                    line=10,
+                    issue_type="LONG_FUNCTION",
+                    value=60,
+                    threshold=50,
+                    message="Function too long",
+                )
             ]
-        }
+        )
         _add_function_issues(issues, results)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "warning"
+        assert issues[0].severity == "warning"
 
     def test_add_function_issue_error(self):
         """Test adding function issue as error when severely over threshold."""
         issues = []
-        results = {
-            "function_issues": [
-                {
-                    "issue_type": "LONG_FUNCTION",
-                    "file": "test.py",
-                    "line": 10,
-                    "function": "test_func",
-                    "value": 150,  # > 50*2
-                    "threshold": 50,
-                    "message": "Function too long",
-                }
+        results = QualityAnalysisResults(
+            function_issues=[
+                FunctionIssueItem(
+                    file="test.py",
+                    function="test_func",
+                    line=10,
+                    issue_type="LONG_FUNCTION",
+                    value=150,  # > 50*2
+                    threshold=50,
+                    message="Function too long",
+                )
             ]
-        }
+        )
         _add_function_issues(issues, results)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "error"
+        assert issues[0].severity == "error"
 
 
 class TestAddCognitiveIssues:
@@ -189,33 +207,35 @@ class TestAddCognitiveIssues:
     def test_add_cognitive_issue(self):
         """Test adding cognitive complexity issue."""
         issues = []
-        results = {
-            "cognitive": [
-                {
-                    "file": "test.py",
-                    "line": 10,
-                    "function": "complex_func",
-                    "cognitive_complexity": 20,
-                    "exceeds_threshold": True,
-                }
+        results = QualityAnalysisResults(
+            cognitive=[
+                CognitiveComplexityItem(
+                    file="test.py",
+                    name="complex_func",
+                    line=10,
+                    complexity=20,
+                    exceeds_threshold=True,
+                )
             ]
-        }
+        )
         _add_cognitive_issues(issues, results, threshold=15)
         assert len(issues) == 1
-        assert "cognitive" in issues[0]["type"]
+        assert "cognitive" in issues[0].type
 
     def test_no_issue_if_not_exceeds(self):
         """Test no issue if exceeds_threshold is False."""
         issues = []
-        results = {
-            "cognitive": [
-                {
-                    "file": "test.py",
-                    "cognitive_complexity": 10,
-                    "exceeds_threshold": False,
-                }
+        results = QualityAnalysisResults(
+            cognitive=[
+                CognitiveComplexityItem(
+                    file="test.py",
+                    name="simple_func",
+                    line=5,
+                    complexity=10,
+                    exceeds_threshold=False,
+                )
             ]
-        }
+        )
         _add_cognitive_issues(issues, results, threshold=15)
         assert len(issues) == 0
 
@@ -226,21 +246,21 @@ class TestAddTestIssues:
     def test_add_test_issue(self):
         """Test adding test issue."""
         issues = []
-        results = {
-            "tests": {
-                "issues": [
-                    {
-                        "type": "NO_ASSERTIONS",
-                        "file": "test_example.py",
-                        "line": 10,
-                        "message": "Test has no assertions",
-                    }
+        results = QualityAnalysisResults(
+            tests=SuiteResults(
+                issues=[
+                    SuiteIssueItem(
+                        type="NO_ASSERTIONS",
+                        file="test_example.py",
+                        line=10,
+                        message="Test has no assertions",
+                    )
                 ]
-            }
-        }
+            )
+        )
         _add_test_issues(issues, results)
         assert len(issues) == 1
-        assert issues[0]["type"] == "no_assertions"
+        assert issues[0].type == "no_assertions"
 
 
 class TestAddArchitectureIssues:
@@ -249,40 +269,42 @@ class TestAddArchitectureIssues:
     def test_add_god_object(self):
         """Test adding god object issue."""
         issues = []
-        results = {
-            "architecture": {
-                "god_objects": [
-                    {
-                        "file": "test.py",
-                        "line": 1,
-                        "class": "GodClass",
-                        "methods": 50,
-                        "lines": 1000,
-                    }
+        results = QualityAnalysisResults(
+            architecture=ArchitectureMetrics(
+                god_objects=[
+                    GodObjectInfo(
+                        file="test.py",
+                        class_name="GodClass",
+                        line=1,
+                        methods=50,
+                        lines=1000,
+                        methods_threshold=20,
+                        lines_threshold=500,
+                    )
                 ]
-            }
-        }
+            )
+        )
         _add_architecture_issues(issues, results, coupling_threshold=10)
         assert len(issues) == 1
-        assert issues[0]["type"] == "god_object"
+        assert issues[0].type == "god_object"
 
     def test_add_high_coupling(self):
         """Test adding high coupling issue."""
         issues = []
-        results = {
-            "architecture": {
-                "highly_coupled": [
-                    {
-                        "file": "test.py",
-                        "import_count": 20,
-                        "threshold": 15,
-                    }
+        results = QualityAnalysisResults(
+            architecture=ArchitectureMetrics(
+                highly_coupled=[
+                    HighCouplingInfo(
+                        file="test.py",
+                        import_count=20,
+                        threshold=15,
+                    )
                 ]
-            }
-        }
+            )
+        )
         _add_architecture_issues(issues, results, coupling_threshold=15)
         assert len(issues) == 1
-        assert issues[0]["type"] == "high_coupling"
+        assert issues[0].type == "high_coupling"
 
 
 class TestAddRuntimeCheckIssues:
@@ -291,20 +313,20 @@ class TestAddRuntimeCheckIssues:
     def test_add_runtime_check(self):
         """Test adding runtime check issue."""
         issues = []
-        results = {
-            "runtime_checks": [
-                {
-                    "file": "test.py",
-                    "line": 10,
-                    "function": "check_func",
-                    "check_count": 5,
-                    "message": "Multiple runtime checks in function",
-                }
+        results = QualityAnalysisResults(
+            runtime_checks=[
+                RuntimeCheckInfo(
+                    file="test.py",
+                    function="check_func",
+                    line=10,
+                    check_count=5,
+                    message="Multiple runtime checks in function",
+                )
             ]
-        }
+        )
         _add_runtime_check_issues(issues, results)
         assert len(issues) == 1
-        assert issues[0]["severity"] == "info"
+        assert issues[0].severity == "info"
 
 
 class TestAddRuffIssues:
@@ -313,40 +335,40 @@ class TestAddRuffIssues:
     def test_add_ruff_issue(self, tmp_path):
         """Test adding Ruff issue."""
         issues = []
-        results = {
-            "static": {
-                "ruff_json": [
-                    {
-                        "filename": str(tmp_path / "test.py"),
-                        "code": "E501",
-                        "message": "Line too long",
-                        "location": {"row": 10},
-                    }
+        results = QualityAnalysisResults(
+            static=RuffResults(
+                ruff_json=[
+                    RuffDiagnostic(
+                        filename=str(tmp_path / "test.py"),
+                        code="E501",
+                        message="Line too long",
+                        location=RuffLocation(row=10),
+                    )
                 ]
-            }
-        }
+            )
+        )
         _add_ruff_issues(issues, results, tmp_path)
         assert len(issues) == 1
-        assert "ruff" in issues[0]["type"]
+        assert "ruff" in issues[0].type
 
     def test_add_ruff_issue_relative_path_error(self, tmp_path):
         """Test handling of non-relative path."""
         issues = []
-        results = {
-            "static": {
-                "ruff_json": [
-                    {
-                        "filename": "/other/path/test.py",
-                        "code": "E501",
-                        "message": "Line too long",
-                        "location": {"row": 10},
-                    }
+        results = QualityAnalysisResults(
+            static=RuffResults(
+                ruff_json=[
+                    RuffDiagnostic(
+                        filename="/other/path/test.py",
+                        code="E501",
+                        message="Line too long",
+                        location=RuffLocation(row=10),
+                    )
                 ]
-            }
-        }
+            )
+        )
         _add_ruff_issues(issues, results, tmp_path)
         assert len(issues) == 1
-        assert issues[0]["file"] == "/other/path/test.py"
+        assert issues[0].file == "/other/path/test.py"
 
 
 class TestAddDuplicationIssues:
@@ -355,10 +377,10 @@ class TestAddDuplicationIssues:
     def test_add_duplication_issue(self):
         """Test adding duplication issue."""
         issues = []
-        results = {"duplication": {"duplicates": ["Similar lines in file1.py and file2.py"]}}
+        results = QualityAnalysisResults(duplication=DuplicationResults(duplicates=["Similar lines in file1.py and file2.py"]))
         _add_duplication_issues(issues, results)
         assert len(issues) == 1
-        assert issues[0]["type"] == "code_duplication"
+        assert issues[0].type == "code_duplication"
 
 
 class TestAddCoverageIssues:
@@ -367,26 +389,32 @@ class TestAddCoverageIssues:
     def test_add_low_type_coverage(self):
         """Test adding low type coverage issue."""
         issues = []
-        results = {"type_coverage": {"coverage_percent": 50}}
+        results = QualityAnalysisResults(
+            type_coverage=TypeCoverageMetrics(coverage_percent=50),
+            docstring_coverage=DocstringCoverageMetrics(coverage_percent=100),
+        )
         _add_coverage_issues(issues, results, min_type_coverage=80, min_docstring_coverage=80)
         assert len(issues) == 1
-        assert issues[0]["type"] == "low_type_coverage"
+        assert issues[0].type == "low_type_coverage"
 
     def test_add_low_docstring_coverage(self):
         """Test adding low docstring coverage issue."""
         issues = []
-        results = {"docstring_coverage": {"coverage_percent": 60}}
+        results = QualityAnalysisResults(
+            type_coverage=TypeCoverageMetrics(coverage_percent=100),
+            docstring_coverage=DocstringCoverageMetrics(coverage_percent=60),
+        )
         _add_coverage_issues(issues, results, min_type_coverage=50, min_docstring_coverage=80)
         assert len(issues) == 1
-        assert issues[0]["type"] == "low_docstring_coverage"
+        assert issues[0].type == "low_docstring_coverage"
 
     def test_no_coverage_issues_above_threshold(self):
         """Test no issues when coverage is above threshold."""
         issues = []
-        results = {
-            "type_coverage": {"coverage_percent": 90},
-            "docstring_coverage": {"coverage_percent": 85},
-        }
+        results = QualityAnalysisResults(
+            type_coverage=TypeCoverageMetrics(coverage_percent=90),
+            docstring_coverage=DocstringCoverageMetrics(coverage_percent=85),
+        )
         _add_coverage_issues(issues, results, min_type_coverage=80, min_docstring_coverage=80)
         assert len(issues) == 0
 
@@ -400,23 +428,31 @@ class TestCompileAllIssues:
         return QualityConfig()
 
     def test_compile_empty_results(self, tmp_path, config):
-        """Test compiling issues from empty results."""
-        issues = compile_all_issues({}, config, tmp_path)
+        """Test compiling issues from empty results with passing coverage."""
+        # Provide coverage values above thresholds to avoid coverage issues
+        results = QualityAnalysisResults(
+            type_coverage=TypeCoverageMetrics(coverage_percent=100),
+            docstring_coverage=DocstringCoverageMetrics(coverage_percent=100),
+        )
+        issues = compile_all_issues(results, config, tmp_path)
         assert issues == []
 
     def test_compile_issues_mixed(self, tmp_path, config):
         """Test compiling multiple types of issues."""
-        results = {
-            "maintainability": [{"file": "test.py", "mi": 5}],
-            "tests": {
-                "issues": [
-                    {
-                        "type": "NO_ASSERTIONS",
-                        "file": "test_example.py",
-                        "message": "Test has no assertions",
-                    }
+        results = QualityAnalysisResults(
+            maintainability=[MaintainabilityItem(file="test.py", mi=5.0, rank="C")],
+            tests=SuiteResults(
+                issues=[
+                    SuiteIssueItem(
+                        type="NO_ASSERTIONS",
+                        file="test_example.py",
+                        line=0,
+                        message="Test has no assertions",
+                    )
                 ]
-            },
-        }
+            ),
+            type_coverage=TypeCoverageMetrics(coverage_percent=100),
+            docstring_coverage=DocstringCoverageMetrics(coverage_percent=100),
+        )
         issues = compile_all_issues(results, config, tmp_path)
         assert len(issues) >= 2

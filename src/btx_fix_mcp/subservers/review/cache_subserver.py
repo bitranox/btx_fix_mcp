@@ -18,6 +18,11 @@ from btx_fix_mcp.subservers.review.cache.batch_screener import BatchScreener
 from btx_fix_mcp.subservers.review.cache.hotspot_analyzer import HotspotAnalyzer
 from btx_fix_mcp.subservers.review.cache.individual_validator import IndividualValidator
 from btx_fix_mcp.subservers.review.cache.pure_function_detector import PureFunctionDetector
+from btx_fix_mcp.subservers.review.cache.summary_generator import (
+    SummaryConfig,
+    generate_issues,
+    generate_summary,
+)
 
 
 class CacheSubServer(BaseSubServer):
@@ -115,8 +120,7 @@ class CacheSubServer(BaseSubServer):
         """Initialize logger based on mode."""
         if mcp_mode:
             return get_mcp_logger(f"btx_fix_mcp.{name}")
-        else:
-            return setup_logger(name, log_file=None, level=20)
+        return setup_logger(name, log_file=None, level=20)
 
     def _check_profile_freshness(self, prof_file: Path) -> tuple[bool, float, str]:
         """Check if profiling data is fresh enough to use.
@@ -578,244 +582,31 @@ class CacheSubServer(BaseSubServer):
         existing_evals,
         profile_warnings: list[str] | None = None,
     ) -> str:
-        """Generate markdown summary."""
-        profile_warnings = profile_warnings or []
-        recommendations = [r for r in validation if r.recommendation == "APPLY"]
+        """Generate markdown summary.
 
-        # Check if we used production data or static analysis
-        used_production_data = any(e.hits > 0 or e.misses > 0 for e in existing_evals)
-
-        lines = [
-            "# Cache Analysis Report",
-            "",
-        ]
-
-        # Add profile warnings at top if present
-        if profile_warnings:
-            lines.append("## [WARN] Profile Data Warnings")
-            lines.append("")
-            for warning in profile_warnings:
-                lines.append(f"> {warning}")
-                lines.append(">")
-            lines.append("")
-
-        lines.extend(
-            [
-                "## Analysis Method",
-                "",
-            ]
+        Delegates to summary_generator module for cleaner separation.
+        """
+        config = SummaryConfig(
+            cache_size=self.cache_size,
+            hit_rate_threshold=self.hit_rate_threshold,
+            speedup_threshold=self.speedup_threshold,
         )
-
-        if used_production_data:
-            lines.extend(
-                [
-                    "[PASS] **Using Production Cache Data**",
-                    "",
-                    "Recommendations based on real cache statistics from your application.",
-                    "",
-                ]
-            )
-        else:
-            lines.extend(
-                [
-                    "[WARN]  **Using Static Code Analysis**",
-                    "",
-                    "No production profiling data available. Recommendations based on static code analysis.",
-                    "",
-                    "### [TIP] Get More Accurate Results with Profiling Data",
-                    "",
-                    "Profile your application with a single command:",
-                    "",
-                    "```bash",
-                    "# Profile any command",
-                    "python -m btx_fix_mcp review profile -- python my_app.py",
-                    "python -m btx_fix_mcp review profile -- pytest tests/",
-                    "python -m btx_fix_mcp review profile -- python -m my_module",
-                    "",
-                    "# Then analyze caches",
-                    "python -m btx_fix_mcp review cache",
-                    "```",
-                    "",
-                    "[REF] **Full examples:** See btx_fix_mcp's `docs/HOW_TO_PROFILE.md`",
-                    "",
-                ]
-            )
-
-        lines.extend(
-            [
-                "## Overview",
-                "",
-                f"- Pure functions identified: {len([c for c in pure if c.is_pure])}",
-                f"- Cache candidates (pure + hot): {len(candidates)}",
-                f"- Batch screening passed: {len([r for r in screening if r.passed_screening])}/{len(screening) if screening else 0}",
-                f"- Individual validation: {len(validation)} tested",
-                f"- **New cache recommendations: {len(recommendations)}**",
-                f"- **Existing caches evaluated: {len(existing_evals)}**",
-                "",
-            ]
+        return generate_summary(
+            pure=pure,
+            candidates=candidates,
+            screening=screening,
+            validation=validation,
+            existing_evals=existing_evals,
+            config=config,
+            profile_warnings=profile_warnings,
         )
-
-        # Existing cache evaluations
-        if existing_evals:
-            keep_caches = [e for e in existing_evals if e.recommendation == "KEEP"]
-            remove_caches = [e for e in existing_evals if e.recommendation == "REMOVE"]
-            adjust_caches = [e for e in existing_evals if e.recommendation == "ADJUST_SIZE"]
-
-            lines.extend(
-                [
-                    "## Existing Cache Evaluation",
-                    "",
-                    f"- **Keep:** {len(keep_caches)} caches performing well",
-                    f"- **Remove:** {len(remove_caches)} caches with low hit rates",
-                    f"- **Adjust:** {len(adjust_caches)} caches with suboptimal maxsize",
-                    "",
-                ]
-            )
-
-            if remove_caches:
-                lines.extend(["### Remove (Low Hit Rate)", ""])
-                for eval_result in remove_caches:
-                    c = eval_result.candidate
-                    lines.extend(
-                        [
-                            f"#### `{c.function_name}` ({c.file_path.name}:{c.line_number})",
-                            f"- **Current:** `@lru_cache(maxsize={c.current_maxsize if c.current_maxsize >= 0 else 'unbounded'})`",
-                            f"- **Hit rate:** {eval_result.hit_rate:.1f}%",
-                            f"- **Recommendation:** {eval_result.reason}",
-                            "",
-                        ]
-                    )
-
-            if adjust_caches:
-                lines.extend(["### Adjust Size", ""])
-                for eval_result in adjust_caches:
-                    c = eval_result.candidate
-                    lines.extend(
-                        [
-                            f"#### `{c.function_name}` ({c.file_path.name}:{c.line_number})",
-                            f"- **Current:** `@lru_cache(maxsize={c.current_maxsize if c.current_maxsize >= 0 else 'unbounded'})`",
-                            f"- **Suggested:** `@lru_cache(maxsize={eval_result.suggested_maxsize})`",
-                            f"- **Hit rate:** {eval_result.hit_rate:.1f}%",
-                            f"- **Reason:** {eval_result.reason}",
-                            "",
-                        ]
-                    )
-
-            if keep_caches:
-                lines.extend(["### Keep (Performing Well)", ""])
-                for eval_result in keep_caches:
-                    c = eval_result.candidate
-                    lines.extend(
-                        [
-                            f"- `{c.function_name}` ({c.file_path.name}:{c.line_number}): {eval_result.hit_rate:.1f}% hit rate",
-                        ]
-                    )
-                lines.append("")
-
-        # New cache recommendations
-        if recommendations:
-            lines.extend(
-                [
-                    "## Recommended New Caching",
-                    "",
-                ]
-            )
-
-            for result in recommendations:
-                c = result.candidate
-                lines.extend(
-                    [
-                        f"### `{c.function_name}` ({c.file_path.name}:{c.line_number})",
-                        f"- **Module:** `{c.module_path}`",
-                        f"- **Expected speedup:** {result.speedup_percent:.1f}%",
-                        f"- **Cache hit rate:** {result.hit_rate:.1f}%",
-                        f"- **Decorator:** `@lru_cache(maxsize={self.cache_size})`",
-                        f"- **Evidence:** {result.hits} hits, {result.misses} misses in test suite",
-                        "",
-                    ]
-                )
-        elif not existing_evals:
-            lines.extend(
-                [
-                    "## No Recommendations",
-                    "",
-                    "No functions met both criteria:",
-                    f"- Cache hit rate >= {self.hit_rate_threshold}%",
-                    f"- Performance speedup >= {self.speedup_threshold}%",
-                    "",
-                ]
-            )
-
-        return "\n".join(lines)
 
     def _generate_issues(self, validation, existing_evals) -> list[dict]:
         """Convert cache analysis results to issues for the report.
 
-        Args:
-            validation: Individual validation results
-            existing_evals: Existing cache evaluations
-
-        Returns:
-            List of issue dictionaries
+        Delegates to summary_generator module for cleaner separation.
         """
-        issues = []
-
-        # Generate issues for new cache recommendations
-        recommendations = [r for r in validation if r.recommendation == "APPLY"]
-        for result in recommendations:
-            c = result.candidate
-            issues.append(
-                {
-                    "type": "cache_opportunity",
-                    "severity": "info",
-                    "message": f"Cache opportunity: {c.function_name} - {result.speedup_percent:.1f}% speedup, {result.hit_rate:.1f}% hit rate",
-                    "file": str(c.file_path),
-                    "line": c.line_number,
-                    "function": c.function_name,
-                    "speedup_percent": round(result.speedup_percent, 2),
-                    "hit_rate": round(result.hit_rate, 2),
-                    "recommended_decorator": f"@lru_cache(maxsize={self.cache_size})",
-                }
-            )
-
-        # Generate issues for existing caches that should be removed
-        remove_evals = [e for e in existing_evals if e.recommendation == "REMOVE"]
-        for eval_result in remove_evals:
-            c = eval_result.candidate
-            issues.append(
-                {
-                    "type": "ineffective_cache",
-                    "severity": "warning",
-                    "message": f"Ineffective cache: {c.function_name} - {eval_result.hit_rate:.1f}% hit rate (remove @lru_cache)",
-                    "file": str(c.file_path),
-                    "line": c.line_number,
-                    "function": c.function_name,
-                    "hit_rate": round(eval_result.hit_rate, 2),
-                    "reason": eval_result.reason,
-                }
-            )
-
-        # Generate issues for existing caches that need size adjustment
-        adjust_evals = [e for e in existing_evals if e.recommendation == "ADJUST_SIZE"]
-        for eval_result in adjust_evals:
-            c = eval_result.candidate
-            current_size = c.current_maxsize if c.current_maxsize >= 0 else "unbounded"
-            issues.append(
-                {
-                    "type": "cache_size_adjustment",
-                    "severity": "info",
-                    "message": f"Cache size adjustment: {c.function_name} - {'reduce' if eval_result.suggested_maxsize < c.current_maxsize else 'increase'} maxsize from {current_size} to {eval_result.suggested_maxsize}",
-                    "file": str(c.file_path),
-                    "line": c.line_number,
-                    "function": c.function_name,
-                    "current_maxsize": current_size,
-                    "suggested_maxsize": eval_result.suggested_maxsize,
-                    "hit_rate": round(eval_result.hit_rate, 2),
-                    "reason": eval_result.reason,
-                }
-            )
-
-        return issues
+        return generate_issues(validation, existing_evals, self.cache_size)
 
     def _save_artifacts(self, pure, candidates, screening, validation, existing_evals) -> dict:
         """Save all artifacts to output directory."""

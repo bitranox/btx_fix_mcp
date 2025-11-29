@@ -8,7 +8,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-
 SEVERITY_ORDER = {"critical": 0, "error": 1, "warning": 2, "info": 3}
 CHUNK_SIZE = 50
 

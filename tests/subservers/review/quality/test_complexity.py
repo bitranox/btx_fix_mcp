@@ -4,6 +4,7 @@ import logging
 
 import pytest
 
+from btx_fix_mcp.subservers.review.quality.analyzer_results import ComplexityResults
 from btx_fix_mcp.subservers.review.quality.complexity import ComplexityAnalyzer
 
 
@@ -29,12 +30,10 @@ class TestComplexityAnalyzerBasic:
         """Test analyze with empty file list."""
         result = analyzer.analyze([])
 
-        assert "complexity" in result
-        assert "cognitive" in result
-        assert "maintainability" in result
-        assert result["complexity"] == []
-        assert result["cognitive"] == []
-        assert result["maintainability"] == []
+        assert isinstance(result, ComplexityResults)
+        assert result.complexity == []
+        assert result.cognitive == []
+        assert result.maintainability == []
 
     def test_analyze_simple_file(self, analyzer, tmp_path):
         """Test analyze with simple file."""
@@ -43,9 +42,9 @@ class TestComplexityAnalyzerBasic:
 
         result = analyzer.analyze([str(code)])
 
-        assert "complexity" in result
-        assert "cognitive" in result
-        assert "maintainability" in result
+        assert isinstance(result, ComplexityResults)
+        assert isinstance(result.complexity, list)
+        assert isinstance(result.maintainability, list)
 
 
 class TestCyclomaticComplexity:
@@ -191,9 +190,9 @@ class TestErrorHandling:
         # Should not raise, should handle gracefully
         result = analyzer.analyze([str(code)])
 
-        assert "complexity" in result
-        assert "cognitive" in result
-        assert "maintainability" in result
+        assert isinstance(result, ComplexityResults)
+        assert isinstance(result.complexity, list)
+        assert isinstance(result.maintainability, list)
 
     def test_binary_file_handling(self, analyzer, tmp_path):
         """Test handling of binary files."""
@@ -203,4 +202,4 @@ class TestErrorHandling:
         # Should not raise, should handle gracefully
         result = analyzer.analyze([str(binary)])
 
-        assert "complexity" in result
+        assert isinstance(result, ComplexityResults)

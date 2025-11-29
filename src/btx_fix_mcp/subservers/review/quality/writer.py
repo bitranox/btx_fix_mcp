@@ -9,6 +9,9 @@ from btx_fix_mcp.subservers.common.chunked_writer import (
     write_chunked_issues,
 )
 
+from .analyzer_results import QualityAnalysisResults
+from .issues import Issue
+
 
 class ResultsWriter:
     """Writes analysis results to files."""
@@ -23,17 +26,17 @@ class ResultsWriter:
         self.output_dir = output_dir
         self.report_dir = report_dir or (output_dir.parent / "report")
 
-    def save_all_results(self, results: dict[str, Any], all_issues: list[dict]) -> dict[str, Path]:
+    def save_all_results(self, results: QualityAnalysisResults, all_issues: list[Issue]) -> dict[str, Path]:
         """Save all analysis results to files.
 
         Args:
-            results: Raw analyzer results
-            all_issues: Compiled issues list
+            results: Typed analyzer results
+            all_issues: List of Issue dataclass instances
 
         Returns:
             Dictionary mapping artifact names to file paths
         """
-        artifacts = {}
+        artifacts: dict[str, Path] = {}
 
         self._save_list_results(results, artifacts)
         self._save_text_results(results, artifacts)
@@ -42,114 +45,124 @@ class ResultsWriter:
 
         return artifacts
 
-    def _save_list_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
+    def _save_list_results(self, results: QualityAnalysisResults, artifacts: dict[str, Path]) -> None:
         """Save list-based results (complexity, maintainability, etc.).
 
         Args:
-            results: Analyzer results
+            results: Typed analyzer results
             artifacts: Artifacts dictionary to update
         """
-        list_keys = [
-            "complexity",
-            "maintainability",
-            "function_issues",
-            "halstead",
-            "raw_metrics",
-            "cognitive",
+        list_mappings = [
+            ("complexity", results.complexity),
+            ("maintainability", results.maintainability),
+            ("function_issues", results.function_issues),
+            ("halstead", results.halstead),
+            ("raw_metrics", results.raw_metrics),
+            ("cognitive", results.cognitive),
         ]
 
-        for key in list_keys:
-            if key in results and results[key]:
-                path = self._save_json(f"{key}.json", results[key])
+        for key, data_list in list_mappings:
+            if data_list:
+                # Sort by relevant metric for each result type
+                if key in ("complexity", "cognitive"):
+                    data_list = sorted(data_list, key=lambda x: x.complexity, reverse=True)
+                elif key == "function_issues":
+                    data_list = sorted(data_list, key=lambda x: x.value, reverse=True)
+                elif key == "maintainability":
+                    # Lower MI = harder to maintain, so sort ascending (worst first)
+                    data_list = sorted(data_list, key=lambda x: x.mi)
+                elif key == "halstead":
+                    # Higher effort = more difficult, so sort descending (hardest first)
+                    data_list = sorted(data_list, key=lambda x: x.effort, reverse=True)
+                # Convert dataclass items to dicts for JSON serialization
+                serialized = [item.to_dict() for item in data_list]
+                path = self._save_json(f"{key}.json", serialized)
                 artifacts[key] = path
 
-    def _save_text_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
+    def _save_text_results(self, results: QualityAnalysisResults, artifacts: dict[str, Path]) -> None:
         """Save text-based results (duplication analysis).
 
         Args:
-            results: Analyzer results
+            results: Typed analyzer results
             artifacts: Artifacts dictionary to update
         """
-        if results.get("duplication", {}).get("raw_output"):
-            path = self._save_text("duplication_analysis.txt", results["duplication"]["raw_output"])
+        if results.duplication.raw_output:
+            path = self._save_text("duplication_analysis.txt", results.duplication.raw_output)
             artifacts["duplication"] = path
 
-    def _save_if_exists(self, results: dict[str, Any], key: str, filename: str, artifact_key: str, artifacts: dict[str, Path]) -> None:
-        """Save result if key exists in results."""
-        if results.get(key):
-            path = self._save_json(filename, results[key])
-            artifacts[artifact_key] = path
-
-    def _save_nested_if_exists(
-        self,
-        results: dict[str, Any],
-        parent_key: str,
-        child_key: str,
-        filename: str,
-        artifact_key: str,
-        artifacts: dict[str, Path],
-    ) -> None:
-        """Save nested result if parent and child keys exist."""
-        if results.get(parent_key, {}).get(child_key):
-            path = self._save_json(filename, results[parent_key][child_key])
-            artifacts[artifact_key] = path
-
-    def _save_dict_results(self, results: dict[str, Any], artifacts: dict[str, Path]) -> None:
+    def _save_dict_results(self, results: QualityAnalysisResults, artifacts: dict[str, Path]) -> None:
         """Save dictionary-based results from various analyzers.
 
         Args:
-            results: Analyzer results
+            results: Typed analyzer results
             artifacts: Artifacts dictionary to update
         """
         # Ruff static analysis
-        self._save_nested_if_exists(results, "static", "ruff_json", "ruff_report.json", "ruff", artifacts)
+        if results.static.ruff_json:
+            # Convert Pydantic models to dicts for JSON serialization
+            ruff_dicts = [d.model_dump() for d in results.static.ruff_json]
+            path = self._save_json("ruff_report.json", ruff_dicts)
+            artifacts["ruff"] = path
 
         # Test analysis
-        self._save_if_exists(results, "tests", "test_analysis.json", "test_analysis", artifacts)
+        if results.tests.test_files or results.tests.total_tests > 0:
+            path = self._save_json("test_analysis.json", results.tests.to_dict())
+            artifacts["test_analysis"] = path
 
         # Architecture analysis
-        if results.get("architecture"):
-            arch_data = {
-                "god_objects": results["architecture"].get("god_objects", []),
-                "highly_coupled": results["architecture"].get("highly_coupled", []),
-                "module_structure": dict(results["architecture"].get("module_structure", {})),
-            }
-            path = self._save_json("architecture_analysis.json", arch_data)
+        if results.architecture.god_objects or results.architecture.highly_coupled:
+            path = self._save_json("architecture_analysis.json", results.architecture.to_dict())
             artifacts["architecture"] = path
 
-        # Type coverage
-        self._save_if_exists(results, "type_coverage", "type_coverage.json", "type_coverage", artifacts)
+        # Type coverage - check for non-zero typed functions
+        if results.type_coverage.typed_functions > 0 or results.type_coverage.untyped_functions > 0:
+            path = self._save_json("type_coverage.json", results.type_coverage.model_dump())
+            artifacts["type_coverage"] = path
 
         # Dead code detection
-        self._save_if_exists(results, "dead_code", "dead_code.json", "dead_code", artifacts)
+        if results.dead_code.dead_code:
+            path = self._save_json("dead_code.json", results.dead_code.to_dict())
+            artifacts["dead_code"] = path
 
         # Import cycles
-        self._save_if_exists(results, "import_cycles", "import_cycles.json", "import_cycles", artifacts)
+        if results.import_cycles.cycles:
+            path = self._save_json("import_cycles.json", results.import_cycles.to_dict())
+            artifacts["import_cycles"] = path
 
-        # Docstring coverage
-        self._save_if_exists(results, "docstring_coverage", "docstring_coverage.json", "docstring_coverage", artifacts)
+        # Docstring coverage - check for non-zero coverage
+        if results.docstring_coverage.coverage_percent > 0 or results.docstring_coverage.missing:
+            path = self._save_json("docstring_coverage.json", results.docstring_coverage.model_dump())
+            artifacts["docstring_coverage"] = path
 
         # Code churn
-        self._save_if_exists(results, "code_churn", "code_churn.json", "code_churn", artifacts)
+        if results.code_churn.files or results.code_churn.high_churn_files:
+            path = self._save_json("code_churn.json", results.code_churn.to_dict())
+            artifacts["code_churn"] = path
 
         # JavaScript/TypeScript analysis
-        self._save_nested_if_exists(results, "js_analysis", "issues", "eslint_report.json", "eslint", artifacts)
+        if results.js_analysis.get("issues"):
+            path = self._save_json("eslint_report.json", results.js_analysis["issues"])
+            artifacts["eslint"] = path
 
         # Beartype runtime checking
-        self._save_if_exists(results, "beartype", "beartype_check.json", "beartype", artifacts)
+        if results.beartype:
+            path = self._save_json("beartype_check.json", results.beartype)
+            artifacts["beartype"] = path
 
-    def _save_issues(self, all_issues: list[dict], artifacts: dict[str, Path]) -> None:
+    def _save_issues(self, all_issues: list[Issue], artifacts: dict[str, Path]) -> None:
         """Save compiled issues list in chunked format.
 
+        Converts Issue dataclasses to dicts at serialization boundary.
+
         Args:
-            all_issues: List of all issues
+            all_issues: List of Issue dataclass instances
             artifacts: Artifacts dictionary to update
         """
         if not all_issues:
             return
 
-        # Get unique issue types from this sub-server's issues
-        issue_types = list({issue.get("type", "unknown") for issue in all_issues})
+        # Get unique issue types before conversion (typed access)
+        issue_types = list({issue.type for issue in all_issues})
 
         # Cleanup old chunked files for these issue types
         cleanup_chunked_issues(
@@ -158,9 +171,12 @@ class ResultsWriter:
             prefix="issues",
         )
 
+        # Convert dataclasses to dicts at serialization boundary
+        issues_dicts = [issue.to_dict() for issue in all_issues]
+
         # Write chunked issues
         written_files = write_chunked_issues(
-            issues=all_issues,
+            issues=issues_dicts,
             output_dir=self.report_dir,
             prefix="issues",
         )

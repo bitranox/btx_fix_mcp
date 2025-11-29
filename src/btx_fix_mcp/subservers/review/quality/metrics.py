@@ -11,30 +11,37 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-from btx_fix_mcp.tools_venv import get_tool_path
 from btx_fix_mcp.config import get_timeout
+from btx_fix_mcp.tools_venv import get_tool_path
 
+from .analyzer_results import (
+    CodeChurnResults,
+    FileChurnInfo,
+    HalsteadItem,
+    MetricsResults,
+    RawMetricsItem,
+)
 from .base import BaseAnalyzer
 
 
-class MetricsAnalyzer(BaseAnalyzer):
+class MetricsAnalyzer(BaseAnalyzer[MetricsResults]):
     """Halstead, raw metrics, and code churn analyzer."""
 
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> MetricsResults:
         """Analyze metrics for all files.
 
         Returns:
-            Dictionary with keys: halstead, raw_metrics, code_churn
+            MetricsResults dataclass with halstead, raw_metrics, code_churn
         """
-        return {
-            "halstead": self._analyze_halstead(files),
-            "raw_metrics": self._analyze_raw_metrics(files),
-            "code_churn": self._analyze_code_churn(files),
-        }
+        return MetricsResults(
+            halstead=self._analyze_halstead(files),
+            raw_metrics=self._analyze_raw_metrics(files),
+            code_churn=self._analyze_code_churn(files),
+        )
 
-    def _analyze_halstead(self, files: list[str]) -> list[dict[str, Any]]:
+    def _analyze_halstead(self, files: list[str]) -> list[HalsteadItem]:
         """Analyze Halstead metrics using radon."""
-        results = []
+        results: list[HalsteadItem] = []
         radon = str(get_tool_path("radon"))
 
         for file_path in files:
@@ -49,12 +56,13 @@ class MetricsAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _analyze_file_halstead(self, file_path: str, radon: str, results: list[dict[str, Any]]) -> None:
+    def _analyze_file_halstead(self, file_path: str, radon: str, results: list[HalsteadItem]) -> None:
         """Analyze Halstead metrics for a single file."""
         try:
-            radon_hal_timeout = get_timeout("tool_quick", 30)
+            radon_hal_timeout = get_timeout("tool_quick", 60)
             result = subprocess.run(
                 [radon, "hal", "-j", file_path],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=radon_hal_timeout,
@@ -75,7 +83,7 @@ class MetricsAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error analyzing Halstead in {file_path}: {e}")
 
-    def _parse_halstead_output(self, stdout: str, results: list[dict[str, Any]]) -> None:
+    def _parse_halstead_output(self, stdout: str, results: list[HalsteadItem]) -> None:
         """Parse radon Halstead metrics JSON output."""
         data = json.loads(stdout)
 
@@ -85,25 +93,25 @@ class MetricsAnalyzer(BaseAnalyzer):
 
             total = hal_data["total"][0] if isinstance(hal_data["total"], list) else hal_data["total"]
             results.append(
-                {
-                    "file": self._get_relative_path(filepath),
-                    "h1": total.get("h1", 0),
-                    "h2": total.get("h2", 0),
-                    "N1": total.get("N1", 0),
-                    "N2": total.get("N2", 0),
-                    "vocabulary": total.get("vocabulary", 0),
-                    "length": total.get("length", 0),
-                    "volume": total.get("volume", 0),
-                    "difficulty": total.get("difficulty", 0),
-                    "effort": total.get("effort", 0),
-                    "time": total.get("time", 0),
-                    "bugs": total.get("bugs", 0),
-                }
+                HalsteadItem(
+                    file=self._get_relative_path(filepath),
+                    h1=total.get("h1", 0),
+                    h2=total.get("h2", 0),
+                    N1=total.get("N1", 0),
+                    N2=total.get("N2", 0),
+                    vocabulary=total.get("vocabulary", 0),
+                    length=total.get("length", 0),
+                    volume=total.get("volume", 0),
+                    difficulty=total.get("difficulty", 0),
+                    effort=total.get("effort", 0),
+                    time=total.get("time", 0),
+                    bugs=total.get("bugs", 0),
+                )
             )
 
-    def _analyze_raw_metrics(self, files: list[str]) -> list[dict[str, Any]]:
+    def _analyze_raw_metrics(self, files: list[str]) -> list[RawMetricsItem]:
         """Analyze raw metrics (LOC, SLOC, comments) using radon."""
-        results = []
+        results: list[RawMetricsItem] = []
         radon = str(get_tool_path("radon"))
 
         for file_path in files:
@@ -118,12 +126,13 @@ class MetricsAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _analyze_file_raw_metrics(self, file_path: str, radon: str, results: list[dict[str, Any]]) -> None:
+    def _analyze_file_raw_metrics(self, file_path: str, radon: str, results: list[RawMetricsItem]) -> None:
         """Analyze raw metrics for a single file."""
         try:
-            radon_raw_timeout = get_timeout("tool_quick", 30)
+            radon_raw_timeout = get_timeout("tool_quick", 60)
             result = subprocess.run(
                 [radon, "raw", "-j", file_path],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=radon_raw_timeout,
@@ -144,25 +153,25 @@ class MetricsAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error analyzing raw metrics in {file_path}: {e}")
 
-    def _parse_raw_metrics_output(self, stdout: str, results: list[dict[str, Any]]) -> None:
+    def _parse_raw_metrics_output(self, stdout: str, results: list[RawMetricsItem]) -> None:
         """Parse radon raw metrics JSON output."""
         data = json.loads(stdout)
 
         for filepath, raw_data in data.items():
             results.append(
-                {
-                    "file": self._get_relative_path(filepath),
-                    "loc": raw_data.get("loc", 0),
-                    "lloc": raw_data.get("lloc", 0),
-                    "sloc": raw_data.get("sloc", 0),
-                    "comments": raw_data.get("comments", 0),
-                    "multi": raw_data.get("multi", 0),
-                    "blank": raw_data.get("blank", 0),
-                    "single_comments": raw_data.get("single_comments", 0),
-                }
+                RawMetricsItem(
+                    file=self._get_relative_path(filepath),
+                    loc=raw_data.get("loc", 0),
+                    lloc=raw_data.get("lloc", 0),
+                    sloc=raw_data.get("sloc", 0),
+                    comments=raw_data.get("comments", 0),
+                    multi=raw_data.get("multi", 0),
+                    blank=raw_data.get("blank", 0),
+                    single_comments=raw_data.get("single_comments", 0),
+                )
             )
 
-    def _analyze_code_churn(self, files: list[str]) -> dict[str, Any]:
+    def _analyze_code_churn(self, files: list[str]) -> CodeChurnResults:
         """Analyze code churn using git history.
 
         Identifies frequently modified files which may indicate:
@@ -171,59 +180,70 @@ class MetricsAnalyzer(BaseAnalyzer):
         - Technical debt areas
         """
         churn_threshold = self.config.get("churn_threshold", 20)
-        results = self._create_empty_churn_results()
 
-        if not files or not self._is_git_repository():
-            return results
+        if not files:
+            return CodeChurnResults(skip_reason="No files provided for churn analysis")
+
+        is_git_repo, skip_reason = self._is_git_repository()
+        if not is_git_repo:
+            return CodeChurnResults(skip_reason=skip_reason)
+
+        results = CodeChurnResults()
 
         try:
             relative_files = self._convert_to_relative_paths(files)
             git_output = self._run_git_log(relative_files)
 
             if git_output is None:
+                results.skip_reason = "Git log returned no output"
                 return results
 
             file_stats, commits_seen = self._parse_git_log(git_output)
-            results["total_commits_analyzed"] = len(commits_seen)
+            results.total_commits_analyzed = len(commits_seen)
 
             self._compile_churn_results(file_stats, churn_threshold, results)
 
         except FileNotFoundError:
             self.logger.warning("git not found for churn analysis")
+            results.skip_reason = "Git executable not found"
         except subprocess.TimeoutExpired:
             self.logger.warning("git log timed out")
+            results.skip_reason = "Git log command timed out"
         except Exception as e:
             self.logger.warning(f"churn analysis error: {e}")
+            results.skip_reason = f"Error during churn analysis: {e}"
 
         return results
 
-    def _create_empty_churn_results(self) -> dict[str, Any]:
-        """Create empty results structure for churn analysis."""
-        return {
-            "files": [],
-            "high_churn_files": [],
-            "total_commits_analyzed": 0,
-            "analysis_period_days": 90,
-        }
+    def _is_git_repository(self) -> tuple[bool, str | None]:
+        """Check if current directory is a git repository.
 
-    def _is_git_repository(self) -> bool:
-        """Check if current directory is a git repository."""
+        Returns:
+            Tuple of (is_git_repo, skip_reason). skip_reason is None if is_git_repo is True.
+        """
         try:
-            git_check_timeout = get_timeout("git_log", 10)
+            git_check_timeout = get_timeout("git_log", 20)
             git_check = subprocess.run(
                 ["git", "rev-parse", "--git-dir"],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=git_check_timeout,
                 cwd=str(self.repo_path),
             )
             if git_check.returncode != 0:
-                self.logger.info("Not a git repository, skipping churn analysis")
-                return False
-            return True
-        except (FileNotFoundError, subprocess.TimeoutExpired):
-            self.logger.info("Git not available, skipping churn analysis")
-            return False
+                reason = f"Not a git repository ({self.repo_path}). Code churn analysis requires git to track file modification history."
+                self.logger.info(reason)
+                return False, reason
+            return True, None
+        except FileNotFoundError:
+            reason = "Git executable not found. Install git to enable code churn analysis."
+            self.logger.info(reason)
+            return False, reason
+        except subprocess.TimeoutExpired:
+            reason = "Git check timed out. Code churn analysis skipped."
+            self.logger.info(reason)
+            return False, reason
 
     def _convert_to_relative_paths(self, files: list[str]) -> list[str]:
         """Convert absolute paths to relative paths for git."""
@@ -238,7 +258,7 @@ class MetricsAnalyzer(BaseAnalyzer):
 
     def _run_git_log(self, relative_files: list[str]) -> str | None:
         """Run git log command to get file change history."""
-        git_log_timeout = get_timeout("tool_analysis", 60)
+        git_log_timeout = get_timeout("tool_analysis", 120)
         churn_period_days = self.config.get("churn_period_days", 90)
 
         result = subprocess.run(
@@ -251,6 +271,7 @@ class MetricsAnalyzer(BaseAnalyzer):
                 "--",
                 *relative_files,
             ],
+            check=False,
             capture_output=True,
             text=True,
             timeout=git_log_timeout,
@@ -309,23 +330,23 @@ class MetricsAnalyzer(BaseAnalyzer):
         file_stats[filepath]["lines_deleted"] += deleted
         file_stats[filepath]["total_changes"] += added + deleted
 
-    def _compile_churn_results(self, file_stats: dict[str, dict[str, Any]], churn_threshold: int, results: dict[str, Any]) -> None:
+    def _compile_churn_results(self, file_stats: dict[str, dict[str, Any]], churn_threshold: int, results: CodeChurnResults) -> None:
         """Compile file statistics into churn results."""
         for filepath, stats in file_stats.items():
-            file_info = {
-                "file": stats["file"],
-                "commits": stats["commits"],
-                "authors": len(stats["authors"]),
-                "lines_added": stats["lines_added"],
-                "lines_deleted": stats["lines_deleted"],
-                "total_changes": stats["total_changes"],
-                "churn_score": stats["commits"] * len(stats["authors"]),
-            }
-            results["files"].append(file_info)
+            file_info = FileChurnInfo(
+                file=stats["file"],
+                commits=stats["commits"],
+                authors=len(stats["authors"]),
+                lines_added=stats["lines_added"],
+                lines_deleted=stats["lines_deleted"],
+                total_changes=stats["total_changes"],
+                churn_score=stats["commits"] * len(stats["authors"]),
+            )
+            results.files.append(file_info)
 
             if stats["commits"] >= churn_threshold:
-                results["high_churn_files"].append(file_info)
+                results.high_churn_files.append(file_info)
 
         # Sort by churn score
-        results["files"].sort(key=lambda x: x["churn_score"], reverse=True)
-        results["high_churn_files"].sort(key=lambda x: x["churn_score"], reverse=True)
+        results.files.sort(key=lambda x: x.churn_score, reverse=True)
+        results.high_churn_files.sort(key=lambda x: x.churn_score, reverse=True)

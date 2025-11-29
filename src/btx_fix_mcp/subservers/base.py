@@ -1,11 +1,11 @@
 """Base sub-server class for MCP agents."""
 
+import json
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Literal
-import json
 
 # Valid status values for sub-server results
 StatusType = Literal["SUCCESS", "FAILED", "PARTIAL"]
@@ -92,7 +92,6 @@ class BaseSubServer(ABC):
             - valid: True if all required inputs exist
             - missing_files: List of missing file paths (empty if valid)
         """
-        pass
 
     @abstractmethod
     def execute(self) -> SubServerResult:
@@ -101,7 +100,6 @@ class BaseSubServer(ABC):
         Returns:
             SubServerResult with status, summary, artifacts, and metrics
         """
-        pass
 
     def save_status(self, status: str) -> None:
         """Save status.txt per integration protocol.
@@ -177,7 +175,7 @@ class BaseSubServer(ABC):
 
             return result
         except Exception as e:
-            error_msg = f"Execution failed: {str(e)}"
+            error_msg = f"Execution failed: {e!s}"
             self.save_status("FAILED")
             self.save_summary(f"# {self.name} - FAILED\n\n{error_msg}\n\n```\n{e}\n```")
             return SubServerResult(

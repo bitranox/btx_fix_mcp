@@ -3,10 +3,11 @@
 import logging
 import sys
 import traceback
+from collections.abc import Callable
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any, TypeVar
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -245,7 +246,7 @@ def log_result(
 def log_metric(
     logger: logging.Logger,
     name: str,
-    value: int | float | str,
+    value: float | str,
     unit: str | None = None,
     level: int = logging.INFO,
 ) -> None:

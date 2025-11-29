@@ -26,11 +26,12 @@ severity_threshold = "medium"
 
 ## Environment Variables
 
-Pattern: `BTX_FIX_MCP_{SECTION}_{KEY}`
+Pattern: `BTX_FIX_MCP___{SECTION}__{KEY}` (triple underscore after prefix, double underscore between sections)
 
 ```bash
-export BTX_FIX_MCP_REVIEW_QUALITY_COMPLEXITY_THRESHOLD=15
-export BTX_FIX_MCP_REVIEW_SECURITY_SEVERITY_THRESHOLD=medium
+export BTX_FIX_MCP___REVIEW__QUALITY__COMPLEXITY_THRESHOLD=15
+export BTX_FIX_MCP___REVIEW__SECURITY__SEVERITY_THRESHOLD=medium
+export BTX_FIX_MCP___GENERAL__TIMEOUTS__TOOL_LONG=300
 ```
 
 ---
@@ -55,14 +56,25 @@ max_workers = 4                       # Parallel workers
 [review.scope]
 mode = "git"                          # "git" (default) or "full"
 exclude_patterns = [
-    "**/vendor/*",
-    "**/node_modules/*",
-    "**/.venv/*",
-    "**/__pycache__/*",
-    "**/dist/*",
-    "**/build/*",
-    "**/.git/*",
-    "**/LLM-CONTEXT/*",
+    # Virtual environments
+    "**/.venv/**/*", "**/venv/**/*", "**/.virtualenv/**/*",
+    # Dependency/cache directories
+    "**/vendor/**/*", "**/node_modules/**/*", "**/__pycache__/**/*",
+    "**/.tox/**/*", "**/.nox/**/*", "**/.pytest_cache/**/*",
+    "**/.mypy_cache/**/*", "**/.ruff_cache/**/*",
+    # Build artifacts
+    "**/dist/**/*", "**/build/**/*", "**/*.egg-info/**/*",
+    # Version control
+    "**/.git/**/*",
+    # IDE and editor configs
+    "**/.claude/**/*", "**/.devcontainer/**/*",
+    "**/.idea/**/*", "**/.vscode/**/*",
+    # CI/CD and tooling
+    "**/.github/**/*", "**/.qlty/**/*",
+    # Project-specific
+    "**/LLM-CONTEXT/**/*", "**/scripts/**/*",
+    # Config files
+    "*.example", "codecov.yml", ".snyk",
 ]
 include_patterns = ["**/*"]
 ```
@@ -268,16 +280,18 @@ max_metrics_display = 5               # Metrics per sub-server
 
 ```toml
 [general.timeouts]
-git_quick_op = 5                      # Quick git commands
-git_status = 10                       # Git status/diff
-git_commit = 30                       # Git commit
-git_log = 10                          # Git log/history
-git_blame = 5                         # Git blame
-tool_quick = 30                       # Fast tools (radon, etc.)
-tool_analysis = 60                    # Standard tools (ruff, etc.)
-tool_long = 120                       # Slow tools (mypy, pylint)
-profile_tests = 300                   # Test profiling
-vuln_scan = 120                       # Dependency scanning
+git_quick_op = 10                     # Quick git commands (is_git_repo, get_branch)
+git_status = 20                       # Git status operations
+git_commit = 60                       # Git commit (may run pre-commit hooks)
+git_log = 20                          # Git log/history
+git_diff = 60                         # Git diff operations
+git_blame = 10                        # Git blame
+tool_quick = 60                       # Fast tools (radon, etc.)
+tool_analysis = 120                   # Standard tools (ruff, interrogate, bandit)
+tool_long = 240                       # Slow tools (mypy, pylint, pytest)
+profile_tests = 600                   # Test profiling (10 minutes)
+beartype_check = 120                  # Beartype runtime type checking
+vuln_scan = 240                       # Dependency vulnerability scanning
 ```
 
 ---

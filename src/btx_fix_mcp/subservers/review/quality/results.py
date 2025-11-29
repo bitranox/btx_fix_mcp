@@ -1,12 +1,18 @@
 """Results compilation for quality analysis."""
 
 from pathlib import Path
-from typing import Any
 
 from btx_fix_mcp.subservers.common.issues import QualityMetrics
 
+from .analyzer_results import (
+    CognitiveComplexityItem,
+    CyclomaticComplexityItem,
+    FunctionIssueItem,
+    MaintainabilityItem,
+    QualityAnalysisResults,
+)
 from .config import QualityConfig
-from .issues import compile_all_issues
+from .issues import Issue, compile_all_issues
 
 
 class ResultsCompiler:
@@ -22,15 +28,15 @@ class ResultsCompiler:
         self.quality_config = quality_config
         self.repo_path = repo_path
 
-    def compile_issues(self, results: dict[str, Any], config: QualityConfig) -> list[dict[str, Any]]:
+    def compile_issues(self, results: QualityAnalysisResults, config: QualityConfig) -> list[Issue]:
         """Compile issues from analyzer results.
 
         Args:
-            results: Raw analyzer results
+            results: Typed analyzer results
             config: Quality configuration
 
         Returns:
-            List of normalized issues
+            List of Issue dataclass instances
         """
         return compile_all_issues(results, config, self.repo_path)
 
@@ -38,179 +44,73 @@ class ResultsCompiler:
         self,
         python_files: list[str],
         js_files: list[str],
-        results: dict[str, Any],
-        all_issues: list[dict],
+        results: QualityAnalysisResults,
+        all_issues: list[Issue],
     ) -> QualityMetrics:
         """Compile all metrics from analysis results.
+
+        Builds QualityMetrics directly from typed analyzer results without
+        intermediate dict conversions.
 
         Args:
             python_files: List of Python files analyzed
             js_files: List of JS/TS files analyzed
-            results: Raw analyzer results
-            all_issues: Compiled issues list
+            results: Typed analyzer results
+            all_issues: List of Issue dataclass instances
 
         Returns:
             Quality metrics dataclass
         """
-        # Collect metrics from all analyzers
-        file_metrics = self._compile_file_metrics(python_files, js_files)
-        complexity_metrics = self._compile_complexity_metrics(results)
-        architecture_metrics = self._compile_architecture_metrics(results)
-        coverage_metrics = self._compile_coverage_metrics(results)
-        issue_metrics = self._compile_issue_metrics(all_issues, results)
+        thresholds = self.quality_config.thresholds
+        critical_count = self._count_critical_issues(all_issues)
+        total_count = len(all_issues)
 
-        # Build QualityMetrics dataclass
         return QualityMetrics(
-            files_analyzed=file_metrics["files_analyzed"],
-            python_files=file_metrics["python_files"],
-            js_files=file_metrics["js_files"],
-            total_functions=complexity_metrics["total_functions"],
-            high_complexity_count=complexity_metrics["high_complexity_count"],
-            high_cognitive_count=complexity_metrics["high_cognitive_count"],
-            low_mi_count=complexity_metrics["low_mi_count"],
-            functions_too_long=complexity_metrics["functions_too_long"],
-            functions_too_nested=complexity_metrics["functions_too_nested"],
-            god_objects=architecture_metrics["god_objects"],
-            highly_coupled_modules=architecture_metrics["highly_coupled_modules"],
-            import_cycles=coverage_metrics["import_cycles"],
-            duplicate_blocks=complexity_metrics["duplicate_blocks"],
-            dead_code_items=coverage_metrics["dead_code_items"],
-            docstring_coverage_percent=coverage_metrics["docstring_coverage_percent"],
-            type_coverage_percent=coverage_metrics["type_coverage_percent"],
-            test_coverage_percent=0.0,  # TODO: Add test coverage computation
-            high_churn_files=coverage_metrics["high_churn_files"],
-            beartype_passed=issue_metrics["beartype_passed"],
-            critical_issues=issue_metrics["critical_issues"],
-            warning_issues=issue_metrics["issues_count"] - issue_metrics["critical_issues"],
-            total_issues=issue_metrics["issues_count"],
+            # File metrics
+            files_analyzed=len(python_files) + len(js_files),
+            python_files=len(python_files),
+            js_files=len(js_files),
+            # Complexity metrics
+            total_functions=len(results.complexity),
+            high_complexity_count=self._count_high_complexity(results.complexity, thresholds.complexity),
+            high_cognitive_count=self._count_high_cognitive(results.cognitive),
+            low_mi_count=self._count_low_maintainability(results.maintainability, thresholds.maintainability),
+            functions_too_long=self._count_function_issues_by_type(results.function_issues, "TOO_LONG"),
+            functions_too_nested=self._count_function_issues_by_type(results.function_issues, "TOO_NESTED"),
+            duplicate_blocks=len(results.duplication.duplicates),
+            # Architecture metrics
+            god_objects=len(results.architecture.god_objects),
+            highly_coupled_modules=len(results.architecture.highly_coupled),
+            # Coverage metrics
+            import_cycles=len(results.import_cycles.cycles),
+            dead_code_items=len(results.dead_code.dead_code),
+            docstring_coverage_percent=results.docstring_coverage.coverage_percent,
+            type_coverage_percent=results.type_coverage.coverage_percent,
+            test_coverage_percent=0.0,
+            high_churn_files=len(results.code_churn.high_churn_files),
+            # Issue metrics
+            beartype_passed=results.beartype.get("passed", True),
+            critical_issues=critical_count,
+            warning_issues=total_count - critical_count,
+            total_issues=total_count,
         )
 
-    def _compile_file_metrics(self, python_files: list[str], js_files: list[str]) -> dict[str, int]:
-        """Compile file-related metrics.
-
-        Args:
-            python_files: Python files analyzed
-            js_files: JS/TS files analyzed
-
-        Returns:
-            File metrics dictionary
-        """
-        return {
-            "files_analyzed": len(python_files) + len(js_files),
-            "python_files": len(python_files),
-            "js_files": len(js_files),
-        }
-
-    def _count_high_complexity(self, complexity_results: list, threshold: int) -> int:
+    def _count_high_complexity(self, complexity_results: list[CyclomaticComplexityItem], threshold: int) -> int:
         """Count functions exceeding complexity threshold."""
-        return len([r for r in complexity_results if r.get("complexity", 0) > threshold])
+        return sum(1 for r in complexity_results if r.complexity > threshold)
 
-    def _count_low_maintainability(self, maintainability_results: list, threshold: int) -> int:
-        """Count functions below maintainability threshold."""
-        return len([r for r in maintainability_results if r.get("mi", 100) < threshold])
+    def _count_low_maintainability(self, maintainability_results: list[MaintainabilityItem], threshold: int) -> int:
+        """Count files below maintainability threshold."""
+        return sum(1 for r in maintainability_results if r.mi < threshold)
 
-    def _count_function_issues_by_type(self, function_issues: list, issue_type: str) -> int:
+    def _count_function_issues_by_type(self, function_issues: list[FunctionIssueItem], issue_type: str) -> int:
         """Count function issues of specific type."""
-        return len([i for i in function_issues if i["issue_type"] == issue_type])
+        return sum(1 for i in function_issues if i.issue_type == issue_type)
 
-    def _count_high_cognitive(self, cognitive_results: list) -> int:
+    def _count_high_cognitive(self, cognitive_results: list[CognitiveComplexityItem]) -> int:
         """Count functions exceeding cognitive complexity threshold."""
-        return len([r for r in cognitive_results if r.get("exceeds_threshold")])
+        return sum(1 for r in cognitive_results if r.exceeds_threshold)
 
-    def _compile_complexity_metrics(self, results: dict[str, Any]) -> dict[str, int]:
-        """Compile complexity-related metrics.
-
-        Args:
-            results: Analyzer results
-
-        Returns:
-            Complexity metrics dictionary
-        """
-        thresholds = self.quality_config.thresholds
-        complexity_results = results.get("complexity", [])
-        maintainability_results = results.get("maintainability", [])
-        cognitive_results = results.get("cognitive", [])
-        function_issues = results.get("function_issues", [])
-
-        return {
-            "total_functions": len(complexity_results),
-            "high_complexity_count": self._count_high_complexity(complexity_results, thresholds.complexity),
-            "low_mi_count": self._count_low_maintainability(maintainability_results, thresholds.maintainability),
-            "functions_too_long": self._count_function_issues_by_type(function_issues, "TOO_LONG"),
-            "functions_too_nested": self._count_function_issues_by_type(function_issues, "TOO_NESTED"),
-            "high_cognitive_count": self._count_high_cognitive(cognitive_results),
-            "duplicate_blocks": len(results.get("duplication", {}).get("duplicates", [])),
-        }
-
-    def _compile_test_metrics(self, results: dict[str, Any]) -> dict[str, int]:
-        """Compile test-related metrics.
-
-        Args:
-            results: Analyzer results
-
-        Returns:
-            Test metrics dictionary
-        """
-        tests = results.get("tests", {})
-        return {
-            "total_tests": tests.get("total_tests", 0),
-            "total_assertions": tests.get("total_assertions", 0),
-            "test_issues": len(tests.get("issues", [])),
-        }
-
-    def _compile_architecture_metrics(self, results: dict[str, Any]) -> dict[str, int]:
-        """Compile architecture-related metrics.
-
-        Args:
-            results: Analyzer results
-
-        Returns:
-            Architecture metrics dictionary
-        """
-        architecture = results.get("architecture", {})
-        return {
-            "god_objects": len(architecture.get("god_objects", [])),
-            "highly_coupled_modules": len(architecture.get("highly_coupled", [])),
-            "runtime_check_optimizations": len(results.get("runtime_checks", [])),
-        }
-
-    def _compile_coverage_metrics(self, results: dict[str, Any]) -> dict[str, Any]:
-        """Compile coverage-related metrics.
-
-        Args:
-            results: Analyzer results
-
-        Returns:
-            Coverage metrics dictionary
-        """
-        type_coverage = results.get("type_coverage", {})
-        docstring_coverage = results.get("docstring_coverage", {})
-        dead_code = results.get("dead_code", {})
-        import_cycles = results.get("import_cycles", {})
-        code_churn = results.get("code_churn", {})
-
-        return {
-            "ruff_issues": len(results.get("static", {}).get("ruff_json", [])),
-            "type_coverage_percent": type_coverage.get("coverage_percent", 0),
-            "docstring_coverage_percent": docstring_coverage.get("coverage_percent", 0),
-            "dead_code_items": len(dead_code.get("dead_code", [])),
-            "import_cycles": len(import_cycles.get("cycles", [])),
-            "high_churn_files": len(code_churn.get("high_churn_files", [])),
-        }
-
-    def _compile_issue_metrics(self, all_issues: list[dict], results: dict[str, Any]) -> dict[str, Any]:
-        """Compile issue-related metrics.
-
-        Args:
-            all_issues: Compiled issues list
-            results: Analyzer results
-
-        Returns:
-            Issue metrics dictionary
-        """
-        return {
-            "js_issues": len(results.get("js_analysis", {}).get("issues", [])),
-            "beartype_passed": results.get("beartype", {}).get("passed", True),
-            "issues_count": len(all_issues),
-            "critical_issues": len([i for i in all_issues if i.get("severity") == "error"]),
-        }
+    def _count_critical_issues(self, all_issues: list[Issue]) -> int:
+        """Count critical (error severity) issues."""
+        return sum(1 for i in all_issues if i.severity == "error")

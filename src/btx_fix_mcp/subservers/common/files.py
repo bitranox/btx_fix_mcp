@@ -22,7 +22,7 @@ def read_file(path: Path) -> str:
     try:
         return path.read_text()
     except Exception as e:
-        raise IOError(f"Failed to read {path}: {e}")
+        raise OSError(f"Failed to read {path}: {e}") from e
 
 
 def write_file(path: Path, content: str) -> None:
@@ -39,7 +39,7 @@ def write_file(path: Path, content: str) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(content)
     except Exception as e:
-        raise IOError(f"Failed to write {path}: {e}")
+        raise OSError(f"Failed to write {path}: {e}") from e
 
 
 def ensure_dir(path: Path) -> None:
@@ -80,23 +80,90 @@ def find_files(
         return []
 
     exclude_patterns = exclude_patterns or [
-        "**/node_modules/*",
-        "**/.venv/*",
-        "**/__pycache__/*",
-        "**/dist/*",
-        "**/build/*",
-        "**/.git/*",
-        "**/LLM-CONTEXT/*",
+        # Virtual environments
+        "**/.venv/**/*",
+        ".venv/**/*",
+        "**/venv/**/*",
+        "venv/**/*",
+        "**/.env/**/*",
+        "**/env/**/*",
+        "**/.virtualenv/**/*",
+        "**/virtualenv/**/*",
+        # Dependency directories
+        "**/vendor/**/*",
+        "**/node_modules/**/*",
+        "**/__pycache__/**/*",
+        "__pycache__/**/*",
+        "**/.tox/**/*",
+        ".tox/**/*",
+        "**/.nox/**/*",
+        ".nox/**/*",
+        "**/.pytest_cache/**/*",
+        ".pytest_cache/**/*",
+        "**/.mypy_cache/**/*",
+        ".mypy_cache/**/*",
+        "**/.ruff_cache/**/*",
+        ".ruff_cache/**/*",
+        # Build artifacts
+        "**/dist/**/*",
+        "dist/**/*",
+        "**/build/**/*",
+        "build/**/*",
+        "**/*.egg-info/**/*",
+        "*.egg-info/**/*",
+        # Version control
+        "**/.git/**/*",
+        ".git/**/*",
+        # Compiled/generated files
         "*.pyc",
         "*.pyo",
         "*.lock",
+        "*.min.js",
+        "*.min.css",
+        # Project-specific
+        "**/LLM-CONTEXT/**/*",
+        "LLM-CONTEXT/**/*",
+        "**/scripts/**/*",
+        "scripts/**/*",
+        # IDE and editor configs
+        "**/.claude/**/*",
+        ".claude/**/*",
+        "**/.devcontainer/**/*",
+        ".devcontainer/**/*",
+        "**/.idea/**/*",
+        ".idea/**/*",
+        "**/.vscode/**/*",
+        ".vscode/**/*",
+        # CI/CD and tooling configs
+        "**/.github/**/*",
+        ".github/**/*",
+        "**/.qlty/**/*",
+        ".qlty/**/*",
+        # Config files at root
+        "*.example",
+        "codecov.yml",
+        ".snyk",
     ]
 
     files: list[Path] = []
     for file_path in root.rglob(pattern):
         if file_path.is_file():
-            # Check exclusions - patterns should already be normalized
-            excluded = any(file_path.match(excl) for excl in exclude_patterns)
+            # Check exclusions using multiple methods for reliability
+            path_str = str(file_path)
+            excluded = False
+            for excl in exclude_patterns:
+                # Method 1: Path.match() for glob patterns
+                if file_path.match(excl):
+                    excluded = True
+                    break
+                # Method 2: Check if path contains excluded directory
+                # Extract directory name from pattern like "**/.mypy_cache/**/*" -> ".mypy_cache"
+                if "**" in excl:
+                    parts = excl.replace("**", "").strip("/").split("/")
+                    dir_name = next((p for p in parts if p and not p.startswith("*")), None)
+                    if dir_name and f"/{dir_name}/" in f"/{path_str}/":
+                        excluded = True
+                        break
             if not excluded:
                 files.append(file_path)
 

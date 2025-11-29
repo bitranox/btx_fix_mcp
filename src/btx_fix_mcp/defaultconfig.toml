@@ -68,81 +68,97 @@ max_workers = 4
 # These should complete almost instantly.
 #
 # Values: Positive integer (seconds)
-# Default: 5
+# Default: 10
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__GIT_QUICK_OP
-git_quick_op = 5
+git_quick_op = 10
 
 # Git status and diff operations.
 # May take longer for large repositories with many changes.
 #
 # Values: Positive integer (seconds)
-# Default: 10
+# Default: 20
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__GIT_STATUS
-git_status = 10
+git_status = 20
 
 # Git commit operations.
 # May run pre-commit hooks which can take time.
 #
 # Values: Positive integer (seconds)
-# Default: 30
+# Default: 60
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__GIT_COMMIT
-git_commit = 30
+git_commit = 60
 
 # Git log and history operations.
 # Reading commit history for large repositories.
 #
 # Values: Positive integer (seconds)
-# Default: 10
+# Default: 20
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__GIT_LOG
-git_log = 10
+git_log = 20
+
+# Git diff operations.
+# Generating diffs for large changesets.
+#
+# Values: Positive integer (seconds)
+# Default: 60
+# Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__GIT_DIFF
+git_diff = 60
 
 # Git blame operations.
 # Line-by-line authorship lookup.
 #
 # Values: Positive integer (seconds)
-# Default: 5
+# Default: 10
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__GIT_BLAME
-git_blame = 5
+git_blame = 10
 
 # Quick analysis tools (< 1 minute typically).
 # Tools: radon complexity, simple file operations.
 #
 # Values: Positive integer (seconds)
-# Default: 30
+# Default: 60
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__TOOL_QUICK
-tool_quick = 30
+tool_quick = 60
 
 # Standard analysis tools (1-2 minutes typically).
 # Tools: ruff, interrogate, bandit.
 #
 # Values: Positive integer (seconds)
-# Default: 60
+# Default: 120
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__TOOL_ANALYSIS
-tool_analysis = 60
+tool_analysis = 120
 
 # Long-running analysis tools (2-5 minutes typically).
 # Tools: mypy, pylint, pytest.
 #
 # Values: Positive integer (seconds)
-# Default: 120
+# Default: 240
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__TOOL_LONG
-tool_long = 120
+tool_long = 240
 
 # Test profiling with pytest.
 # Full test suite execution with cProfile wrapper.
 #
 # Values: Positive integer (seconds)
-# Default: 300 (5 minutes)
+# Default: 600 (10 minutes)
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__PROFILE_TESTS
-profile_tests = 300
+profile_tests = 600
+
+# Beartype runtime type checking.
+# Full test suite execution with beartype validation.
+#
+# Values: Positive integer (seconds)
+# Default: 120 (2 minutes)
+# Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__BEARTYPE_CHECK
+beartype_check = 120
 
 # Dependency vulnerability scanning.
 # pip-audit and safety checks against vulnerability databases.
 #
 # Values: Positive integer (seconds)
-# Default: 120
+# Default: 240
 # Env: BTX_FIX_MCP___GENERAL__TIMEOUTS__VULN_SCAN
-vuln_scan = 120
+vuln_scan = 240
 
 
 # =============================================================================
@@ -353,18 +369,43 @@ mode = "git"
 #
 # Env: BTX_FIX_MCP___REVIEW__SCOPE__EXCLUDE_PATTERNS (comma-separated)
 exclude_patterns = [
+    # Virtual environments
+    "**/.venv/**/*",
+    ".venv/**/*",
+    "**/venv/**/*",
+    "venv/**/*",
+    "**/.env/**/*",
+    "**/env/**/*",
+    "**/.virtualenv/**/*",
+    "**/virtualenv/**/*",
+
     # Dependency directories
-    "**/vendor/*",
-    "**/node_modules/*",
-    "**/.venv/*",
-    "**/__pycache__/*",
+    "**/vendor/**/*",
+    "**/node_modules/**/*",
+    "**/__pycache__/**/*",
+    "__pycache__/**/*",
+    "**/.tox/**/*",
+    ".tox/**/*",
+    "**/.nox/**/*",
+    ".nox/**/*",
+    "**/.pytest_cache/**/*",
+    ".pytest_cache/**/*",
+    "**/.mypy_cache/**/*",
+    ".mypy_cache/**/*",
+    "**/.ruff_cache/**/*",
+    ".ruff_cache/**/*",
 
     # Build artifacts
-    "**/dist/*",
-    "**/build/*",
+    "**/dist/**/*",
+    "dist/**/*",
+    "**/build/**/*",
+    "build/**/*",
+    "**/*.egg-info/**/*",
+    "*.egg-info/**/*",
 
     # Version control
-    "**/.git/*",
+    "**/.git/**/*",
+    ".git/**/*",
 
     # Compiled/generated files
     "*.pyc",
@@ -374,8 +415,31 @@ exclude_patterns = [
     "*.min.css",
 
     # Project-specific
-    "**/LLM-CONTEXT/*",
-    "**/scripts/*",
+    "**/LLM-CONTEXT/**/*",
+    "LLM-CONTEXT/**/*",
+    "**/scripts/**/*",
+    "scripts/**/*",
+
+    # IDE and editor configs
+    "**/.claude/**/*",
+    ".claude/**/*",
+    "**/.devcontainer/**/*",
+    ".devcontainer/**/*",
+    "**/.idea/**/*",
+    ".idea/**/*",
+    "**/.vscode/**/*",
+    ".vscode/**/*",
+
+    # CI/CD and tooling configs
+    "**/.github/**/*",
+    ".github/**/*",
+    "**/.qlty/**/*",
+    ".qlty/**/*",
+
+    # Config files at root
+    "*.example",
+    "codecov.yml",
+    ".snyk",
 ]
 
 # Patterns to include in analysis.

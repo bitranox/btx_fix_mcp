@@ -6,8 +6,6 @@ from pathlib import Path
 class ProtocolViolation(Exception):
     """Raised when a sub-server violates the integration protocol."""
 
-    pass
-
 
 class IntegrationProtocol:
     """Validates sub-server integration protocol compliance.
@@ -190,7 +188,7 @@ class IntegrationProtocol:
         try:
             status_file.write_text(status)
         except Exception as e:
-            raise IOError(f"Failed to write status.txt: {e}") from e
+            raise OSError(f"Failed to write status.txt: {e}") from e
 
     @staticmethod
     def create_summary_file(
@@ -229,7 +227,7 @@ class IntegrationProtocol:
         try:
             summary_file.write_text(content)
         except Exception as e:
-            raise IOError(f"Failed to write {subagent_name}_summary.md: {e}") from e
+            raise OSError(f"Failed to write {subagent_name}_summary.md: {e}") from e
 
     @staticmethod
     def get_status(output_dir: Path) -> str | None:

@@ -12,12 +12,30 @@ pip install btx_fix_mcp
 uv pip install btx_fix_mcp
 ```
 
+## Configuration (Optional)
+
+Deploy a configuration file to customize settings:
+
+```bash
+# Deploy config to application directory (recommended)
+python -m btx_fix_mcp config-deploy --target app
+
+# View current effective configuration
+python -m btx_fix_mcp config-show
+
+# Show config file locations
+python -m btx_fix_mcp config-path
+```
+
+The deployed config file includes all settings with detailed documentation.
+See [Configuration Reference](../reference/CONFIGURATION.md) for details.
+
 ## Basic Usage
 
 ### Review Uncommitted Git Changes (Default)
 
 ```bash
-# Go to your project
+# Go to your project root (where pyproject.toml / src/ is located)
 cd /path/to/your/project
 
 # Review uncommitted changes
@@ -25,6 +43,16 @@ python -m btx_fix_mcp review all
 ```
 
 Output is saved to `LLM-CONTEXT/btx_fix_mcp/review/`.
+
+**Typical project structure:**
+```
+your-project/           <-- Run btx_fix_mcp from here
+├── pyproject.toml
+├── src/
+│   └── your_package/
+│       └── *.py
+└── tests/
+```
 
 > **Note**: If your project is not a git repository, `--mode git` automatically falls back to `--mode full` with a warning.
 
@@ -113,6 +141,18 @@ python -m btx_fix_mcp review clean --dry-run
 ```
 
 ## Quick Reference
+
+### Config Commands
+
+| Command | Option | Default | Permitted Values |
+|---------|--------|---------|------------------|
+| `config-deploy` | `--target` | **required** | `app`, `host`, `user` (repeatable) |
+| | `--force` | disabled | Flag (overwrite existing) |
+| `config-show` | `--section` | all | Dotted path (e.g., `review.quality`) |
+| | `--json` | disabled | Flag (output as JSON) |
+| `config-path` | - | - | No options |
+
+### Review Commands
 
 | Command | Option | Default | Permitted Values |
 |---------|--------|---------|------------------|

@@ -24,10 +24,8 @@ features evolve.
 
 from __future__ import annotations
 
-from typing import TextIO
-
 import sys
-
+from typing import TextIO
 
 CANONICAL_GREETING = "Hello World"
 
@@ -134,12 +132,12 @@ def noop_main() -> None:
     >>> noop_main()
     """
 
-    return None
+    return
 
 
 __all__ = [
     "CANONICAL_GREETING",
     "emit_greeting",
-    "raise_intentional_failure",
     "noop_main",
+    "raise_intentional_failure",
 ]

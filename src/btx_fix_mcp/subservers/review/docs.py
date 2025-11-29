@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from btx_fix_mcp.config import get_config, get_display_limit, get_subserver_config, get_timeout
+from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.chunked_writer import (
     cleanup_chunked_issues,
     write_chunked_issues,
@@ -21,9 +22,7 @@ from btx_fix_mcp.subservers.common.issues import (
     BaseIssue,
     DocsMetrics,
     DocstringIssue,
-    ProjectDocIssue,
 )
-from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.logging import (
     LogContext,
     get_mcp_logger,
@@ -38,6 +37,12 @@ from btx_fix_mcp.subservers.common.mindsets import (
     evaluate_results,
     get_mindset,
 )
+from btx_fix_mcp.subservers.review.docs_project import (
+    ProjectDocsConfig,
+    ProjectDocsResult,
+    check_project_docs,
+)
+from btx_fix_mcp.subservers.review.docs_style import validate_docstring_style
 from btx_fix_mcp.tools_venv import ensure_tools_venv, get_tool_path
 
 
@@ -68,8 +73,7 @@ class DocsSubServer(BaseSubServer):
         """Initialize logger based on mode."""
         if mcp_mode:
             return get_mcp_logger(f"btx_fix_mcp.{name}")
-        else:
-            return setup_logger(name, log_file=None, level=20)
+        return setup_logger(name, log_file=None, level=20)
 
     def _apply_feature_overrides(self, check_docstrings: bool | None, check_project_docs: bool | None, config: dict) -> tuple[bool, bool]:
         """Apply feature flag overrides."""
@@ -191,7 +195,7 @@ class DocsSubServer(BaseSubServer):
         with LogContext(self.logger, "Project docs"):
             project_docs = self._check_project_docs()
             results["project_docs"] = project_docs
-            all_issues.extend(project_docs.get("issues", []))
+            all_issues.extend(project_docs.issues)
 
     def _determine_status(self, all_issues: list[BaseIssue]) -> str:
         """Determine analysis status based on issues."""
@@ -310,9 +314,10 @@ class DocsSubServer(BaseSubServer):
 
         try:
             python_path = get_tool_path("python")
-            interrogate_timeout = get_timeout("tool_analysis", 60, start_dir=str(self.repo_path))
+            interrogate_timeout = get_timeout("tool_analysis", 120, start_dir=str(self.repo_path))
             result = subprocess.run(
                 [str(python_path), "-m", "interrogate", "-v", str(self.repo_path / "src")],
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=interrogate_timeout,
@@ -408,44 +413,6 @@ class DocsSubServer(BaseSubServer):
             issues.extend(self._analyze_file_for_docstrings(file_path))
         return issues
 
-    def _get_style_patterns(self) -> dict:
-        """Get docstring style patterns."""
-        return {
-            "google": {
-                "args": ["Args:", "Arguments:"],
-                "returns": ["Returns:", "Return:"],
-                "raises": ["Raises:", "Raise:"],
-                "yields": ["Yields:", "Yield:"],
-            },
-            "numpy": {
-                "args": ["Parameters", "----------"],
-                "returns": ["Returns", "-------"],
-                "raises": ["Raises", "------"],
-                "yields": ["Yields", "------"],
-            },
-            "sphinx": {
-                "args": [":param", ":type"],
-                "returns": [":return:", ":rtype:"],
-                "raises": [":raises:", ":raise:"],
-                "yields": [":yields:"],
-            },
-        }
-
-    def _has_style_indicators(self, docstring: str, style: str, style_patterns: dict) -> bool:
-        """Check if docstring has indicators of a particular style."""
-        if style not in style_patterns:
-            return False
-        return any(pattern in docstring for pattern in style_patterns[style]["args"])
-
-    def _detect_used_style(self, docstring: str, expected_style: str, style_patterns: dict) -> str | None:
-        """Detect which style is actually used in the docstring."""
-        other_styles = [s for s in style_patterns.keys() if s != expected_style]
-        for other_style in other_styles:
-            for patterns in style_patterns[other_style].values():
-                if any(pattern in docstring for pattern in patterns):
-                    return other_style
-        return None
-
     def _validate_docstring_style(
         self,
         docstring: str,
@@ -456,166 +423,29 @@ class DocsSubServer(BaseSubServer):
     ) -> DocstringIssue | None:
         """Validate docstring conforms to configured style.
 
-        Args:
-            docstring: The docstring text
-            name: Function/class name
-            file_path: File path
-            line: Line number
-            doc_type: Type of element (function/class)
-
-        Returns:
-            DocstringIssue if style violation found, None otherwise
+        Delegates to docs_style module for cleaner separation.
+        Returns DocstringIssue directly, no conversion needed.
         """
-        if not docstring or not self.docstring_style:
-            return None
-
-        expected_style = self.docstring_style.lower()
-        style_patterns = self._get_style_patterns()
-
-        if expected_style not in style_patterns:
-            return None
-
-        # If expected style is used, no issue
-        if self._has_style_indicators(docstring, expected_style, style_patterns):
-            return None
-
-        # Check if a different style is being used
-        used_style = self._detect_used_style(docstring, expected_style, style_patterns)
-        if used_style:
-            return DocstringIssue(
-                type="docstring_style_mismatch",
-                severity="info",
-                file=file_path,
-                line=line,
-                name=name,
-                doc_type=doc_type,
-                message=f"{doc_type.capitalize()} '{name}' uses {used_style} style but project expects {expected_style}",
-            )
-
-        return None
-
-    def _find_readme_file(self) -> tuple[bool, Path | None]:
-        """Find README file in project root."""
-        for readme in self.REQUIRED_PROJECT_DOCS:
-            readme_path = self.repo_path / readme
-            if readme_path.exists():
-                return True, readme_path
-        return False, None
-
-    def _check_readme_file(self, issues: list[ProjectDocIssue]) -> tuple[bool, Path | None]:
-        """Check for README file and add issues if missing."""
-        readme_found, readme_path = self._find_readme_file()
-
-        if not readme_found:
-            severity = "critical" if self.require_readme else "warning"
-            issues.append(
-                ProjectDocIssue(
-                    type="missing_readme",
-                    severity=severity,
-                    message="No README file found (README.md, README.rst, or README.txt)",
-                    doc_file="README",
-                    required=self.require_readme,
-                )
-            )
-
-        return readme_found, readme_path
-
-    def _check_readme_sections_if_required(self, readme_path: Path | None, issues: list[ProjectDocIssue]) -> None:
-        """Check README sections if file exists and sections are required."""
-        if not readme_path or not self.required_readme_sections:
-            return
-
-        missing_sections = self._check_readme_sections(readme_path)
-        for section in missing_sections:
-            issues.append(
-                ProjectDocIssue(
-                    type="missing_readme_section",
-                    severity="warning",
-                    message=f"README is missing required section: {section}",
-                    doc_file="README",
-                    required=True,
-                )
-            )
-
-    def _check_changelog_file(self, issues: list[ProjectDocIssue]) -> bool:
-        """Check for CHANGELOG file."""
-        if (self.repo_path / "CHANGELOG.md").exists():
-            return True
-
-        if self.require_changelog:
-            issues.append(
-                ProjectDocIssue(
-                    type="missing_changelog",
-                    severity="warning",
-                    message="No CHANGELOG.md file found",
-                    doc_file="CHANGELOG",
-                    required=True,
-                )
-            )
-        return False
-
-    def _check_license_file(self, issues: list[ProjectDocIssue]) -> bool:
-        """Check for LICENSE file."""
-        if (self.repo_path / "LICENSE").exists() or (self.repo_path / "LICENSE.md").exists():
-            return True
-
-        issues.append(
-            ProjectDocIssue(
-                type="missing_license",
-                severity="warning",
-                message="No LICENSE file found",
-                doc_file="LICENSE",
-                required=False,
-            )
+        return validate_docstring_style(
+            docstring=docstring,
+            name=name,
+            file_path=file_path,
+            line=line,
+            doc_type=doc_type,
+            expected_style=self.docstring_style,
         )
-        return False
 
-    def _check_project_docs(self) -> dict[str, Any]:
-        """Check project documentation files."""
-        issues: list[ProjectDocIssue] = []
+    def _check_project_docs(self) -> ProjectDocsResult:
+        """Check project documentation files.
 
-        # Check README
-        readme_found, readme_path = self._check_readme_file(issues)
-        self._check_readme_sections_if_required(readme_path, issues)
-
-        # Check other project docs
-        changelog_found = self._check_changelog_file(issues)
-        contributing_found = (self.repo_path / "CONTRIBUTING.md").exists()
-        license_found = self._check_license_file(issues)
-
-        return {
-            "readme": readme_found,
-            "readme_path": str(readme_path) if readme_path else None,
-            "changelog": changelog_found,
-            "contributing": contributing_found,
-            "license": license_found,
-            "issues": issues,
-        }
-
-    def _check_readme_sections(self, readme_path: Path) -> list[str]:
-        """Check if README contains required sections.
-
-        Args:
-            readme_path: Path to README file
-
-        Returns:
-            List of missing section names
+        Delegates to docs_project module for cleaner separation.
         """
-        try:
-            content = readme_path.read_text().lower()
-            missing = []
-
-            for section in self.required_readme_sections:
-                # Look for section as markdown heading (# Section or ## Section)
-                section_lower = section.lower()
-                if f"# {section_lower}" not in content and f"#{section_lower}" not in content:
-                    missing.append(section)
-
-            return missing
-
-        except Exception as e:
-            self.logger.warning(f"Error checking README sections: {e}")
-            return []
+        config = ProjectDocsConfig(
+            require_readme=self.require_readme,
+            require_changelog=self.require_changelog,
+            required_readme_sections=self.required_readme_sections,
+        )
+        return check_project_docs(self.repo_path, config, self.logger)
 
     def _save_docstring_coverage(self, results: dict[str, Any], artifacts: dict) -> None:
         """Save docstring coverage results."""
@@ -627,23 +457,37 @@ class DocsSubServer(BaseSubServer):
         artifacts["docstring_coverage"] = path
 
     def _save_missing_docstrings(self, results: dict[str, Any], artifacts: dict) -> None:
-        """Save missing docstrings results."""
-        missing_docstrings = results.get("missing_docstrings", [])
+        """Save missing docstrings results.
+
+        Converts DocstringIssue dataclasses to dicts at serialization boundary.
+        """
+        missing_docstrings: list[DocstringIssue] = results.get("missing_docstrings", [])
         if not missing_docstrings:
             return
         path = self.output_dir / "missing_docstrings.json"
-        missing_dicts = [i.to_dict() if hasattr(i, "to_dict") else i for i in missing_docstrings]
+        # Convert dataclasses to dicts at serialization boundary
+        missing_dicts = [issue.to_dict() for issue in missing_docstrings]
         path.write_text(json.dumps(missing_dicts, indent=2))
         artifacts["missing_docstrings"] = path
 
     def _save_project_docs(self, results: dict[str, Any], artifacts: dict) -> None:
-        """Save project documentation results."""
-        project_docs = results.get("project_docs", {})
+        """Save project documentation results.
+
+        Converts ProjectDocsResult dataclass to dict at serialization boundary.
+        """
+        project_docs: ProjectDocsResult | None = results.get("project_docs")
         if not project_docs:
             return
         path = self.output_dir / "project_docs.json"
-        doc_data = dict(project_docs)
-        doc_data["issues"] = [i.to_dict() if hasattr(i, "to_dict") else i for i in project_docs.get("issues", [])]
+        # Convert dataclass to dict at serialization boundary
+        doc_data = {
+            "readme": project_docs.readme,
+            "readme_path": project_docs.readme_path,
+            "changelog": project_docs.changelog,
+            "contributing": project_docs.contributing,
+            "license": project_docs.license,
+            "issues": [issue.to_dict() for issue in project_docs.issues],
+        }
         path.write_text(json.dumps(doc_data, indent=2))
         artifacts["project_docs"] = path
 
@@ -653,8 +497,9 @@ class DocsSubServer(BaseSubServer):
             return
 
         report_dir = self.output_dir.parent / "report"
+        # Extract issue types before conversion (typed access)
+        issue_types = list({issue.type for issue in all_issues})
         issues_dicts = [i.to_dict() for i in all_issues]
-        issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
 
         cleanup_chunked_issues(output_dir=report_dir, issue_types=issue_types, prefix="issues")
         written_files = write_chunked_issues(issues=issues_dicts, output_dir=report_dir, prefix="issues")
@@ -673,28 +518,23 @@ class DocsSubServer(BaseSubServer):
 
     def _compile_metrics(self, files: list[str], results: dict[str, Any], all_issues: list[BaseIssue]) -> dict[str, Any]:
         """Compile metrics for result."""
+        project_docs: ProjectDocsResult | None = results.get("project_docs")
+        project_docs_found = 0
+        if project_docs:
+            project_docs_found = sum([project_docs.readme, project_docs.changelog, project_docs.license])
         return DocsMetrics(
             files_analyzed=len(files),
             coverage_percent=results.get("docstring_coverage", {}).get("coverage_percent", 0),
             missing_docstrings=len(results.get("missing_docstrings", [])),
-            project_docs_found=sum(1 for k in ["readme", "changelog", "license"] if results.get("project_docs", {}).get(k, False)),
+            project_docs_found=project_docs_found,
             total_issues=len(all_issues),
         ).model_dump()
 
-    def _extract_docstring_item_data(self, item) -> tuple[str, int, str, str]:
-        """Extract data from docstring issue item (object or dict)."""
-        file_path = item.file if hasattr(item, "file") else item.get("file", "")
-        line_num = item.line if hasattr(item, "line") else item.get("line", 0)
-        doc_type = item.doc_type if hasattr(item, "doc_type") else item.get("kind", "")
-        name = item.name if hasattr(item, "name") else item.get("name", "")
-        return file_path, line_num, doc_type, name
-
-    def _format_docstring_item(self, item) -> str:
+    def _format_docstring_item(self, item: DocstringIssue) -> str:
         """Format a single docstring item."""
-        file_path, line_num, doc_type, name = self._extract_docstring_item_data(item)
-        return f"- `{file_path}:{line_num}` - {doc_type} `{name}`"
+        return f"- `{item.file}:{item.line}` - {item.doc_type} `{item.name}`"
 
-    def _format_missing_docstrings_section(self, missing: list) -> list[str]:
+    def _format_missing_docstrings_section(self, missing: list[DocstringIssue]) -> list[str]:
         """Format missing docstrings section."""
         if not missing:
             return []
@@ -736,9 +576,9 @@ class DocsSubServer(BaseSubServer):
             "",
         ]
 
-    def _format_overview_section(self, metrics: dict, doc_cov: dict, project_docs: dict) -> list[str]:
+    def _format_overview_section(self, metrics: dict, doc_cov: dict, project_docs: ProjectDocsResult | None) -> list[str]:
         """Format overview and project documentation sections."""
-        return [
+        lines = [
             "## Overview",
             "",
             f"**Files Analyzed**: {metrics['files_analyzed']}",
@@ -748,12 +588,20 @@ class DocsSubServer(BaseSubServer):
             "",
             "## Project Documentation",
             "",
-            f"- README: {'[PASS]' if project_docs.get('readme') else '[FAIL]'}",
-            f"- CHANGELOG: {'[PASS]' if project_docs.get('changelog') else '[WARN]'}",
-            f"- CONTRIBUTING: {'[PASS]' if project_docs.get('contributing') else '[WARN]'}",
-            f"- LICENSE: {'[PASS]' if project_docs.get('license') else '[FAIL]'}",
-            "",
         ]
+        if project_docs:
+            lines.extend(
+                [
+                    f"- README: {'[PASS]' if project_docs.readme else '[FAIL]'}",
+                    f"- CHANGELOG: {'[PASS]' if project_docs.changelog else '[WARN]'}",
+                    f"- CONTRIBUTING: {'[PASS]' if project_docs.contributing else '[WARN]'}",
+                    f"- LICENSE: {'[PASS]' if project_docs.license else '[FAIL]'}",
+                    "",
+                ]
+            )
+        else:
+            lines.extend(["*Project documentation check not run*", ""])
+        return lines
 
     def _format_approval_section(self, verdict) -> list[str]:
         """Format approval status section."""
@@ -768,10 +616,10 @@ class DocsSubServer(BaseSubServer):
         """Generate markdown summary with mindset evaluation."""
         metrics = self._compile_metrics(files, results, all_issues)
         doc_cov = results.get("docstring_coverage", {})
-        project_docs = results.get("project_docs", {})
+        project_docs: ProjectDocsResult | None = results.get("project_docs")
 
-        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
-        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        critical_issues = [i for i in all_issues if i.severity == "critical"]
+        warning_issues = [i for i in all_issues if i.severity == "warning"]
         verdict = evaluate_results(self.mindset, critical_issues, warning_issues, max(len(files), 1))
 
         lines = []

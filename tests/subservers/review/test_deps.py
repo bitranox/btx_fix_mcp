@@ -3,6 +3,7 @@
 import pytest
 
 from btx_fix_mcp.subservers.review.deps import DepsSubServer
+from btx_fix_mcp.subservers.review.deps_scanners import OutdatedPackage, Vulnerability
 
 
 class TestDepsSubServer:
@@ -174,7 +175,6 @@ dependencies = [
 
         # Should complete (may not find vulnerabilities in test env)
         assert result.status in ("SUCCESS", "PARTIAL", "FAILED")
-        assert hasattr(result, "metrics")
         assert result.metrics.get("project_type") == "python"
 
     def test_mindset_loaded(self, tmp_path):
@@ -222,13 +222,13 @@ dependencies = [
         )
 
         vulns = [
-            {
-                "package": "test-pkg",
-                "version": "1.0.0",
-                "vulnerability_id": "CVE-2023-1234",
-                "description": "Test vulnerability",
-                "severity": "high",
-            }
+            Vulnerability(
+                package="test-pkg",
+                version="1.0.0",
+                vulnerability_id="CVE-2023-1234",
+                description="Test vulnerability",
+                severity="high",
+            )
         ]
 
         issues = server._vulnerabilities_to_issues(vulns)
@@ -246,11 +246,11 @@ dependencies = [
         )
 
         outdated = [
-            {
-                "name": "requests",
-                "version": "2.25.0",
-                "latest_version": "2.31.0",
-            }
+            OutdatedPackage(
+                name="requests",
+                version="2.25.0",
+                latest_version="2.31.0",
+            )
         ]
 
         issues = server._outdated_to_issues(outdated)

@@ -21,7 +21,6 @@ This sub-server analyzes code quality using multiple tools:
 """
 
 from pathlib import Path
-from typing import Any
 
 from btx_fix_mcp.config import get_config, get_subserver_config
 from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
@@ -39,10 +38,12 @@ from btx_fix_mcp.subservers.common.logging import (
 from btx_fix_mcp.subservers.common.mindsets import QUALITY_MINDSET, get_mindset
 from btx_fix_mcp.tools_venv import ensure_tools_venv
 
+from .analyzer_results import QualityAnalysisResults
 from .architecture import ArchitectureAnalyzer
 from .complexity import ComplexityAnalyzer
 from .config import QualityConfig, load_quality_config
 from .files import FileManager
+from .issues import Issue
 from .metrics import MetricsAnalyzer
 from .orchestrator import AnalyzerOrchestrator
 from .results import ResultsCompiler
@@ -54,20 +55,20 @@ from .types import TypeAnalyzer
 from .writer import ResultsWriter
 
 __all__ = [
-    "QualitySubServer",
-    "QualityConfig",
+    "AnalyzerOrchestrator",
     "ArchitectureAnalyzer",
+    "BeartypeAnalyzer",
     "ComplexityAnalyzer",
+    "FileManager",
+    "JavaScriptAnalyzer",
     "MetricsAnalyzer",
+    "QualityConfig",
+    "QualitySubServer",
+    "ResultsCompiler",
+    "ResultsWriter",
     "StaticAnalyzer",
     "TestSuiteAnalyzer",
     "TypeAnalyzer",
-    "FileManager",
-    "AnalyzerOrchestrator",
-    "ResultsCompiler",
-    "ResultsWriter",
-    "JavaScriptAnalyzer",
-    "BeartypeAnalyzer",
 ]
 
 
@@ -175,27 +176,27 @@ class QualitySubServer(BaseSubServer):
 
         return python_files, js_files
 
-    def _run_core_analyzers(self, python_files: list[str], js_files: list[str]) -> dict:
+    def _run_core_analyzers(self, python_files: list[str], js_files: list[str]) -> QualityAnalysisResults:
         """Run core analyzers in parallel."""
         log_step(self.logger, 2, "Analyzing complexity metrics")
         with LogContext(self.logger, "Complexity analysis"):
             return self.orchestrator.run_all(python_files, js_files)
 
-    def _run_special_analyzers(self, results: dict, js_files: list[str]) -> None:
+    def _run_special_analyzers(self, results: QualityAnalysisResults, js_files: list[str]) -> None:
         """Run special analyzers (JS/TS, Beartype)."""
         if self.quality_config.features.js_analysis and js_files:
             log_step(self.logger, 18, "Analyzing JavaScript/TypeScript")
             with LogContext(self.logger, "JS/TS analysis"):
-                results["js_analysis"] = self.js_analyzer.analyze(js_files)
+                results.js_analysis = self.js_analyzer.analyze(js_files)
 
         if self.quality_config.features.beartype:
             log_step(self.logger, 19, "Running beartype runtime type check")
             with LogContext(self.logger, "Beartype check"):
-                results["beartype"] = self.beartype_analyzer.analyze()
+                results.beartype = self.beartype_analyzer.analyze()
 
     def _compile_and_save_results(
-        self, results: dict[str, Any], python_files: list[str], js_files: list[str]
-    ) -> tuple[list[dict[str, Any]], dict[str, Path], QualityMetrics, str]:
+        self, results: QualityAnalysisResults, python_files: list[str], js_files: list[str]
+    ) -> tuple[list[Issue], dict[str, Path], QualityMetrics, str]:
         """Compile issues, save results, and generate summary."""
         log_step(self.logger, 20, "Compiling issues")
         all_issues = self.results_compiler.compile_issues(results, self.quality_config)
@@ -208,9 +209,9 @@ class QualitySubServer(BaseSubServer):
 
         return all_issues, artifacts, metrics, summary
 
-    def _determine_status(self, all_issues: list) -> str:
+    def _determine_status(self, all_issues: list[Issue]) -> str:
         """Determine analysis status based on critical issues."""
-        critical_issues = [i for i in all_issues if i.get("severity") == "error"]
+        critical_issues = [i for i in all_issues if i.severity == "error"]
         return "SUCCESS" if not critical_issues else "PARTIAL"
 
     def execute(self) -> SubServerResult:

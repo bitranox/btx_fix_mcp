@@ -32,12 +32,12 @@ from functools import lru_cache
 from typing import Any, Literal
 
 from btx_fix_mcp.config import get_config
+from btx_fix_mcp.subservers.common.llm_providers import LLMProvider
 from btx_fix_mcp.subservers.common.logging import (
     get_mcp_logger,
     log_debug,
     log_error_detailed,
 )
-from btx_fix_mcp.subservers.common.llm_providers import LLMProvider
 
 # Type aliases
 SeverityLevel = Literal["low", "medium", "high", "critical"]
@@ -499,12 +499,11 @@ Respond with ONLY one word: low, medium, high, or critical"""
 
         if complexity > 20 or nesting > 5:
             return "critical"
-        elif complexity > 15 or nesting > 4 or lines > 100:
+        if complexity > 15 or nesting > 4 or lines > 100:
             return "high"
-        elif complexity > 10 or nesting > 3 or lines > 50:
+        if complexity > 10 or nesting > 3 or lines > 50:
             return "medium"
-        else:
-            return "low"
+        return "low"
 
     def _fallback_strategy(self) -> dict[str, Any]:
         """Fallback fix strategy when LLM unavailable."""

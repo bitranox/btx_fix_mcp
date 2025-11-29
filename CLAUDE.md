@@ -344,7 +344,7 @@ When reviewing code in this project, **run these tools** to ensure quality:
 | **interrogate** | `interrogate src/` | Docstring coverage |
 | **radon** | `radon cc src/ -a` | Cyclomatic complexity |
 | **radon** | `radon mi src/` | Maintainability index |
-| **bandit** | `python3.13 -m bandit -r src/` | Security vulnerabilities |
+| **bandit** | `bandit -r src/` | Security vulnerabilities |
 
 ### Quick Quality Check
 

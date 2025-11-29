@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from btx_fix_mcp.subservers.common.issues import DocstringCoverageMetrics, TypeCoverageMetrics
+from btx_fix_mcp.subservers.review.quality.analyzer_results import TypeResults
 from btx_fix_mcp.subservers.review.quality.types import TypeAnalyzer
 
 
@@ -31,15 +33,13 @@ class TestTypeAnalyzerBasic:
         """Test analyze with empty file list."""
         result = analyzer.analyze([])
 
-        assert "type_coverage" in result
-        assert "dead_code" in result
-        assert "docstring_coverage" in result
-        assert result["type_coverage"]["coverage_percent"] == 0
-        assert result["dead_code"]["dead_code"] == []
-        assert result["docstring_coverage"]["coverage_percent"] == 0
+        assert isinstance(result, TypeResults)
+        assert result.type_coverage.coverage_percent == 0
+        assert result.dead_code.dead_code == []
+        assert result.docstring_coverage.coverage_percent == 0
 
-    def test_analyze_returns_all_keys(self, analyzer, tmp_path):
-        """Test analyze returns expected keys."""
+    def test_analyze_returns_type_results(self, analyzer, tmp_path):
+        """Test analyze returns TypeResults dataclass."""
         code = tmp_path / "simple.py"
         code.write_text("x = 1")
 
@@ -47,9 +47,9 @@ class TestTypeAnalyzerBasic:
             mock_run.return_value = MagicMock(stdout="", stderr="", returncode=0)
             result = analyzer.analyze([str(code)])
 
-        assert "type_coverage" in result
-        assert "dead_code" in result
-        assert "docstring_coverage" in result
+        assert isinstance(result, TypeResults)
+        assert isinstance(result.type_coverage, TypeCoverageMetrics)
+        assert isinstance(result.docstring_coverage, DocstringCoverageMetrics)
 
 
 class TestAnalyzeTypeCoverage:
@@ -163,7 +163,7 @@ class TestDetectDeadCode:
     def test_dead_code_empty_files(self, analyzer):
         """Test dead code detection with empty file list."""
         result = analyzer._detect_dead_code([])
-        assert result["dead_code"] == []
+        assert result.dead_code == []
 
     def test_dead_code_found(self, analyzer, tmp_path):
         """Test detecting dead code."""
@@ -176,9 +176,9 @@ class TestDetectDeadCode:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._detect_dead_code([str(code)])
 
-        assert len(result["dead_code"]) == 1
-        assert result["dead_code"][0]["line"] == 1
-        assert "unused" in result["dead_code"][0]["message"]
+        assert len(result.dead_code) == 1
+        assert result.dead_code[0].line == 1
+        assert "unused" in result.dead_code[0].message
 
     def test_dead_code_no_results(self, analyzer, tmp_path):
         """Test no dead code found."""
@@ -191,7 +191,7 @@ class TestDetectDeadCode:
         with patch("subprocess.run", return_value=mock_result):
             result = analyzer._detect_dead_code([str(code)])
 
-        assert result["dead_code"] == []
+        assert result.dead_code == []
 
     def test_dead_code_timeout(self, analyzer, tmp_path):
         """Test dead code detection timeout."""
@@ -201,7 +201,7 @@ class TestDetectDeadCode:
         with patch("subprocess.run", side_effect=subprocess.TimeoutExpired("vulture", 60)):
             result = analyzer._detect_dead_code([str(code)])
 
-        assert result["dead_code"] == []
+        assert result.dead_code == []
 
     def test_dead_code_not_found(self, analyzer, tmp_path):
         """Test vulture not found."""
@@ -211,7 +211,7 @@ class TestDetectDeadCode:
         with patch("subprocess.run", side_effect=FileNotFoundError()):
             result = analyzer._detect_dead_code([str(code)])
 
-        assert result["dead_code"] == []
+        assert result.dead_code == []
 
     def test_dead_code_other_error(self, analyzer, tmp_path):
         """Test other error handling."""
@@ -221,7 +221,7 @@ class TestDetectDeadCode:
         with patch("subprocess.run", side_effect=Exception("unexpected error")):
             result = analyzer._detect_dead_code([str(code)])
 
-        assert result["dead_code"] == []
+        assert result.dead_code == []
 
 
 class TestAnalyzeDocstringCoverage:

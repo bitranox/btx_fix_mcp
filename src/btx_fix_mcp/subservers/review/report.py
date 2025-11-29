@@ -12,11 +12,11 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field
 
 from btx_fix_mcp.config import get_config, get_display_limit
+from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.chunked_writer import (
     cleanup_all_issues,
     write_chunked_all_issues,
 )
-from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.logging import (
     get_mcp_logger,
     log_error_detailed,
@@ -291,11 +291,12 @@ class ReportSubServer(BaseSubServer):
             message="[PASS] Code review passed - no critical issues found",
         )
 
-        # Check for failures
+        # Check for failures (actual errors, not skips)
         if metrics.subservers_failed:
+            failed_names = ", ".join(metrics.subservers_failed)
             verdict.status = "REVIEW_INCOMPLETE"
-            verdict.message = f"[WARN] Review incomplete - {len(metrics.subservers_failed)} sub-servers failed"
-            verdict.recommendations.append("Fix sub-server failures and re-run analysis")
+            verdict.message = f"[WARN] Review incomplete - {len(metrics.subservers_failed)} sub-server(s) failed: {failed_names}"
+            verdict.recommendations.append(f"Fix failures in: {failed_names}")
 
         # Check for critical issues
         if metrics.critical_issues > 0:
@@ -334,6 +335,7 @@ class ReportSubServer(BaseSubServer):
         """Generate consolidated markdown report."""
         lines = []
         lines.extend(self._format_header(metrics, verdict))
+        lines.extend(self._format_subserver_status_breakdown(results))
         lines.extend(self._format_summary_statistics(metrics))
         lines.extend(self._format_subserver_results(results))
         lines.extend(self._format_critical_issues(results))
@@ -361,6 +363,44 @@ class ReportSubServer(BaseSubServer):
             lines.append("**Recommendations:**")
             for rec in verdict.recommendations:
                 lines.append(f"- {rec}")
+            lines.append("")
+
+        return lines
+
+    def _format_subserver_status_breakdown(self, results: dict[str, dict]) -> list[str]:
+        """Format breakdown of failed and skipped subservers with reasons."""
+        lines = []
+
+        # Collect failed subservers (status == FAILED)
+        failed = []
+        skipped = []
+
+        for name in self.SUBSERVERS:
+            result = results.get(name, {"status": "NOT_RUN"})
+            status = result.get("status", "NOT_RUN")
+
+            if status == "FAILED":
+                # Get error message if available
+                errors = result.get("errors", [])
+                reason = errors[0] if errors else "Unknown error"
+                failed.append((name, reason))
+            elif status == "NOT_RUN":
+                skip_reason = result.get("skip_reason", "Not in configured subservers")
+                skipped.append((name, skip_reason))
+
+        # Format failed subservers
+        if failed:
+            lines.extend(["", "**Failed Sub-Servers:**", ""])
+            for name, reason in failed:
+                lines.append(f"- **{name}**: {reason}")
+
+        # Format skipped subservers
+        if skipped:
+            lines.extend(["", "**Skipped Sub-Servers:**", ""])
+            for name, reason in skipped:
+                lines.append(f"- **{name}**: {reason}")
+
+        if lines:
             lines.append("")
 
         return lines
@@ -407,6 +447,13 @@ class ReportSubServer(BaseSubServer):
             f"**Status**: `{status}`",
             "",
         ]
+
+        # Show skip reason if NOT_RUN
+        if status == "NOT_RUN":
+            skip_reason = result.get("skip_reason", "Not included in configured subservers")
+            lines.append(f"**Reason**: {skip_reason}")
+            lines.append("")
+            return lines
 
         # Show key metrics
         sub_metrics = result.get("metrics", {})
@@ -492,10 +539,9 @@ class ReportSubServer(BaseSubServer):
         """Save report and data files."""
         artifacts = {}
 
-        # Save markdown report
-        report_path = self.output_dir / "code_review_report.md"
-        report_path.write_text(report)
-        artifacts["report"] = report_path
+        # Note: Markdown report is saved as report_summary.md by base class
+        # Just record the path for artifact tracking
+        artifacts["report"] = self.output_dir / "report_summary.md"
 
         # Save metrics JSON
         metrics_path = self.output_dir / "metrics.json"

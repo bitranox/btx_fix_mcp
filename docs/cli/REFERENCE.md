@@ -8,11 +8,106 @@ Complete reference for all btx_fix_mcp CLI commands.
 python -m btx_fix_mcp [OPTIONS] COMMAND
 ```
 
+| Option | Required | Default          | Permitted Values | Description |
+|--------|----------|------------------|------------------|-------------|
+| `--help`, `-h` | No | -                | - | Show help message |
+| `--version` | No | -                | - | Show version |
+| `--traceback/--no-traceback` | No | `--no-traceback` | - | Show full Python traceback on errors |
+
+---
+
+## Config Commands
+
+Configuration management commands for deploying, viewing, and managing configuration files.
+
+### `config-deploy`
+
+Deploy default configuration to system or user directories.
+
+```bash
+python -m btx_fix_mcp config-deploy [OPTIONS]
+```
+
 | Option | Required | Default | Permitted Values | Description |
 |--------|----------|---------|------------------|-------------|
-| `--help`, `-h` | No | - | - | Show help message |
-| `--version` | No | - | - | Show version |
-| `--traceback/--no-traceback` | No | `--traceback` | - | Show full Python traceback on errors |
+| `--target` | **Yes** | - | `app`, `host`, `user` | Target layer(s) to deploy to (repeatable) |
+| `--force` | No | `false` | Flag (no value) | Overwrite existing configuration files |
+
+**Target values:**
+| Value | Description |
+|-------|-------------|
+| `app` | System-wide application config (recommended) |
+| `host` | System-wide host config |
+| `user` | User-specific config (~/.config on Linux) |
+
+**Platform-specific paths:**
+- **Linux (app)**: `/etc/xdg/btx_fix_mcp/config.toml`
+- **Linux (user)**: `~/.config/btx_fix_mcp/config.toml`
+- **macOS (app)**: `/Library/Application Support/bitranox/Btx Fix Mcp/config.toml`
+- **macOS (user)**: `~/Library/Application Support/bitranox/Btx Fix Mcp/config.toml`
+- **Windows (app)**: `C:\ProgramData\bitranox\Btx Fix Mcp\config.toml`
+- **Windows (user)**: `%APPDATA%\bitranox\Btx Fix Mcp\config.toml`
+
+**Examples:**
+```bash
+# Deploy to application directory (recommended)
+python -m btx_fix_mcp config-deploy --target app
+
+# Deploy to user config directory
+python -m btx_fix_mcp config-deploy --target user
+
+# Deploy to multiple targets
+python -m btx_fix_mcp config-deploy --target app --target user
+
+# Force overwrite existing config
+python -m btx_fix_mcp config-deploy --target user --force
+```
+
+---
+
+### `config-show`
+
+Show current effective configuration (merged from all sources).
+
+```bash
+python -m btx_fix_mcp config-show [OPTIONS]
+```
+
+| Option | Required | Default | Permitted Values | Description |
+|--------|----------|---------|------------------|-------------|
+| `--section`, `-s` | No | all | Dotted path (e.g., `review.quality`, `general.timeouts`) | Show only specific section |
+| `--json` | No | `false` | Flag (no value) | Output as JSON instead of TOML-like format |
+
+**Examples:**
+```bash
+# Show all configuration
+python -m btx_fix_mcp config-show
+
+# Show quality settings only
+python -m btx_fix_mcp config-show -s review.quality
+
+# Show security settings as JSON
+python -m btx_fix_mcp config-show -s review.security --json
+
+# Show timeout settings
+python -m btx_fix_mcp config-show -s general.timeouts
+```
+
+---
+
+### `config-path`
+
+Show all configuration file locations and their status.
+
+```bash
+python -m btx_fix_mcp config-path
+```
+
+No options. Displays:
+- Package defaults location (always exists)
+- User config location (platform-specific)
+- Project config location
+- Environment variable format
 
 ---
 

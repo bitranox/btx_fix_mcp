@@ -94,8 +94,8 @@ class TestRunPipAudit:
             result = run_pip_audit(tmp_path, logger)
 
             assert len(result) == 1
-            assert result[0]["package"] == "requests"
-            assert result[0]["vulnerability_id"] == "CVE-2021-1234"
+            assert result[0].package == "requests"
+            assert result[0].vulnerability_id == "CVE-2021-1234"
 
     def test_pip_audit_empty_output(self, tmp_path, logger):
         """Test pip-audit with empty output."""
@@ -145,8 +145,8 @@ class TestRunSafety:
             result = run_safety(tmp_path, logger)
 
             assert len(result) == 1
-            assert result[0]["package"] == "requests"
-            assert result[0]["version"] == "2.25.0"
+            assert result[0].package == "requests"
+            assert result[0].version == "2.25.0"
 
     def test_safety_empty_output(self, tmp_path, logger):
         """Test safety with empty output."""
@@ -188,8 +188,8 @@ class TestRunNpmAudit:
             result = run_npm_audit(tmp_path, logger)
 
             assert len(result) == 1
-            assert result[0]["package"] == "lodash"
-            assert result[0]["severity"] == "high"
+            assert result[0].package == "lodash"
+            assert result[0].severity == "high"
 
     def test_npm_audit_empty_output(self, tmp_path, logger):
         """Test npm audit with empty output."""
@@ -277,8 +277,8 @@ class TestCheckOutdatedPackages:
             result = check_outdated_packages("nodejs", tmp_path, logger)
 
             assert len(result) == 1
-            assert result[0]["name"] == "lodash"
-            assert result[0]["latest_version"] == "4.17.21"
+            assert result[0].name == "lodash"
+            assert result[0].latest_version == "4.17.21"
 
     def test_nodejs_outdated_error(self, tmp_path, logger):
         """Test Node.js outdated check error handling."""

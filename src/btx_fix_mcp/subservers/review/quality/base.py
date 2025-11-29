@@ -6,10 +6,13 @@ All quality analyzers inherit from this base class and implement the analyze() m
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Any
+from typing import Any, Generic, TypeVar
+
+# TypeVar for analyzer result types - each subclass returns a specific dataclass
+AnalyzerResultT = TypeVar("AnalyzerResultT")
 
 
-class BaseAnalyzer(ABC):
+class BaseAnalyzer(ABC, Generic[AnalyzerResultT]):
     """Base class for quality analyzers.
 
     Each analyzer focuses on a specific aspect of code quality
@@ -33,14 +36,14 @@ class BaseAnalyzer(ABC):
         self.config = config
 
     @abstractmethod
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> AnalyzerResultT:
         """Analyze the given files.
 
         Args:
             files: List of absolute file paths to analyze
 
         Returns:
-            Dictionary containing analysis results
+            Typed result dataclass specific to the analyzer
         """
 
     def _get_relative_path(self, file_path: str) -> str:

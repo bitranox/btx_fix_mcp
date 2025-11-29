@@ -62,7 +62,6 @@ class LLMProvider(ABC):
         Returns:
             Tuple of (response_text, input_tokens, output_tokens)
         """
-        pass
 
     def count_tokens(self, text: str) -> int:
         """Estimate token count (rough approximation).
@@ -375,19 +374,19 @@ def create_provider(config: dict[str, Any]) -> LLMProvider:
             api_key=config.get("api_key"),
         )
 
-    elif provider_type == "openai":
+    if provider_type == "openai":
         return OpenAIProvider(
             model=config.get("model", "gpt-4o-mini"),
             api_key=config.get("api_key"),
         )
 
-    elif provider_type == "ollama":
+    if provider_type == "ollama":
         return OllamaProvider(
             model=config.get("model", "llama3.2:3b"),
             base_url=config.get("base_url", "http://localhost:11434"),
         )
 
-    elif provider_type in ("openai-compatible", "compatible", "custom"):
+    if provider_type in ("openai-compatible", "compatible", "custom"):
         if "base_url" not in config:
             raise ValueError("base_url required for openai-compatible provider")
 
@@ -397,8 +396,7 @@ def create_provider(config: dict[str, Any]) -> LLMProvider:
             api_key=config.get("api_key"),
         )
 
-    else:
-        raise ValueError(f"Unknown provider: {provider_type}. Supported: anthropic, openai, ollama, openai-compatible")
+    raise ValueError(f"Unknown provider: {provider_type}. Supported: anthropic, openai, ollama, openai-compatible")
 
 
 def get_provider_cost(provider: str, model: str) -> dict[str, float]:

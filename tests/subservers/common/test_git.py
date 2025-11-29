@@ -187,11 +187,11 @@ class TestGitOperations:
         history = GitOperations.get_file_history("history.txt", limit=5, path=git_repo)
 
         assert len(history) == 2
-        assert history[0]["message"] == "Version 2"  # Most recent first
-        assert history[1]["message"] == "Version 1"
-        assert "hash" in history[0]
-        assert "author" in history[0]
-        assert "date" in history[0]
+        assert history[0].message == "Version 2"  # Most recent first
+        assert history[1].message == "Version 1"
+        assert history[0].hash  # CommitInfo has typed attributes
+        assert history[0].author
+        assert history[0].date
 
     def test_get_last_commit_hash(self, git_repo):
         """Test getting last commit hash."""

@@ -468,4 +468,4 @@ def foo():
         result = server.orchestrator.run_all([str(repo_dir / "code.py")], [])
 
         # Should complete with results from other analyzers (complexity at minimum)
-        assert "complexity" in result or "maintainability" in result
+        assert isinstance(result.complexity, list) or isinstance(result.maintainability, list)

@@ -9,30 +9,23 @@ Analyzes test suites for:
 
 import ast
 from pathlib import Path
-from typing import Any
 
+from .analyzer_results import SuiteFileInfo, SuiteIssueItem, SuiteResults
 from .base import BaseAnalyzer
 
 
-class TestSuiteAnalyzer(BaseAnalyzer):
+class TestSuiteAnalyzer(BaseAnalyzer[SuiteResults]):
     """Test suite analyzer with assertion counting and OS-specific detection."""
 
     __test__ = False  # Tell pytest this is not a test class
 
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> SuiteResults:
         """Analyze test suite.
 
         Returns:
-            Dictionary with test files info, counts, categories, and issues.
+            SuiteResults dataclass with test files info, counts, categories, and issues.
         """
-        results = {
-            "test_files": [],
-            "total_tests": 0,
-            "total_assertions": 0,
-            "categories": {"unit": 0, "integration": 0, "e2e": 0, "unknown": 0},
-            "issues": [],
-        }
-
+        results = SuiteResults()
         test_files = self._identify_test_files(files)
 
         for file_path in test_files:
@@ -42,65 +35,60 @@ class TestSuiteAnalyzer(BaseAnalyzer):
                 content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
                 tree = ast.parse(content)
                 rel_path = self._get_relative_path(file_path)
-                file_info = {
-                    "file": rel_path,
-                    "test_count": 0,
-                    "assertion_count": 0,
-                    "issues": [],
-                }
+                file_info = SuiteFileInfo(file=rel_path)
 
                 # Categorize test file
                 path_lower = file_path.lower()
                 if "unit" in path_lower:
-                    results["categories"]["unit"] += 1
+                    results.categories.unit += 1
                 elif "integration" in path_lower:
-                    results["categories"]["integration"] += 1
+                    results.categories.integration += 1
                 elif "e2e" in path_lower or "end_to_end" in path_lower:
-                    results["categories"]["e2e"] += 1
+                    results.categories.e2e += 1
                 else:
-                    results["categories"]["unknown"] += 1
+                    results.categories.unknown += 1
 
                 for node in ast.walk(tree):
                     if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                         if node.name.startswith("test_"):
-                            file_info["test_count"] += 1
-                            results["total_tests"] += 1
+                            file_info.test_count += 1
+                            results.total_tests += 1
 
                             # Count assertions
                             assertion_count = self._count_assertions(node)
-                            file_info["assertion_count"] += assertion_count
-                            results["total_assertions"] += assertion_count
+                            file_info.assertion_count += assertion_count
+                            results.total_assertions += assertion_count
 
                             if assertion_count == 0:
-                                issue = {
-                                    "type": "NO_ASSERTIONS",
-                                    "file": rel_path,
-                                    "line": node.lineno,
-                                    "message": f"Test '{node.name}' has no assertions",
-                                }
-                                file_info["issues"].append(issue)
-                                results["issues"].append(issue)
+                                issue = SuiteIssueItem(
+                                    type="NO_ASSERTIONS",
+                                    file=rel_path,
+                                    line=node.lineno,
+                                    message=f"Test '{node.name}' has no assertions",
+                                )
+                                file_info.issues.append(issue)
+                                results.issues.append(issue)
 
                             # Check test length
                             if hasattr(node, "end_lineno"):
                                 length = node.end_lineno - node.lineno
                                 if length > 50:
-                                    issue = {
-                                        "type": "LONG_TEST",
-                                        "file": rel_path,
-                                        "line": node.lineno,
-                                        "message": f"Test '{node.name}' is {length} lines (should be <50)",
-                                    }
-                                    file_info["issues"].append(issue)
-                                    results["issues"].append(issue)
+                                    issue = SuiteIssueItem(
+                                        type="LONG_TEST",
+                                        file=rel_path,
+                                        line=node.lineno,
+                                        message=f"Test '{node.name}' is {length} lines (should be <50)",
+                                    )
+                                    file_info.issues.append(issue)
+                                    results.issues.append(issue)
 
                             # Check for OS-specific code without proper decorators
                             os_issue = self._check_os_specific_test(node, rel_path)
                             if os_issue:
-                                file_info["issues"].append(os_issue)
-                                results["issues"].append(os_issue)
+                                file_info.issues.append(os_issue)
+                                results.issues.append(os_issue)
 
-                results["test_files"].append(file_info)
+                results.test_files.append(file_info)
             except Exception as e:
                 self.logger.warning(f"Error analyzing test file {file_path}: {e}")
 
@@ -113,10 +101,7 @@ class TestSuiteAnalyzer(BaseAnalyzer):
             path = Path(f)
             name = path.name.lower()
             # Standard pytest naming conventions
-            if name.startswith("test_") or name.endswith("_test.py"):
-                test_files.append(f)
-            # pytest conftest files
-            elif name == "conftest.py":
+            if name.startswith("test_") or name.endswith("_test.py") or name == "conftest.py":
                 test_files.append(f)
             # Files in tests/ directory (any level)
             elif "tests" in path.parts or "test" in path.parts:
@@ -135,7 +120,7 @@ class TestSuiteAnalyzer(BaseAnalyzer):
                     count += 1
         return count
 
-    def _check_os_specific_test(self, node: ast.FunctionDef, file_path: str) -> dict[str, Any] | None:
+    def _check_os_specific_test(self, node: ast.FunctionDef, file_path: str) -> SuiteIssueItem | None:
         """Check if test has OS-specific code without proper skip decorators.
 
         Detects:
@@ -197,21 +182,21 @@ class TestSuiteAnalyzer(BaseAnalyzer):
         # If OS checks found but no decorator, flag it
         if os_checks_found and not has_os_decorator:
             unique_checks = list(set(os_checks_found))
-            return {
-                "type": "MISSING_OS_DECORATOR",
-                "file": file_path,
-                "line": node.lineno,
-                "function": node.name,
-                "os_checks": unique_checks,
-                "message": (f"Test '{node.name}' uses {', '.join(unique_checks)} but lacks @pytest.mark.skipif decorator"),
-            }
+            return SuiteIssueItem(
+                type="MISSING_OS_DECORATOR",
+                file=file_path,
+                line=node.lineno,
+                function=node.name,
+                os_checks=unique_checks,
+                message=f"Test '{node.name}' uses {', '.join(unique_checks)} but lacks @pytest.mark.skipif decorator",
+            )
         return None
 
     def _get_decorator_name(self, decorator: ast.expr) -> str:
         """Extract decorator name from AST node."""
         if isinstance(decorator, ast.Name):
             return decorator.id
-        elif isinstance(decorator, ast.Attribute):
+        if isinstance(decorator, ast.Attribute):
             # Handle chained attributes like pytest.mark.skipif
             parts = []
             node = decorator
@@ -221,6 +206,6 @@ class TestSuiteAnalyzer(BaseAnalyzer):
             if isinstance(node, ast.Name):
                 parts.append(node.id)
             return ".".join(reversed(parts))
-        elif isinstance(decorator, ast.Call):
+        if isinstance(decorator, ast.Call):
             return self._get_decorator_name(decorator.func)
         return ""

@@ -53,6 +53,9 @@ cd btx_fix_mcp && make dev
 ### CLI Usage (Simple)
 
 ```bash
+# Deploy configuration (recommended first step) - this creates a config file with the settings for all tests to adjust
+btx_fix_mcp config-deploy --target app
+
 # Review uncommitted git changes (default)
 btx_fix_mcp review all
 

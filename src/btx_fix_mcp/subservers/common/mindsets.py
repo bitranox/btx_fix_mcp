@@ -180,12 +180,11 @@ def _determine_verdict(
     """Determine verdict and verdict text based on issue counts and thresholds."""
     if critical_ratio > crit_threshold or (critical_count > 0 and crit_threshold <= 1):
         return "REJECT", mindset.judgment.verdict_reject
-    elif warning_ratio > warn_threshold:
+    if warning_ratio > warn_threshold:
         return "NEEDS_WORK", mindset.judgment.verdict_needs_work
-    elif warning_count > 0:
+    if warning_count > 0:
         return "WARNING", mindset.judgment.verdict_warning
-    else:
-        return "PASS", mindset.judgment.verdict_pass
+    return "PASS", mindset.judgment.verdict_pass
 
 
 def _generate_findings(critical_count: int, warning_count: int, critical_ratio: float, warning_ratio: float) -> list[str]:

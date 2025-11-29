@@ -7,31 +7,31 @@ Analyzes code using:
 
 import json
 import subprocess
-from typing import Any
 
-from btx_fix_mcp.tools_venv import get_tool_path
 from btx_fix_mcp.config import get_timeout, get_tool_config
+from btx_fix_mcp.tools_venv import get_tool_path
 
+from .analyzer_results import DuplicationResults, RuffDiagnostic, RuffResults, StaticResults
 from .base import BaseAnalyzer
 
 
-class StaticAnalyzer(BaseAnalyzer):
+class StaticAnalyzer(BaseAnalyzer[StaticResults]):
     """Static analysis using Ruff and Pylint."""
 
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> StaticResults:
         """Run static analysis on files.
 
         Returns:
-            Dictionary with keys: static, duplication
+            StaticResults dataclass with static (ruff), duplication
         """
-        return {
-            "static": self._run_ruff(files),
-            "duplication": self._detect_duplication(files),
-        }
+        return StaticResults(
+            static=self._run_ruff(files),
+            duplication=self._detect_duplication(files),
+        )
 
-    def _run_ruff(self, files: list[str]) -> dict[str, Any]:
+    def _run_ruff(self, files: list[str]) -> RuffResults:
         """Run Ruff static analysis."""
-        results = {"ruff": "", "ruff_json": []}
+        results = RuffResults()
         if not files:
             return results
 
@@ -45,7 +45,7 @@ class StaticAnalyzer(BaseAnalyzer):
 
         ruff = str(get_tool_path("ruff"))
         try:
-            ruff_timeout = get_timeout("tool_analysis", 60)
+            ruff_timeout = get_timeout("tool_analysis", 120)
 
             # Build command with config options
             cmd = [
@@ -69,14 +69,17 @@ class StaticAnalyzer(BaseAnalyzer):
 
             result = subprocess.run(
                 cmd + files,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=ruff_timeout,
             )
-            results["ruff"] = result.stdout
+            results.ruff = result.stdout
             if result.stdout.strip():
                 try:
-                    results["ruff_json"] = json.loads(result.stdout)
+                    raw_diagnostics = json.loads(result.stdout)
+                    # Convert to typed RuffDiagnostic at parse boundary
+                    results.ruff_json = [RuffDiagnostic.model_validate(d) for d in raw_diagnostics]
                 except json.JSONDecodeError:
                     self.logger.warning("Invalid JSON output from Ruff")
         except subprocess.TimeoutExpired:
@@ -88,9 +91,9 @@ class StaticAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _detect_duplication(self, files: list[str]) -> dict[str, Any]:
+    def _detect_duplication(self, files: list[str]) -> DuplicationResults:
         """Detect code duplication using pylint."""
-        results = {"duplicates": [], "raw_output": ""}
+        results = DuplicationResults()
         if not files:
             return results
 
@@ -106,7 +109,7 @@ class StaticAnalyzer(BaseAnalyzer):
 
         pylint = str(get_tool_path("pylint"))
         try:
-            pylint_timeout = get_timeout("tool_long", 120)
+            pylint_timeout = get_timeout("tool_long", 240)
             cmd = [
                 pylint,
                 "--disable=all",
@@ -125,14 +128,15 @@ class StaticAnalyzer(BaseAnalyzer):
 
             result = subprocess.run(
                 cmd + files,
+                check=False,
                 capture_output=True,
                 text=True,
                 timeout=pylint_timeout,
             )
-            results["raw_output"] = result.stdout + result.stderr
+            results.raw_output = result.stdout + result.stderr
             for line in result.stdout.split("\n"):
                 if "Similar lines" in line or "duplicate-code" in line:
-                    results["duplicates"].append(line.strip())
+                    results.duplicates.append(line.strip())
         except subprocess.TimeoutExpired:
             self.logger.warning("Pylint duplication check timed out")
         except FileNotFoundError:

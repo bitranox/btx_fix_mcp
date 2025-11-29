@@ -29,9 +29,9 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
-from ._utils import _load_pyproject  # pyright: ignore[reportPrivateUsage]
+from .toml_config import PyprojectConfig, load_pyproject_config
 
 __all__ = ["DependencyInfo", "check_dependencies", "print_report", "update_dependencies"]
 
@@ -128,7 +128,12 @@ def _fetch_latest_version(package_name: str) -> str | None:
     data = _fetch_pypi_data(package_name)
     if data is None:
         return None
-    return str(data.get("info", {}).get("version", ""))
+    info = data.get("info")
+    if isinstance(info, dict):
+        typed_info = cast(dict[str, Any], info)
+        version = typed_info.get("version", "")
+        return str(version) if version else ""
+    return ""
 
 
 def _fetch_latest_version_below(package_name: str, upper_bound: str) -> str | None:
@@ -145,13 +150,15 @@ def _fetch_latest_version_below(package_name: str, upper_bound: str) -> str | No
     if data is None:
         return None
 
-    releases = data.get("releases", {})
-    if not releases:
+    releases = data.get("releases")
+    if not isinstance(releases, dict) or not releases:
         return None
+
+    typed_releases = cast(dict[str, Any], releases)
 
     # Get all version strings and filter to those below upper_bound
     valid_versions: list[tuple[tuple[int, ...], str]] = []
-    for version_str in releases.keys():
+    for version_str in typed_releases.keys():
         # Skip pre-release versions (containing a, b, rc, dev, etc.)
         if re.search(r"(a|b|rc|dev|alpha|beta)", version_str, re.IGNORECASE):
             continue
@@ -213,14 +220,14 @@ def _compare_versions(current: str, latest: str) -> str:
 
 
 def _extract_dependencies_from_list(
-    deps: list[Any],
+    deps: tuple[str, ...] | list[str],
     source: str,
 ) -> list[DependencyInfo]:
     """Extract dependency info from a list of requirement strings."""
     results: list[DependencyInfo] = []
 
     for dep in deps:
-        if not isinstance(dep, str):
+        if not dep:
             continue
 
         original_spec = dep.strip()
@@ -233,11 +240,9 @@ def _extract_dependencies_from_list(
         if latest_absolute is None:
             status = "error"
             latest_str = "not found"
-            latest_in_range = None
         elif not min_version:
             status = "unknown"
             latest_str = latest_absolute
-            latest_in_range = None
         elif upper_bound and _version_gte(latest_absolute, upper_bound):
             # Latest version exceeds our upper bound - check for updates within range
             latest_in_range = _fetch_latest_version_below(name, upper_bound)
@@ -256,7 +261,6 @@ def _extract_dependencies_from_list(
             # No upper bound constraint or latest is within range
             status = _compare_versions(min_version, latest_absolute)
             latest_str = latest_absolute
-            latest_in_range = None
 
         results.append(
             DependencyInfo(
@@ -274,120 +278,54 @@ def _extract_dependencies_from_list(
     return results
 
 
-def _extract_all_dependencies(data: dict[str, Any]) -> list[DependencyInfo]:
-    """Extract all dependencies from pyproject.toml data."""
+def _extract_all_dependencies(config: PyprojectConfig) -> list[DependencyInfo]:
+    """Extract all dependencies from PyprojectConfig."""
     all_deps: list[DependencyInfo] = []
 
     # 1. [project].dependencies
-    project = data.get("project", {})
-    if isinstance(project, dict):
-        deps = project.get("dependencies", [])
-        if isinstance(deps, list):
-            all_deps.extend(_extract_dependencies_from_list(deps, "[project].dependencies"))
+    if config.project.dependencies:
+        all_deps.extend(_extract_dependencies_from_list(config.project.dependencies, "[project].dependencies"))
 
-        # 2. [project.optional-dependencies]
-        optional = project.get("optional-dependencies", {})
-        if isinstance(optional, dict):
-            for group_name, group_deps in optional.items():
-                if isinstance(group_deps, list):
-                    source = f"[project.optional-dependencies].{group_name}"
-                    all_deps.extend(_extract_dependencies_from_list(group_deps, source))
+    # 2. [project.optional-dependencies]
+    for group_name, group_deps in config.project.optional_dependencies.items():
+        source = f"[project.optional-dependencies].{group_name}"
+        all_deps.extend(_extract_dependencies_from_list(group_deps, source))
 
     # 3. [build-system].requires
-    build_system = data.get("build-system", {})
-    if isinstance(build_system, dict):
-        requires = build_system.get("requires", [])
-        if isinstance(requires, list):
-            all_deps.extend(_extract_dependencies_from_list(requires, "[build-system].requires"))
+    if config.build_system.requires:
+        all_deps.extend(_extract_dependencies_from_list(config.build_system.requires, "[build-system].requires"))
 
-    # 4. [dependency-groups] (PEP 735 - newer spec)
-    dep_groups = data.get("dependency-groups", {})
-    if isinstance(dep_groups, dict):
-        for group_name, group_deps in dep_groups.items():
-            if isinstance(group_deps, list):
-                source = f"[dependency-groups].{group_name}"
-                all_deps.extend(_extract_dependencies_from_list(group_deps, source))
+    # 4. [dependency-groups] (PEP 735)
+    for group_name, group_deps in config.dependency_groups.groups.items():
+        source = f"[dependency-groups].{group_name}"
+        all_deps.extend(_extract_dependencies_from_list(group_deps, source))
 
-    # 5. Check for tool-specific dependency sections
-    tool = data.get("tool", {})
-    if isinstance(tool, dict):
-        # [tool.pdm.dev-dependencies] (PDM)
-        pdm = tool.get("pdm", {})
-        if isinstance(pdm, dict):
-            pdm_dev = pdm.get("dev-dependencies", {})
-            if isinstance(pdm_dev, dict):
-                for group_name, group_deps in pdm_dev.items():
-                    if isinstance(group_deps, list):
-                        source = f"[tool.pdm.dev-dependencies].{group_name}"
-                        all_deps.extend(_extract_dependencies_from_list(group_deps, source))
+    # 5. [tool.pdm.dev-dependencies]
+    for group_name, group_deps in config.tool.pdm.dev_dependencies.items():
+        source = f"[tool.pdm.dev-dependencies].{group_name}"
+        all_deps.extend(_extract_dependencies_from_list(group_deps, source))
 
-        # [tool.poetry.dependencies] and [tool.poetry.dev-dependencies] (Poetry)
-        poetry = tool.get("poetry", {})
-        if isinstance(poetry, dict):
-            poetry_deps = poetry.get("dependencies", {})
-            if isinstance(poetry_deps, dict):
-                poetry_dep_list = _poetry_deps_to_list(poetry_deps)
-                all_deps.extend(_extract_dependencies_from_list(poetry_dep_list, "[tool.poetry.dependencies]"))
+    # 6. [tool.poetry.dependencies]
+    if config.tool.poetry.dependencies:
+        poetry_deps = [dep.to_requirement_string() for dep in config.tool.poetry.dependencies]
+        all_deps.extend(_extract_dependencies_from_list(poetry_deps, "[tool.poetry.dependencies]"))
 
-            poetry_dev = poetry.get("dev-dependencies", {})
-            if isinstance(poetry_dev, dict):
-                poetry_dev_list = _poetry_deps_to_list(poetry_dev)
-                all_deps.extend(_extract_dependencies_from_list(poetry_dev_list, "[tool.poetry.dev-dependencies]"))
+    # 7. [tool.poetry.dev-dependencies]
+    if config.tool.poetry.dev_dependencies:
+        poetry_dev_deps = [dep.to_requirement_string() for dep in config.tool.poetry.dev_dependencies]
+        all_deps.extend(_extract_dependencies_from_list(poetry_dev_deps, "[tool.poetry.dev-dependencies]"))
 
-            # Poetry group dependencies
-            poetry_groups = poetry.get("group", {})
-            if isinstance(poetry_groups, dict):
-                for group_name, group_data in poetry_groups.items():
-                    if isinstance(group_data, dict):
-                        group_deps = group_data.get("dependencies", {})
-                        if isinstance(group_deps, dict):
-                            source = f"[tool.poetry.group.{group_name}.dependencies]"
-                            all_deps.extend(_extract_dependencies_from_list(_poetry_deps_to_list(group_deps), source))
+    # 8. [tool.poetry.group.*.dependencies]
+    for group_name, group_deps in config.tool.poetry.group_dependencies.items():
+        poetry_group_deps = [dep.to_requirement_string() for dep in group_deps]
+        source = f"[tool.poetry.group.{group_name}.dependencies]"
+        all_deps.extend(_extract_dependencies_from_list(poetry_group_deps, source))
 
-        # [tool.uv.dev-dependencies] (uv)
-        uv = tool.get("uv", {})
-        if isinstance(uv, dict):
-            uv_dev = uv.get("dev-dependencies", [])
-            if isinstance(uv_dev, list):
-                all_deps.extend(_extract_dependencies_from_list(uv_dev, "[tool.uv.dev-dependencies]"))
+    # 9. [tool.uv.dev-dependencies]
+    if config.tool.uv.dev_dependencies:
+        all_deps.extend(_extract_dependencies_from_list(config.tool.uv.dev_dependencies, "[tool.uv.dev-dependencies]"))
 
     return all_deps
-
-
-def _poetry_deps_to_list(deps: dict[str, Any]) -> list[str]:
-    """Convert Poetry-style dependency dict to requirement strings."""
-    result: list[str] = []
-    for name, spec in deps.items():
-        if name.lower() == "python":
-            continue
-        if isinstance(spec, str):
-            # Simple version constraint
-            if spec == "*":
-                result.append(name)
-            elif spec.startswith("^"):
-                # Poetry caret constraint -> approximate >=
-                result.append(f"{name}>={spec[1:]}")
-            elif spec.startswith("~"):
-                # Poetry tilde constraint -> approximate >=
-                result.append(f"{name}>={spec[1:]}")
-            else:
-                result.append(f"{name}{spec}")
-        elif isinstance(spec, dict):
-            version = spec.get("version", "")
-            if isinstance(version, str) and version:
-                if version == "*":
-                    result.append(name)
-                elif version.startswith("^"):
-                    result.append(f"{name}>={version[1:]}")
-                elif version.startswith("~"):
-                    result.append(f"{name}>={version[1:]}")
-                else:
-                    result.append(f"{name}{version}")
-            else:
-                result.append(name)
-        else:
-            result.append(name)
-    return result
 
 
 def check_dependencies(pyproject: Path = Path("pyproject.toml")) -> list[DependencyInfo]:
@@ -399,8 +337,8 @@ def check_dependencies(pyproject: Path = Path("pyproject.toml")) -> list[Depende
     Returns:
         List of DependencyInfo objects for all found dependencies.
     """
-    data = _load_pyproject(pyproject)
-    return _extract_all_dependencies(data)
+    config = load_pyproject_config(pyproject)
+    return _extract_all_dependencies(config)
 
 
 def print_report(deps: list[DependencyInfo], *, verbose: bool = False) -> int:
@@ -611,11 +549,6 @@ def update_dependencies(
         else:
             pyproject.write_text(content, encoding="utf-8")
             print(f"\nUpdated {updated_count} dependencies in {pyproject}")
-
-            # Clear the pyproject cache since we modified the file
-            from ._utils import _PYPROJECT_DATA_CACHE  # pyright: ignore[reportPrivateUsage]
-
-            _PYPROJECT_DATA_CACHE.pop(pyproject.resolve(), None)
     else:
         print("\nNo dependencies were updated")
 

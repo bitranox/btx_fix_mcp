@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 from btx_fix_mcp.config import get_config, get_display_limit, get_subserver_config, get_timeout
+from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.chunked_writer import (
     cleanup_chunked_issues,
     write_chunked_issues,
@@ -25,7 +26,6 @@ from btx_fix_mcp.subservers.common.issues import (
     OutdatedIssue,
     VulnerabilityIssue,
 )
-from btx_fix_mcp.subservers.base import BaseSubServer, SubServerResult
 from btx_fix_mcp.subservers.common.logging import (
     LogContext,
     get_mcp_logger,
@@ -41,6 +41,8 @@ from btx_fix_mcp.subservers.common.mindsets import (
     get_mindset,
 )
 from btx_fix_mcp.subservers.review.deps_scanners import (
+    OutdatedPackage,
+    Vulnerability,
     check_outdated_packages,
     scan_vulnerabilities,
 )
@@ -239,8 +241,10 @@ class DepsSubServer(BaseSubServer):
         log_step(self.logger, 2, "Scanning for vulnerabilities")
         with LogContext(self.logger, "Vulnerability scan"):
             vuln_results = scan_vulnerabilities(project_type, self.repo_path, self.logger)
-            results["vulnerabilities"] = vuln_results
+            # Convert typed objects to issues first (typed access)
             all_issues.extend(self._vulnerabilities_to_issues(vuln_results))
+            # Store as dicts for JSON serialization
+            results["vulnerabilities"] = [v.model_dump() for v in vuln_results]
 
     def _run_outdated_check(self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]) -> None:
         """Run outdated package check if enabled."""
@@ -250,8 +254,10 @@ class DepsSubServer(BaseSubServer):
         log_step(self.logger, 3, "Checking for outdated packages")
         with LogContext(self.logger, "Outdated check"):
             outdated = check_outdated_packages(project_type, self.repo_path, self.logger)
-            results["outdated"] = outdated
+            # Convert typed objects to issues first (typed access)
             all_issues.extend(self._outdated_to_issues(outdated))
+            # Store as dicts for JSON serialization
+            results["outdated"] = [pkg.model_dump() for pkg in outdated]
 
     def _run_license_check(self, project_type: str, results: dict[str, Any], all_issues: list[BaseIssue]) -> None:
         """Run license compliance check if enabled."""
@@ -319,9 +325,10 @@ class DepsSubServer(BaseSubServer):
         if project_type == "python":
             try:
                 python_path = get_tool_path("python")
-                pip_licenses_timeout = get_timeout("tool_analysis", 60, start_dir=str(self.repo_path))
+                pip_licenses_timeout = get_timeout("tool_analysis", 120, start_dir=str(self.repo_path))
                 result = subprocess.run(
                     [str(python_path), "-m", "pip_licenses", "--format=json"],
+                    check=False,
                     capture_output=True,
                     text=True,
                     timeout=pip_licenses_timeout,
@@ -341,9 +348,10 @@ class DepsSubServer(BaseSubServer):
 
         if project_type == "python":
             try:
-                pip_list_timeout = get_timeout("tool_quick", 30, start_dir=str(self.repo_path))
+                pip_list_timeout = get_timeout("tool_quick", 60, start_dir=str(self.repo_path))
                 result = subprocess.run(
                     ["pip", "list", "--format=json"],
+                    check=False,
                     capture_output=True,
                     text=True,
                     timeout=pip_list_timeout,
@@ -385,32 +393,32 @@ class DepsSubServer(BaseSubServer):
 
         return count
 
-    def _vulnerabilities_to_issues(self, vulns: list[dict]) -> list[BaseIssue]:
+    def _vulnerabilities_to_issues(self, vulns: list[Vulnerability]) -> list[BaseIssue]:
         """Convert vulnerabilities to issues."""
         issues: list[BaseIssue] = []
         for v in vulns:
             issue = VulnerabilityIssue(
                 type="vulnerability",
-                severity="critical" if v.get("severity") in ("critical", "high") else "warning",
-                package=v.get("package", ""),
-                version=v.get("version", ""),
-                vuln_id=v.get("vulnerability_id", ""),
-                message=f"Security vulnerability in {v.get('package', '')} {v.get('version', '')}: {v.get('description', '')[:100]}",
+                severity="critical" if v.severity in ("critical", "high") else "warning",
+                package=v.package,
+                version=v.version,
+                vuln_id=v.vulnerability_id,
+                message=f"Security vulnerability in {v.package} {v.version}: {v.description[:100]}",
             )
             issues.append(issue)
         return issues
 
-    def _outdated_to_issues(self, outdated: list[dict]) -> list[BaseIssue]:
+    def _outdated_to_issues(self, outdated: list[OutdatedPackage]) -> list[BaseIssue]:
         """Convert outdated packages to issues."""
         issues: list[BaseIssue] = []
         for pkg in outdated:
             issue = OutdatedIssue(
                 type="outdated",
                 severity="warning",
-                package=pkg.get("name", ""),
-                version=pkg.get("version", ""),
-                latest=pkg.get("latest_version", ""),
-                message=f"Outdated package: {pkg.get('name', '')} {pkg.get('version', '')} -> {pkg.get('latest_version', '')}",
+                package=pkg.name,
+                version=pkg.version,
+                latest=pkg.latest_version,
+                message=f"Outdated package: {pkg.name} {pkg.version} -> {pkg.latest_version}",
             )
             issues.append(issue)
         return issues
@@ -474,11 +482,8 @@ class DepsSubServer(BaseSubServer):
         if all_issues:
             report_dir = self.output_dir.parent / "report"
 
-            # Convert to dicts
-            issues_dicts = [issue.to_dict() for issue in all_issues]
-
-            # Get unique issue types
-            issue_types = list({issue.get("type", "unknown") for issue in issues_dicts})
+            # Get unique issue types before conversion (typed access)
+            issue_types = list({issue.type for issue in all_issues})
 
             # Cleanup old chunked files
             cleanup_chunked_issues(
@@ -486,6 +491,9 @@ class DepsSubServer(BaseSubServer):
                 issue_types=issue_types,
                 prefix="issues",
             )
+
+            # Convert to dicts at serialization boundary
+            issues_dicts = [issue.to_dict() for issue in all_issues]
 
             # Write chunked issues
             written_files = write_chunked_issues(
@@ -532,8 +540,8 @@ class DepsSubServer(BaseSubServer):
 
     def _evaluate_mindset(self, all_issues: list[BaseIssue], metrics: dict[str, Any]) -> Any:
         """Evaluate results using mindset."""
-        critical_issues = [i.to_dict() for i in all_issues if i.severity == "critical"]
-        warning_issues = [i.to_dict() for i in all_issues if i.severity == "warning"]
+        critical_issues = [i for i in all_issues if i.severity == "critical"]
+        warning_issues = [i for i in all_issues if i.severity == "warning"]
         total_items = max(metrics["total_dependencies"], 1)
 
         return evaluate_results(

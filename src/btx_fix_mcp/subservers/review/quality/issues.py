@@ -3,10 +3,11 @@
 Extracts issue compilation logic to reduce __init__ complexity.
 """
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal
 
+from .analyzer_results import QualityAnalysisResults
 from .config import QualityConfig
 
 # Severity levels for issues
@@ -59,21 +60,21 @@ class RuleIssue(Issue):
 
 
 def compile_all_issues(
-    results: dict[str, Any],
+    results: QualityAnalysisResults,
     config: QualityConfig,
     repo_path: Path,
-) -> list[dict[str, Any]]:
+) -> list[Issue]:
     """Compile all issues from various analyses.
 
     Args:
-        results: Analysis results dictionary
+        results: Typed analysis results from orchestrator
         config: Quality configuration with thresholds
         repo_path: Repository path for relative paths
 
     Returns:
-        List of issue dictionaries
+        List of Issue dataclass instances (convert with to_dict() at serialization)
     """
-    issues: list[dict[str, Any]] = []
+    issues: list[Issue] = []
     t = config.thresholds
 
     # Complexity issues
@@ -125,317 +126,311 @@ def compile_all_issues(
 
 
 def _add_complexity_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
     threshold: int,
     error_threshold: int,
 ) -> None:
-    """Add cyclomatic complexity issues.
-
-    Args:
-        issues: List to append issues to
-        results: Analysis results dictionary
-        threshold: Warning threshold for complexity
-        error_threshold: Error threshold for complexity (above this = error severity)
-    """
-    for r in results.get("complexity", []):
-        if r.get("complexity", 0) > threshold:
-            complexity_value = r["complexity"]
-            issue = ThresholdIssue(
-                type="high_complexity",
-                severity="warning" if complexity_value <= error_threshold else "error",
-                file=r["file"],
-                line=r.get("line", 0),
-                name=r["name"],
-                value=complexity_value,
-                threshold=threshold,
-                message=f"Function '{r['name']}' has complexity {complexity_value} (threshold: {threshold})",
+    """Add cyclomatic complexity issues."""
+    for r in results.complexity:
+        if r.complexity > threshold:
+            issues.append(
+                ThresholdIssue(
+                    type="high_complexity",
+                    severity="warning" if r.complexity <= error_threshold else "error",
+                    file=r.file,
+                    line=r.line,
+                    name=r.name,
+                    value=r.complexity,
+                    threshold=threshold,
+                    message=f"Function '{r.name}' has complexity {r.complexity} (threshold: {threshold})",
+                )
             )
-            issues.append(issue.to_dict())
 
 
 def _add_maintainability_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
     threshold: int,
     error_threshold: int,
 ) -> None:
-    """Add maintainability index issues.
-
-    Args:
-        issues: List to append issues to
-        results: Analysis results dictionary
-        threshold: Warning threshold for MI (below this = warning)
-        error_threshold: Error threshold for MI (below this = error severity)
-    """
-    for r in results.get("maintainability", []):
-        mi_value = r.get("mi", 100)
-        if mi_value < threshold:
-            issue = ThresholdIssue(
-                type="low_maintainability",
-                severity="warning" if mi_value >= error_threshold else "error",
-                file=r["file"],
-                value=mi_value,
-                threshold=threshold,
-                message=f"File has maintainability index {mi_value:.1f} (threshold: {threshold})",
+    """Add maintainability index issues."""
+    for r in results.maintainability:
+        if r.mi < threshold:
+            issues.append(
+                ThresholdIssue(
+                    type="low_maintainability",
+                    severity="warning" if r.mi >= error_threshold else "error",
+                    file=r.file,
+                    value=r.mi,
+                    threshold=threshold,
+                    message=f"File has maintainability index {r.mi:.1f} (threshold: {threshold})",
+                )
             )
-            issues.append(issue.to_dict())
 
 
 def _add_function_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add function length/nesting issues."""
-    for raw_issue in results.get("function_issues", []):
-        issue = ThresholdIssue(
-            type=raw_issue["issue_type"].lower(),
-            severity="error" if raw_issue["value"] > raw_issue["threshold"] * 2 else "warning",
-            file=raw_issue["file"],
-            line=raw_issue["line"],
-            name=raw_issue["function"],
-            value=raw_issue["value"],
-            threshold=raw_issue["threshold"],
-            message=raw_issue["message"],
+    for fi in results.function_issues:
+        issues.append(
+            ThresholdIssue(
+                type=fi.issue_type.lower(),
+                severity="error" if fi.value > fi.threshold * 2 else "warning",
+                file=fi.file,
+                line=fi.line,
+                name=fi.function,
+                value=fi.value,
+                threshold=fi.threshold,
+                message=fi.message,
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_cognitive_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
     threshold: int,
 ) -> None:
     """Add cognitive complexity issues."""
-    for r in results.get("cognitive", []):
-        if r.get("exceeds_threshold"):
-            func_name = r.get("function", r.get("name", "unknown"))
-            complexity_value = r.get("complexity", 0)
-            issue = ThresholdIssue(
-                type="high_cognitive_complexity",
-                severity="warning",
-                file=r.get("file", ""),
-                line=r.get("line", 0),
-                name=func_name,
-                value=complexity_value,
-                threshold=threshold,
-                message=f"Function '{func_name}' has cognitive complexity {complexity_value} (threshold: {threshold})",
+    for r in results.cognitive:
+        if r.exceeds_threshold:
+            issues.append(
+                ThresholdIssue(
+                    type="high_cognitive_complexity",
+                    severity="warning",
+                    file=r.file,
+                    line=r.line,
+                    name=r.name,
+                    value=r.complexity,
+                    threshold=threshold,
+                    message=f"Function '{r.name}' has cognitive complexity {r.complexity} (threshold: {threshold})",
+                )
             )
-            issues.append(issue.to_dict())
 
 
 def _add_test_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add test-related issues."""
-    for test_issue in results.get("tests", {}).get("issues", []):
-        issue_type = test_issue.get("type", "test_issue").lower()
-        issue = Issue(
-            type=issue_type,
-            severity="warning",
-            file=test_issue.get("file", ""),
-            line=test_issue.get("line", 0),
-            message=test_issue.get("message", ""),
+    for ti in results.tests.issues:
+        issues.append(
+            Issue(
+                type=ti.type.lower(),
+                severity="warning",
+                file=ti.file,
+                line=ti.line,
+                message=ti.message,
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_architecture_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
     coupling_threshold: int,
 ) -> None:
     """Add architecture issues (god objects, coupling)."""
-    arch = results.get("architecture", {})
-
-    for obj in arch.get("god_objects", []):
-        issue = ThresholdIssue(
-            type="god_object",
-            severity="error",
-            file=obj["file"],
-            line=obj["line"],
-            name=obj["class"],
-            value=f"{obj['methods']} methods, {obj['lines']} lines",
-            message=f"Class '{obj['class']}' is a god object ({obj['methods']} methods, {obj['lines']} lines)",
+    for obj in results.architecture.god_objects:
+        issues.append(
+            ThresholdIssue(
+                type="god_object",
+                severity="error",
+                file=obj.file,
+                line=obj.line,
+                name=obj.class_name,
+                value=f"{obj.methods} methods, {obj.lines} lines",
+                message=f"Class '{obj.class_name}' is a god object ({obj.methods} methods, {obj.lines} lines)",
+            )
         )
-        issues.append(issue.to_dict())
 
-    for item in arch.get("highly_coupled", []):
-        threshold = item.get("threshold", coupling_threshold)
-        issue = ThresholdIssue(
-            type="high_coupling",
-            severity="warning",
-            file=item["file"],
-            value=item["import_count"],
-            threshold=threshold,
-            message=f"Module has {item['import_count']} imports (threshold: {threshold})",
+    for item in results.architecture.highly_coupled:
+        issues.append(
+            ThresholdIssue(
+                type="high_coupling",
+                severity="warning",
+                file=item.file,
+                value=item.import_count,
+                threshold=item.threshold,
+                message=f"Module has {item.import_count} imports (threshold: {item.threshold})",
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_runtime_check_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add runtime check optimization issues."""
-    for rc in results.get("runtime_checks", []):
-        issue = ThresholdIssue(
-            type="runtime_check_optimization",
-            severity="info",
-            file=rc["file"],
-            line=rc["line"],
-            name=rc["function"],
-            value=rc["check_count"],
-            message=rc["message"],
+    for rc in results.runtime_checks:
+        issues.append(
+            ThresholdIssue(
+                type="runtime_check_optimization",
+                severity="info",
+                file=rc.file,
+                line=rc.line,
+                name=rc.function,
+                value=rc.check_count,
+                message=rc.message,
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_ruff_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
     repo_path: Path,
 ) -> None:
     """Add Ruff static analysis issues."""
-    for ruff_issue in results.get("static", {}).get("ruff_json", []):
-        file_path = ruff_issue.get("filename", "")
+    for ruff_issue in results.static.ruff_json:
+        file_path = ruff_issue.filename
         try:
             rel_path = str(Path(file_path).relative_to(repo_path)) if file_path else ""
         except ValueError:
             rel_path = file_path
-        issue = RuleIssue(
-            type=f"ruff_{ruff_issue.get('code', 'unknown')}",
-            severity="warning",
-            file=rel_path,
-            line=ruff_issue.get("location", {}).get("row", 0),
-            message=ruff_issue.get("message", ""),
-            rule=ruff_issue.get("code", ""),
+        issues.append(
+            RuleIssue(
+                type=f"ruff_{ruff_issue.code or 'unknown'}",
+                severity="warning",
+                file=rel_path,
+                line=ruff_issue.location.row,
+                message=ruff_issue.message,
+                rule=ruff_issue.code,
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_duplication_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add code duplication issues."""
-    for dup in results.get("duplication", {}).get("duplicates", []):
-        issue = Issue(
-            type="code_duplication",
-            severity="warning",
-            message=dup,
+    for dup in results.duplication.duplicates:
+        issues.append(
+            Issue(
+                type="code_duplication",
+                severity="warning",
+                message=dup,
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_coverage_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
     min_type_coverage: int,
     min_docstring_coverage: int,
 ) -> None:
     """Add type and docstring coverage issues."""
-    type_cov = results.get("type_coverage", {})
-    if type_cov.get("coverage_percent", 100) < min_type_coverage:
-        issue = ThresholdIssue(
-            type="low_type_coverage",
-            severity="warning",
-            value=type_cov["coverage_percent"],
-            threshold=min_type_coverage,
-            message=f"Type coverage is {type_cov['coverage_percent']}% (minimum: {min_type_coverage}%)",
+    type_coverage_percent = results.type_coverage.coverage_percent
+    if type_coverage_percent < min_type_coverage:
+        issues.append(
+            ThresholdIssue(
+                type="low_type_coverage",
+                severity="warning",
+                value=type_coverage_percent,
+                threshold=min_type_coverage,
+                message=f"Type coverage is {type_coverage_percent}% (minimum: {min_type_coverage}%)",
+            )
         )
-        issues.append(issue.to_dict())
 
-    doc_cov = results.get("docstring_coverage", {})
-    if doc_cov.get("coverage_percent", 100) < min_docstring_coverage:
-        issue = ThresholdIssue(
-            type="low_docstring_coverage",
-            severity="warning",
-            value=doc_cov["coverage_percent"],
-            threshold=min_docstring_coverage,
-            message=f"Docstring coverage is {doc_cov['coverage_percent']}% (minimum: {min_docstring_coverage}%)",
+    docstring_coverage_percent = results.docstring_coverage.coverage_percent
+    if docstring_coverage_percent < min_docstring_coverage:
+        issues.append(
+            ThresholdIssue(
+                type="low_docstring_coverage",
+                severity="warning",
+                value=docstring_coverage_percent,
+                threshold=min_docstring_coverage,
+                message=f"Docstring coverage is {docstring_coverage_percent}% (minimum: {min_docstring_coverage}%)",
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_import_cycle_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add import cycle issues."""
-    for cycle in results.get("import_cycles", {}).get("cycles", []):
-        issue = ThresholdIssue(
-            type="import_cycle",
-            severity="error",
-            value=" -> ".join(cycle),
-            message=f"Import cycle detected: {' -> '.join(cycle)}",
+    for cycle in results.import_cycles.cycles:
+        issues.append(
+            ThresholdIssue(
+                type="import_cycle",
+                severity="error",
+                value=" -> ".join(cycle),
+                message=f"Import cycle detected: {' -> '.join(cycle)}",
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_dead_code_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add dead code issues."""
-    for dc in results.get("dead_code", {}).get("dead_code", []):
-        issue = ThresholdIssue(
-            type="dead_code",
-            severity="warning",
-            file=dc["file"],
-            line=dc["line"],
-            value=dc.get("confidence", 0),
-            message=dc["message"],
+    for dc in results.dead_code.dead_code:
+        issues.append(
+            ThresholdIssue(
+                type="dead_code",
+                severity="warning",
+                file=dc.file,
+                line=dc.line,
+                value=0,  # DeadCodeItem doesn't have confidence
+                message=dc.message,
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_churn_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add high churn file issues."""
-    churn_data = results.get("code_churn", {})
-    analysis_period = churn_data.get("analysis_period_days", 90)
-    for churn_file in churn_data.get("high_churn_files", []):
-        issue = ThresholdIssue(
-            type="high_churn",
-            severity="warning",
-            file=churn_file["file"],
-            value=f"{churn_file['commits']} commits, {churn_file['authors']} authors",
-            message=f"High churn file: {churn_file['file']} ({churn_file['commits']} commits by {churn_file['authors']} authors in {analysis_period} days)",
+    analysis_period = results.code_churn.analysis_period_days
+    for cf in results.code_churn.high_churn_files:
+        issues.append(
+            ThresholdIssue(
+                type="high_churn",
+                severity="warning",
+                file=cf.file,
+                value=f"{cf.commits} commits, {cf.authors} authors",
+                message=f"High churn file: {cf.file} ({cf.commits} commits by {cf.authors} authors in {analysis_period} days)",
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_js_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add JavaScript/TypeScript issues."""
-    for js_issue in results.get("js_analysis", {}).get("issues", []):
-        issue = RuleIssue(
-            type=f"eslint_{js_issue.get('rule', 'unknown')}",
-            severity=js_issue.get("severity", "warning"),
-            file=js_issue["file"],
-            line=js_issue["line"],
-            message=js_issue["message"],
-            rule=js_issue.get("rule", ""),
+    for js_issue in results.js_analysis.get("issues", []):
+        issues.append(
+            RuleIssue(
+                type=f"eslint_{js_issue.get('rule', 'unknown')}",
+                severity=js_issue.get("severity", "warning"),
+                file=js_issue["file"],
+                line=js_issue["line"],
+                message=js_issue["message"],
+                rule=js_issue.get("rule", ""),
+            )
         )
-        issues.append(issue.to_dict())
 
 
 def _add_beartype_issues(
-    issues: list[dict[str, Any]],
-    results: dict[str, Any],
+    issues: list[Issue],
+    results: QualityAnalysisResults,
 ) -> None:
     """Add beartype runtime type check issues."""
-    if not results.get("beartype", {}).get("passed", True):
-        for err in results.get("beartype", {}).get("errors", []):
-            issue = Issue(
-                type="runtime_type_error",
-                severity="error",
-                message=err,
+    if not results.beartype.get("passed", True):
+        for err in results.beartype.get("errors", []):
+            issues.append(
+                Issue(
+                    type="runtime_type_error",
+                    severity="error",
+                    message=err,
+                )
             )
-            issues.append(issue.to_dict())

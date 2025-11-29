@@ -1,9 +1,10 @@
-"""Tests for TestAnalyzer."""
+"""Tests for TestSuiteAnalyzer."""
 
 import logging
 
 import pytest
 
+from btx_fix_mcp.subservers.review.quality.analyzer_results import SuiteResults
 from btx_fix_mcp.subservers.review.quality.tests import TestSuiteAnalyzer
 
 
@@ -29,17 +30,18 @@ class TestTestAnalyzerBasic:
         """Test analyze with empty file list."""
         result = analyzer.analyze([])
 
-        assert result["test_files"] == []
-        assert result["total_tests"] == 0
-        assert result["total_assertions"] == 0
-        assert result["issues"] == []
+        assert isinstance(result, SuiteResults)
+        assert result.test_files == []
+        assert result.total_tests == 0
+        assert result.total_assertions == 0
+        assert result.issues == []
 
     def test_analyze_nonexistent_files(self, analyzer):
         """Test analyze with nonexistent files."""
         result = analyzer.analyze(["/nonexistent/test_file.py"])
 
-        assert result["test_files"] == []
-        assert result["total_tests"] == 0
+        assert result.test_files == []
+        assert result.total_tests == 0
 
 
 class TestIdentifyTestFiles:
@@ -128,8 +130,8 @@ def test_with_asserts():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["total_tests"] == 1
-        assert result["total_assertions"] == 3
+        assert result.total_tests == 1
+        assert result.total_assertions == 3
 
     def test_count_no_assertions(self, analyzer, tmp_path):
         """Test counting when no assertions present."""
@@ -143,10 +145,10 @@ def test_without_assertions():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["total_tests"] == 1
-        assert result["total_assertions"] == 0
+        assert result.total_tests == 1
+        assert result.total_assertions == 0
         # Should have a NO_ASSERTIONS issue
-        assert any(i["type"] == "NO_ASSERTIONS" for i in result["issues"])
+        assert any(i.type == "NO_ASSERTIONS" for i in result.issues)
 
 
 class TestTestCategorization:
@@ -173,7 +175,7 @@ def test_unit():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["categories"]["unit"] == 1
+        assert result.categories.unit == 1
 
     def test_categorize_integration_test(self, analyzer, tmp_path):
         """Test integration test categorization."""
@@ -187,7 +189,7 @@ def test_integration():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["categories"]["integration"] == 1
+        assert result.categories.integration == 1
 
     def test_categorize_e2e_test(self, analyzer, tmp_path):
         """Test e2e test categorization."""
@@ -201,7 +203,7 @@ def test_end_to_end():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["categories"]["e2e"] == 1
+        assert result.categories.e2e == 1
 
     def test_categorize_unknown(self, analyzer, tmp_path):
         """Test unknown category for uncategorized tests."""
@@ -213,7 +215,7 @@ def test_something():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["categories"]["unknown"] == 1
+        assert result.categories.unknown == 1
 
 
 class TestIssueDetection:
@@ -239,8 +241,8 @@ def test_without_assertion():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert len(result["issues"]) >= 1
-        assert any(i["type"] == "NO_ASSERTIONS" for i in result["issues"])
+        assert len(result.issues) >= 1
+        assert any(i.type == "NO_ASSERTIONS" for i in result.issues)
 
     def test_detect_long_test(self, analyzer, tmp_path):
         """Test detecting long tests."""
@@ -255,7 +257,7 @@ def test_without_assertion():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert any(i["type"] == "LONG_TEST" for i in result["issues"])
+        assert any(i.type == "LONG_TEST" for i in result.issues)
 
 
 class TestOSSpecificDetection:
@@ -283,7 +285,7 @@ def test_os_specific():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert any(i["type"] == "MISSING_OS_DECORATOR" for i in result["issues"])
+        assert any(i.type == "MISSING_OS_DECORATOR" for i in result.issues)
 
     def test_detect_os_name_without_decorator(self, analyzer, tmp_path):
         """Test detecting os.name usage without skip decorator."""
@@ -298,7 +300,7 @@ def test_os_name():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert any(i["type"] == "MISSING_OS_DECORATOR" for i in result["issues"])
+        assert any(i.type == "MISSING_OS_DECORATOR" for i in result.issues)
 
     def test_no_issue_with_skip_decorator(self, analyzer, tmp_path):
         """Test no issue when proper skip decorator is present."""
@@ -316,7 +318,7 @@ def test_linux_only():
         result = analyzer.analyze([str(test_file)])
 
         # Should not have MISSING_OS_DECORATOR issue
-        assert not any(i["type"] == "MISSING_OS_DECORATOR" for i in result["issues"])
+        assert not any(i.type == "MISSING_OS_DECORATOR" for i in result.issues)
 
 
 class TestDecoratorExtraction:
@@ -392,5 +394,5 @@ async def test_async_function():
 
         result = analyzer.analyze([str(test_file)])
 
-        assert result["total_tests"] == 1
-        assert result["total_assertions"] == 1
+        assert result.total_tests == 1
+        assert result.total_assertions == 1

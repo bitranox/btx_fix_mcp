@@ -4,7 +4,8 @@ Extracted from ReviewMCPServer to reduce class size, fix deep nesting,
 and improve maintainability using a dispatch pattern.
 """
 
-from typing import TYPE_CHECKING, Any, Callable
+from collections.abc import Callable
+from typing import TYPE_CHECKING, Any
 
 from btx_fix_mcp.subservers.common.logging import get_mcp_logger, log_debug, log_error_detailed
 

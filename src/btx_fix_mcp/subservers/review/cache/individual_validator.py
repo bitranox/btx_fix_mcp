@@ -149,6 +149,7 @@ class IndividualValidator:
             try:
                 result = subprocess.run(
                     cmd,
+                    check=False,
                     cwd=repo_path,
                     capture_output=True,
                     timeout=self.test_timeout,
@@ -209,6 +210,7 @@ class IndividualValidator:
                 try:
                     result = subprocess.run(
                         cmd,
+                        check=False,
                         cwd=repo_path,
                         capture_output=True,
                         timeout=self.test_timeout,

@@ -10,27 +10,34 @@ Analyzes code architecture for:
 import ast
 from collections import defaultdict
 from pathlib import Path
-from typing import Any
 
+from .analyzer_results import (
+    ArchitectureMetrics,
+    ArchitectureResults,
+    GodObjectInfo,
+    HighCouplingInfo,
+    ImportCycleResults,
+    RuntimeCheckInfo,
+)
 from .base import BaseAnalyzer
 
 
-class ArchitectureAnalyzer(BaseAnalyzer):
+class ArchitectureAnalyzer(BaseAnalyzer[ArchitectureResults]):
     """Architecture analysis: god objects, coupling, import cycles."""
 
-    def analyze(self, files: list[str]) -> dict[str, Any]:
+    def analyze(self, files: list[str]) -> ArchitectureResults:
         """Analyze architecture metrics.
 
         Returns:
-            Dictionary with keys: architecture, import_cycles, runtime_checks
+            ArchitectureResults dataclass with architecture, import_cycles, runtime_checks
         """
-        return {
-            "architecture": self._analyze_architecture(files),
-            "import_cycles": self._detect_import_cycles(files),
-            "runtime_checks": self._detect_runtime_checks(files),
-        }
+        return ArchitectureResults(
+            architecture=self._analyze_architecture(files),
+            import_cycles=self._detect_import_cycles(files),
+            runtime_checks=self._detect_runtime_checks(files),
+        )
 
-    def _analyze_architecture(self, files: list[str]) -> dict[str, Any]:
+    def _analyze_architecture(self, files: list[str]) -> ArchitectureMetrics:
         """Analyze architecture: god objects and module coupling."""
         # Check feature flags
         detect_god_objects = self.config.get("detect_god_objects", True)
@@ -40,12 +47,10 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         god_object_lines = self.config.get("god_object_lines_threshold", 500)
         coupling_threshold = self.config.get("coupling_threshold", 15)
 
-        results = {
-            "god_objects": [],
-            "highly_coupled": [],
-            "module_structure": defaultdict(list),
-        }
-        import_graph = defaultdict(set)
+        god_objects: list[GodObjectInfo] = []
+        highly_coupled: list[HighCouplingInfo] = []
+        module_structure: dict[str, list[str]] = defaultdict(list)
+        import_graph: dict[str, set[str]] = defaultdict(set)
 
         for file_path in files:
             if not Path(file_path).exists():
@@ -53,7 +58,9 @@ class ArchitectureAnalyzer(BaseAnalyzer):
 
             self._analyze_single_file(
                 file_path,
-                results,
+                god_objects,
+                highly_coupled,
+                module_structure,
                 import_graph,
                 god_object_methods,
                 god_object_lines,
@@ -61,14 +68,20 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             )
 
         if detect_high_coupling:
-            self._identify_highly_coupled(import_graph, results, coupling_threshold)
+            self._identify_highly_coupled(import_graph, highly_coupled, coupling_threshold)
 
-        return results
+        return ArchitectureMetrics(
+            god_objects=god_objects,
+            highly_coupled=highly_coupled,
+            module_structure=dict(module_structure),
+        )
 
     def _analyze_single_file(
         self,
         file_path: str,
-        results: dict[str, Any],
+        god_objects: list[GodObjectInfo],
+        highly_coupled: list[HighCouplingInfo],
+        module_structure: dict[str, list[str]],
         import_graph: dict[str, set[str]],
         god_object_methods: int,
         god_object_lines: int,
@@ -80,13 +93,13 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             tree = ast.parse(content)
             rel_path = self._get_relative_path(file_path)
 
-            self._update_module_structure(rel_path, results)
+            self._update_module_structure(rel_path, module_structure)
 
             for node in ast.walk(tree):
                 self._process_node(
                     node,
                     rel_path,
-                    results,
+                    god_objects,
                     import_graph,
                     god_object_methods,
                     god_object_lines,
@@ -95,17 +108,17 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error analyzing architecture in {file_path}: {e}")
 
-    def _update_module_structure(self, rel_path: str, results: dict[str, Any]) -> None:
+    def _update_module_structure(self, rel_path: str, module_structure: dict[str, list[str]]) -> None:
         """Update module structure with file path."""
         parts = Path(rel_path).parts
         module = parts[0] if len(parts) > 1 else "root"
-        results["module_structure"][module].append(rel_path)
+        module_structure[module].append(rel_path)
 
     def _process_node(
         self,
         node: ast.AST,
         rel_path: str,
-        results: dict[str, Any],
+        god_objects: list[GodObjectInfo],
         import_graph: dict[str, set[str]],
         god_object_methods: int,
         god_object_lines: int,
@@ -114,7 +127,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         """Process AST node for god objects and imports."""
         if isinstance(node, ast.ClassDef):
             if detect_god_objects:
-                self._check_god_object(node, rel_path, results, god_object_methods, god_object_lines)
+                self._check_god_object(node, rel_path, god_objects, god_object_methods, god_object_lines)
         elif isinstance(node, ast.Import):
             self._process_import(node, rel_path, import_graph)
         elif isinstance(node, ast.ImportFrom):
@@ -124,7 +137,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         self,
         node: ast.ClassDef,
         rel_path: str,
-        results: dict[str, Any],
+        god_objects: list[GodObjectInfo],
         god_object_methods: int,
         god_object_lines: int,
     ) -> None:
@@ -138,16 +151,16 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         if len(methods) <= god_object_methods and lines <= god_object_lines:
             return
 
-        results["god_objects"].append(
-            {
-                "file": rel_path,
-                "class": node.name,
-                "line": node.lineno,
-                "methods": len(methods),
-                "lines": lines,
-                "methods_threshold": god_object_methods,
-                "lines_threshold": god_object_lines,
-            }
+        god_objects.append(
+            GodObjectInfo(
+                file=rel_path,
+                class_name=node.name,
+                line=node.lineno,
+                methods=len(methods),
+                lines=lines,
+                methods_threshold=god_object_methods,
+                lines_threshold=god_object_lines,
+            )
         )
 
     def _process_import(self, node: ast.Import, rel_path: str, import_graph: dict[str, set[str]]) -> None:
@@ -160,28 +173,30 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         if node.module:
             import_graph[rel_path].add(node.module.split(".")[0])
 
-    def _identify_highly_coupled(self, import_graph: dict[str, set[str]], results: dict[str, Any], coupling_threshold: int) -> None:
+    def _identify_highly_coupled(self, import_graph: dict[str, set[str]], highly_coupled: list[HighCouplingInfo], coupling_threshold: int) -> None:
         """Identify highly coupled modules."""
         for filepath, imports in import_graph.items():
             if len(imports) > coupling_threshold:
-                results["highly_coupled"].append(
-                    {
-                        "file": filepath,
-                        "import_count": len(imports),
-                        "threshold": coupling_threshold,
-                    }
+                highly_coupled.append(
+                    HighCouplingInfo(
+                        file=filepath,
+                        import_count=len(imports),
+                        threshold=coupling_threshold,
+                    )
                 )
 
-    def _detect_import_cycles(self, files: list[str]) -> dict[str, Any]:
+    def _detect_import_cycles(self, files: list[str]) -> ImportCycleResults:
         """Detect import cycles."""
-        results = {"cycles": [], "import_graph": {}}
+        cycles: list[list[str]] = []
         import_graph: dict[str, set[str]] = defaultdict(set)
 
         self._build_import_graph(files, import_graph)
-        results["import_graph"] = {k: list(v) for k, v in import_graph.items()}
-        self._find_all_cycles(import_graph, results)
+        self._find_all_cycles(import_graph, cycles)
 
-        return results
+        return ImportCycleResults(
+            cycles=cycles,
+            import_graph={k: list(v) for k, v in import_graph.items()},
+        )
 
     def _build_import_graph(self, files: list[str], import_graph: dict[str, set[str]]) -> None:
         """Build import graph from files."""
@@ -212,12 +227,12 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         elif isinstance(node, ast.ImportFrom) and node.module:
             import_graph[module_name].add(node.module)
 
-    def _find_all_cycles(self, import_graph: dict[str, set[str]], results: dict[str, Any]) -> None:
+    def _find_all_cycles(self, import_graph: dict[str, set[str]], cycles: list[list[str]]) -> None:
         """Find all import cycles in the graph."""
         for module in import_graph:
             cycle = self._find_cycle_from_module(module, import_graph)
-            if cycle and cycle not in results["cycles"]:
-                results["cycles"].append(cycle)
+            if cycle and cycle not in cycles:
+                cycles.append(cycle)
 
     def _find_cycle_from_module(self, module: str, import_graph: dict[str, set[str]]) -> list | None:
         """Find cycle starting from given module using DFS."""
@@ -246,9 +261,9 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         path.pop()
         return None
 
-    def _detect_runtime_checks(self, files: list[str]) -> list[dict[str, Any]]:
+    def _detect_runtime_checks(self, files: list[str]) -> list[RuntimeCheckInfo]:
         """Detect runtime checks that could be module-level constants."""
-        results = []
+        results: list[RuntimeCheckInfo] = []
         for file_path in files:
             if not Path(file_path).exists():
                 continue
@@ -257,7 +272,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
 
         return results
 
-    def _scan_file_for_runtime_checks(self, file_path: str, results: list[dict[str, Any]]) -> None:
+    def _scan_file_for_runtime_checks(self, file_path: str, results: list[RuntimeCheckInfo]) -> None:
         """Scan a single file for runtime checks."""
         try:
             content = Path(file_path).read_text(encoding="utf-8", errors="ignore")
@@ -270,7 +285,7 @@ class ArchitectureAnalyzer(BaseAnalyzer):
         except Exception as e:
             self.logger.warning(f"Error detecting runtime checks in {file_path}: {e}")
 
-    def _check_function_for_runtime_checks(self, node: ast.FunctionDef | ast.AsyncFunctionDef, rel_path: str, results: list[dict[str, Any]]) -> None:
+    def _check_function_for_runtime_checks(self, node: ast.FunctionDef | ast.AsyncFunctionDef, rel_path: str, results: list[RuntimeCheckInfo]) -> None:
         """Check a function for runtime checks."""
         runtime_checks = [child for child in ast.walk(node) if self._is_runtime_check(child)]
 
@@ -278,13 +293,13 @@ class ArchitectureAnalyzer(BaseAnalyzer):
             return
 
         results.append(
-            {
-                "file": rel_path,
-                "function": node.name,
-                "line": node.lineno,
-                "check_count": len(runtime_checks),
-                "message": f"Function '{node.name}' has {len(runtime_checks)} runtime checks that could be module-level constants",
-            }
+            RuntimeCheckInfo(
+                file=rel_path,
+                function=node.name,
+                line=node.lineno,
+                check_count=len(runtime_checks),
+                message=f"Function '{node.name}' has {len(runtime_checks)} runtime checks that could be module-level constants",
+            )
         )
 
     def _is_runtime_check(self, node: ast.AST) -> bool:

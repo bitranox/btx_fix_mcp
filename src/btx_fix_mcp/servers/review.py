@@ -17,7 +17,7 @@ from btx_fix_mcp.subservers.common.logging import (
     log_error_detailed,
     log_tool_execution,
 )
-from btx_fix_mcp.subservers.review.cache import CacheSubServer
+from btx_fix_mcp.subservers.review.cache_subserver import CacheSubServer
 from btx_fix_mcp.subservers.review.deps import DepsSubServer
 from btx_fix_mcp.subservers.review.docs import DocsSubServer
 from btx_fix_mcp.subservers.review.perf import PerfSubServer
@@ -498,19 +498,27 @@ class ReviewMCPServer:
         return results
 
     def _init_results(self) -> dict[str, Any]:
-        """Initialize results dictionary."""
-        return {
+        """Initialize results dictionary with skip reasons for unconfigured subservers."""
+        all_subservers = ["scope", "quality", "security", "deps", "docs", "perf", "cache"]
+        results: dict[str, Any] = {
             "overall_status": "SUCCESS",
-            "scope": None,
-            "quality": None,
-            "security": None,
-            "deps": None,
-            "docs": None,
-            "perf": None,
-            "cache": None,
             "report": None,
             "errors": [],
         }
+
+        # Initialize each subserver - mark as skipped if not configured
+        for name in all_subservers:
+            if name in self._subservers:
+                results[name] = None  # Will be populated when run
+            else:
+                results[name] = {
+                    "status": "NOT_RUN",
+                    "skip_reason": f"'{name}' not in configured subservers (check review.subservers in config)",
+                    "metrics": {},
+                    "issues": [],
+                }
+
+        return results
 
     def _run_scope_step(self, results: dict[str, Any], mode: str) -> bool:
         """Run scope analysis. Returns False if failed."""
@@ -539,7 +547,7 @@ class ReviewMCPServer:
         def make_task(name: str, runner: Any) -> Any:
             """Create a task function for parallel execution."""
 
-            def task() -> tuple[str, dict[str, Any] | None, str | None]:
+            def task() -> tuple[str, dict[str, Any], str | None]:
                 """Execute the analysis task and return results."""
                 try:
                     result = runner()
@@ -547,7 +555,13 @@ class ReviewMCPServer:
                     return (name, result, error)
                 except Exception as e:
                     log_error_detailed(logger, e, context={"step": name})
-                    return (name, None, f"{name.title()} error: {e}")
+                    error_result = {
+                        "status": "FAILED",
+                        "skip_reason": f"Exception during {name} analysis: {e}",
+                        "metrics": {},
+                        "issues": [],
+                    }
+                    return (name, error_result, f"{name.title()} error: {e}")
 
             return task
 
@@ -592,7 +606,7 @@ class ReviewMCPServer:
         Cache always runs last and sequentially because it modifies source files.
         """
         if "cache" not in self._subservers:
-            return
+            return  # Already marked as skipped in _init_results
 
         try:
             results["cache"] = self.run_cache()
@@ -601,6 +615,12 @@ class ReviewMCPServer:
                 results["errors"].append("Cache analysis failed")
         except Exception as e:
             log_error_detailed(logger, e, context={"step": "cache"})
+            results["cache"] = {
+                "status": "FAILED",
+                "skip_reason": f"Exception during cache analysis: {e}",
+                "metrics": {},
+                "issues": [],
+            }
             results["errors"].append(f"Cache error: {e}")
 
     def _run_report_step(self, results: dict[str, Any]) -> None:

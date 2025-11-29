@@ -4,7 +4,7 @@ Provides typed issue classes for consistent issue reporting across
 all review subservers (deps, security, docs, perf, quality).
 """
 
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass
 from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -162,12 +162,14 @@ class PerformanceIssue(BaseIssue):
         line: Line number
         pattern: Pattern identifier
         impact: Estimated impact level
+        value: Numeric value for sorting (e.g., nesting depth, complexity score)
     """
 
     file: str = ""
     line: int = 0
     pattern: str = ""
     impact: str = ""
+    value: int = 0
 
 
 @dataclass(slots=True)

@@ -24,20 +24,21 @@ entry point (python -m) reuses the same helpers for consistency.
 
 from __future__ import annotations
 
-from pathlib import Path
 from collections.abc import Sequence
+from pathlib import Path
 
 import rich_click as click
 from rich.console import Console
 from rich.markdown import Markdown
-from rich.traceback import Traceback, install as install_rich_traceback
+from rich.traceback import Traceback
+from rich.traceback import install as install_rich_traceback
 
 from . import __init__conf__
 from .behaviors import emit_greeting, noop_main, raise_intentional_failure
 from .config import get_config
 
 #: Shared Click context flags for consistent help output.
-CLICK_CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}  # noqa: C408
+CLICK_CONTEXT_SETTINGS = {"help_option_names": ["-h", "--help"]}
 
 #: Console for rich output
 console = Console()
@@ -56,7 +57,7 @@ console = Console()
 @click.option(
     "--traceback/--no-traceback",
     is_flag=True,
-    default=True,
+    default=False,
     help="Show full Python traceback on errors (default: enabled)",
 )
 @click.pass_context
@@ -110,6 +111,183 @@ def cli_hello() -> None:
 def cli_fail() -> None:
     """Trigger the intentional failure helper to test error handling."""
     raise_intentional_failure()
+
+
+# =============================================================================
+# Config Commands
+# =============================================================================
+
+
+@cli.command("config-deploy", context_settings=CLICK_CONTEXT_SETTINGS)
+@click.option(
+    "--target",
+    "targets",
+    type=click.Choice(["app", "host", "user"], case_sensitive=False),
+    multiple=True,
+    required=True,
+    help="Target configuration layer(s) to deploy to (can specify multiple)",
+)
+@click.option(
+    "--force",
+    is_flag=True,
+    default=False,
+    help="Overwrite existing configuration files",
+)
+def cli_config_deploy(targets: tuple[str, ...], force: bool) -> None:
+    """Deploy default configuration to system or user directories.
+
+    Creates configuration files in platform-specific locations:
+
+    \b
+    - app:  System-wide application config (requires privileges)
+    - host: System-wide host config (requires privileges)
+    - user: User-specific config (~/.config on Linux)
+
+    By default, existing files are not overwritten. Use --force to overwrite.
+
+    Examples:
+
+    \b
+    # Deploy to user config directory
+    $ python -m btx_fix_mcp config-deploy --target user
+
+    \b
+    # Deploy to both app and user directories
+    $ python -m btx_fix_mcp config-deploy --target app --target user
+
+    \b
+    # Force overwrite existing config
+    $ python -m btx_fix_mcp config-deploy --target user --force
+    """
+    from .config_deploy import deploy_configuration
+
+    try:
+        deployed_paths = deploy_configuration(targets=list(targets), force=force)
+
+        if deployed_paths:
+            console.print("\n[green]Configuration deployed successfully:[/green]")
+            for path in deployed_paths:
+                console.print(f"  [green][OK][/green] {path}")
+        else:
+            console.print("\n[yellow]No files were created (all target files already exist).[/yellow]")
+            console.print("Use --force to overwrite existing configuration files.")
+
+    except PermissionError as exc:
+        console.print(f"\n[red]Error: Permission denied. {exc}[/red]")
+        console.print("[dim]Hint: System-wide deployment (--target app/host) may require sudo.[/dim]")
+        raise SystemExit(1) from exc
+    except Exception as exc:
+        console.print(f"\n[red]Error: Failed to deploy configuration: {exc}[/red]")
+        raise SystemExit(1) from exc
+
+
+@cli.command("config-show", context_settings=CLICK_CONTEXT_SETTINGS)
+@click.option(
+    "--section",
+    "-s",
+    default=None,
+    help="Show only specific section (e.g., 'review.quality', 'general.timeouts')",
+)
+@click.option(
+    "--json",
+    "as_json",
+    is_flag=True,
+    help="Output as JSON instead of TOML-like format",
+)
+def cli_config_show(section: str | None, as_json: bool) -> None:
+    """Show current effective configuration.
+
+    Displays the merged configuration from all sources:
+    package defaults, user config, project config, and environment variables.
+
+    Examples:
+
+    \b
+    $ python -m btx_fix_mcp config-show
+    $ python -m btx_fix_mcp config-show -s review.quality
+    $ python -m btx_fix_mcp config-show --json
+    """
+    import json
+
+    from .config import get_config, get_section
+
+    if section:
+        data = get_section(section)
+        if not data:
+            console.print(f"[yellow]Section '{section}' not found or empty[/yellow]")
+            return
+    else:
+        config = get_config()
+        data = dict(config)
+
+    if as_json:
+        console.print(json.dumps(data, indent=2, default=str))
+    else:
+        _print_config_toml(data)
+
+
+@cli.command("config-path", context_settings=CLICK_CONTEXT_SETTINGS)
+def cli_config_path() -> None:
+    """Show paths where config files are loaded from.
+
+    Displays all configuration file locations and their status:
+    - Package defaults (always exists)
+    - User config (platform-specific)
+    - Project config
+    - Environment variable prefix
+    """
+    from platformdirs import user_config_dir
+
+    from .__init__conf__ import LAYEREDCONF_SLUG, LAYEREDCONF_VENDOR
+    from .config import _DEFAULT_CONFIG_FILE
+
+    # Get platform-specific paths
+    user_dir = Path(user_config_dir(LAYEREDCONF_SLUG, LAYEREDCONF_VENDOR))
+    user_config = user_dir / "config.toml"
+    project_config = Path.cwd() / f".{LAYEREDCONF_SLUG}.toml"
+    pyproject = Path.cwd() / "pyproject.toml"
+
+    console.print("[bold]Configuration file locations:[/bold]\n")
+
+    # Package defaults
+    status = "[green][EXISTS][/green]" if _DEFAULT_CONFIG_FILE.exists() else "[red][MISSING][/red]"
+    console.print(f"  {status} Package defaults: {_DEFAULT_CONFIG_FILE}")
+
+    # User config
+    status = "[green][EXISTS][/green]" if user_config.exists() else "[dim][MISSING][/dim]"
+    console.print(f"  {status} User config: {user_config}")
+
+    # Project config
+    status = "[green][EXISTS][/green]" if project_config.exists() else "[dim][MISSING][/dim]"
+    console.print(f"  {status} Project config: {project_config}")
+
+    # pyproject.toml
+    console.print(f"  pyproject.toml: {pyproject}")
+    console.print(f"    (use [tool.{LAYEREDCONF_SLUG}] section)")
+
+    # Environment variable prefix
+    env_prefix = f"{LAYEREDCONF_SLUG.upper()}___"
+    console.print("\n[bold]Environment variable prefix:[/bold]")
+    console.print(f"  {env_prefix}<SECTION>__<KEY>=<VALUE>")
+    console.print(f"\n  Example: {env_prefix}GENERAL__LOG_LEVEL=DEBUG")
+
+
+def _print_config_toml(data: dict, prefix: str = "") -> None:
+    """Print configuration in TOML-like format."""
+    for key, value in data.items():
+        if isinstance(value, dict):
+            _print_config_toml(value, prefix=f"{prefix}{key}.")
+        else:
+            # Format value based on type
+            if isinstance(value, bool):
+                val_str = "true" if value else "false"
+            elif isinstance(value, str):
+                val_str = f'"{value}"'
+            elif isinstance(value, list):
+                val_str = str(value)
+            else:
+                val_str = str(value)
+            console.print(f"{prefix}{key} = {val_str}")
 
 
 # =============================================================================
@@ -342,6 +520,7 @@ def review_profile(ctx: click.Context, command: tuple[str, ...]) -> None:
     try:
         result = subprocess.run(
             profiled_cmd,
+            check=False,
             cwd=repo_path,
             capture_output=False,
         )

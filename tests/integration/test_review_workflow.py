@@ -84,7 +84,6 @@ __pycache__/
         # Verify result structure
         assert result.status == "SUCCESS"
         assert "# Scope Analysis" in result.summary
-        assert hasattr(result, "artifacts")
         assert len(result.artifacts) > 0
 
         # Verify result.json was created

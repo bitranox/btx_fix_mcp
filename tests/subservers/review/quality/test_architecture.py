@@ -4,6 +4,7 @@ import logging
 
 import pytest
 
+from btx_fix_mcp.subservers.review.quality.analyzer_results import ArchitectureResults
 from btx_fix_mcp.subservers.review.quality.architecture import ArchitectureAnalyzer
 
 
@@ -25,31 +26,32 @@ class TestArchitectureAnalyzer:
             config={},
         )
 
-    def test_analyze_returns_all_keys(self, analyzer, tmp_path):
-        """Test analyze returns architecture, import_cycles, and runtime_checks."""
+    def test_analyze_returns_architecture_results(self, analyzer, tmp_path):
+        """Test analyze returns ArchitectureResults dataclass."""
         code = tmp_path / "simple.py"
         code.write_text("x = 1")
 
         result = analyzer.analyze([str(code)])
 
-        assert "architecture" in result
-        assert "import_cycles" in result
-        assert "runtime_checks" in result
+        # Result is a typed ArchitectureResults dataclass
+        assert isinstance(result, ArchitectureResults)
+        assert isinstance(result.architecture.god_objects, list)
+        assert isinstance(result.import_cycles.cycles, list)
 
     def test_analyze_empty_files(self, analyzer):
         """Test analyze with empty file list."""
         result = analyzer.analyze([])
 
-        assert result["architecture"]["god_objects"] == []
-        assert result["architecture"]["highly_coupled"] == []
-        assert result["import_cycles"]["cycles"] == []
-        assert result["runtime_checks"] == []
+        assert result.architecture.god_objects == []
+        assert result.architecture.highly_coupled == []
+        assert result.import_cycles.cycles == []
+        assert result.runtime_checks == []
 
     def test_analyze_nonexistent_files(self, analyzer):
         """Test analyze with nonexistent files."""
         result = analyzer.analyze(["/nonexistent/file.py"])
 
-        assert result["architecture"]["god_objects"] == []
+        assert result.architecture.god_objects == []
 
 
 class TestGodObjectDetection:
@@ -92,10 +94,10 @@ class GodClass:
 
         result = analyzer._analyze_architecture([str(code)])
 
-        assert len(result["god_objects"]) >= 1
-        god_obj = result["god_objects"][0]
-        assert god_obj["class"] == "GodClass"
-        assert god_obj["methods"] >= 5
+        assert len(result.god_objects) >= 1
+        god_obj = result.god_objects[0]
+        assert god_obj.class_name == "GodClass"
+        assert god_obj.methods >= 5
 
     def test_no_god_object_for_small_class(self, tmp_path, arch_logger):
         """Test that small classes are not flagged."""
@@ -121,7 +123,7 @@ class SmallClass:
 
         result = analyzer._analyze_architecture([str(code)])
 
-        assert len(result["god_objects"]) == 0
+        assert len(result.god_objects) == 0
 
 
 class TestModuleCoupling:
@@ -153,8 +155,8 @@ x = 1
 
         result = analyzer._analyze_architecture([str(code)])
 
-        assert len(result["highly_coupled"]) >= 1
-        assert result["highly_coupled"][0]["import_count"] >= 5
+        assert len(result.highly_coupled) >= 1
+        assert result.highly_coupled[0].import_count >= 5
 
     def test_no_coupling_issue_for_few_imports(self, tmp_path, arch_logger):
         """Test that files with few imports are not flagged."""
@@ -174,7 +176,7 @@ x = os.getcwd()
 
         result = analyzer._analyze_architecture([str(code)])
 
-        assert len(result["highly_coupled"]) == 0
+        assert len(result.highly_coupled) == 0
 
 
 class TestImportCycleDetection:
@@ -199,7 +201,7 @@ x = 1
 
         result = analyzer._detect_import_cycles([str(code)])
 
-        assert result["cycles"] == []
+        assert result.cycles == []
 
     def test_import_graph_built(self, analyzer, tmp_path):
         """Test that import graph is built correctly."""
@@ -212,8 +214,8 @@ from pathlib import Path
 
         result = analyzer._detect_import_cycles([str(code)])
 
-        assert "import_graph" in result
-        # Should have entries for the module
+        # ImportCycleResults dataclass has import_graph field
+        assert isinstance(result.import_graph, dict)
 
     def test_handles_import_from(self, analyzer, tmp_path):
         """Test handling of 'from x import y' statements."""
@@ -226,7 +228,7 @@ from typing import Any, List
         result = analyzer._detect_import_cycles([str(code)])
 
         # Should complete without errors
-        assert "import_graph" in result
+        assert isinstance(result.import_graph, dict)
 
 
 class TestRuntimeCheckDetection:
@@ -254,7 +256,7 @@ def get_config():
         result = analyzer._detect_runtime_checks([str(code)])
 
         assert len(result) >= 1
-        assert result[0]["function"] == "get_config"
+        assert result[0].function == "get_config"
 
     def test_detect_sys_platform(self, analyzer, tmp_path):
         """Test detecting sys.platform check."""
@@ -286,7 +288,7 @@ def check_feature(obj):
         result = analyzer._detect_runtime_checks([str(code)])
 
         assert len(result) >= 1
-        assert result[0]["function"] == "check_feature"
+        assert result[0].function == "check_feature"
 
     def test_detect_isinstance(self, analyzer, tmp_path):
         """Test detecting isinstance calls."""
@@ -319,7 +321,7 @@ def normal_function():
 
         # Should not flag module-level os.getenv
         # Only function-level checks should be flagged
-        function_names = [r["function"] for r in result]
+        function_names = [r.function for r in result]
         assert "normal_function" not in function_names or len(result) == 0
 
 
@@ -405,6 +407,8 @@ class TestArchitectureIntegration:
 
     def test_full_analysis_workflow(self, tmp_path, arch_logger):
         """Test complete architecture analysis workflow."""
+        from btx_fix_mcp.subservers.review.quality.analyzer_results import ArchitectureResults
+
         # Create code files
         module_a = tmp_path / "module_a.py"
         module_a.write_text('''
@@ -441,8 +445,8 @@ class ServiceB:
 
         result = analyzer.analyze([str(module_a), str(module_b)])
 
-        # Should complete without errors
-        assert isinstance(result, dict)
-        assert "architecture" in result
-        assert "import_cycles" in result
-        assert "runtime_checks" in result
+        # Should complete without errors and return ArchitectureResults
+        assert isinstance(result, ArchitectureResults)
+        assert isinstance(result.architecture.god_objects, list)
+        assert isinstance(result.import_cycles.cycles, list)
+        assert isinstance(result.runtime_checks, list)
