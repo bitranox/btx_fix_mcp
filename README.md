@@ -15,8 +15,8 @@
 
 **Code review and automated fixing tools - available as CLI and MCP server.**
 
-## this is very early beta - high churn rate and braking changes ahead - its only released to ensure pypi package name
-## MCP part completely untested and NOT operational - CLI Subservers in development
+## its useable, but in a very early beta - high churn rate and braking changes ahead - released to ensure pypi package name
+## MCP part completely untested and NOT operational - the CLI Subservers are working, but in development
 
 ---
 
