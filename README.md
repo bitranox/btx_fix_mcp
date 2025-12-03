@@ -15,6 +15,11 @@
 
 **Code review and automated fixing tools - available as CLI and MCP server.**
 
+## this is very early beta - high churn rate and braking changes ahead - its only released to ensure pypi package name
+## MCP part completely untested and NOT operational - CLI Subservers in development
+
+---
+
 ## What is glintefy?
 
 glintefy provides comprehensive code analysis:
