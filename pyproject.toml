@@ -1,6 +1,6 @@
 [project]
 name = "glintefy"
-version = "3.0.0"
+version = "3.0.1"
 description = "MCP servers for code review and automated fixing"
 readme = "README.md"
 requires-python = ">=3.13"
@@ -8,13 +8,14 @@ dependencies = [
     "mcp>=1.23.1",
     "bandit>=1.9.2",
     "radon>=6.0.1",
-    "pytest>=9.0.1",
+    "pytest>=9.0.2",
     "gitpython>=3.1.45",
     "pyyaml>=6.0.3",
     "jinja2>=3.1.6",
     "rich-click>=1.9.4",
     "lib-layered-config>=4.0.0",
     "pydantic>=2.12.5",
+    "urllib3>=2.6.0",
 ]
 license = { text = "MIT" }
 authors = [{ name = "bitranox", email = "bitranox@gmail.com" }]
@@ -36,18 +37,18 @@ Issues = "https://github.com/bitranox/glintefy/issues"
 
 [project.optional-dependencies]
 dev = [
-  "pytest>=9.0.1",
+  "pytest>=9.0.2",
   "pytest-cov>=7.0.0",
   "pytest-asyncio>=1.3.0",
   "pytest-mock>=3.15.1",
-  "ruff>=0.14.7",
+  "ruff>=0.14.8",
   "pyright>=1.1.407",
   "black>=25.11.0",
   "mypy>=1.19.0",
   "build>=1.3.0",
   "twine>=6.2.0",
   # codecov-cli pins: click<8.3.0, responses==0.21.*, test-results-parser==0.6.0
-  "codecov-cli>=11.2.5",
+  "codecov-cli>=11.2.6",
   # pip-audit pins: cyclonedx-python-lib<10
   "pip-audit>=2.10.0",
   "textual>=6.7.1",
@@ -58,7 +59,7 @@ dev = [
 # These are NOT installed with pip install glintefy
 # Instead, they're installed on-demand in ~/.cache/glintefy/tools-venv/
 tools = [
-  "ruff>=0.14.7",
+  "ruff>=0.14.8",
   "mypy>=1.19.0",
   "pylint>=4.0.4",
   "vulture>=2.14",

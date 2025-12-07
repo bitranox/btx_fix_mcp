@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file following
 the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [3.0.1] - 2025-12-07
+
+### Fixed
+- Updated `urllib3` dependency to `>=2.6.0` to fix CVE-2025-66418 and CVE-2025-66471
+
 ## [3.0.0] - 2025-12-03
 
 ### Changed
