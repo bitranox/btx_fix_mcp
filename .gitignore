@@ -179,3 +179,7 @@ poetry.lock
 pdm.lock
 uv.lock
 LLM-CONTEXT/
+
+.claude/
+.devcontainer/
+.qlty/
