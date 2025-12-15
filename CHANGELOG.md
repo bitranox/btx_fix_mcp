@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file following
 the [Keep a Changelog](https://keepachangelog.com/) format.
 
+## [3.0.2] - 2025-12-15
+
+### Fixed
+- Fixed type error in `config_deploy.py`: Extract `destination` paths from `DeployResult` objects returned by `lib_layered_config.deploy_config()`
+
 ## [3.0.1] - 2025-12-07
 
 ### Fixed

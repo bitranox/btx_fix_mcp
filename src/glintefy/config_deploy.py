@@ -92,7 +92,7 @@ def deploy_configuration(
     >>> paths[0].exists()  # doctest: +SKIP
     True
     """
-    deployed_paths = deploy_config(
+    results = deploy_config(
         source=_DEFAULT_CONFIG_FILE,
         vendor=__init__conf__.LAYEREDCONF_VENDOR,
         app=__init__conf__.LAYEREDCONF_APP,
@@ -101,7 +101,7 @@ def deploy_configuration(
         force=force,
     )
 
-    return deployed_paths
+    return [r.destination for r in results]
 
 
 __all__ = [
